@@ -7,14 +7,14 @@ an example `config.toml` block.
 Find (or set) your custom plugins path in `/etc/pwnagotchi/config.toml`:
 
 ```toml
-main.custom_plugins = "/usr/local/share/pwnagotchi/custom-plugins/"
+main.custom_plugins = "/etc/pwnagotchi/custom-plugins/"
 ```
 
 Copy the plugin you want there, e.g.:
 
 ```bash
-sudo mkdir -p /usr/local/share/pwnagotchi/custom-plugins/
-sudo cp boot_post.py /usr/local/share/pwnagotchi/custom-plugins/
+sudo mkdir -p /etc/pwnagotchi/custom-plugins/
+sudo cp boot_post.py /etc/pwnagotchi/custom-plugins/
 ```
 
 ## 2. Add its config block
