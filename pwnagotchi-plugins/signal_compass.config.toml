@@ -1,0 +1,18 @@
+# Example config for the "signal_compass" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library).
+
+main.plugins.signal_compass.enabled = true
+
+# BSSID to track (any case/separator). Leave empty and enable auto_strongest to follow
+# the loudest AP instead.
+main.plugins.signal_compass.target = ""
+
+# Lock onto the strongest AP when no target is set.
+main.plugins.signal_compass.auto_strongest = false
+
+# Number of RSSI samples kept for the warmer/colder trend.
+main.plugins.signal_compass.window = 8
+
+# UI position "x,y" for the "sig:" trend/RSSI readout.
+main.plugins.signal_compass.position = "0,0"

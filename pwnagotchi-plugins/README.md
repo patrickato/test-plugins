@@ -46,7 +46,7 @@ tested off-Pi.
 | P35 `daily_digest` | none *(Pillow ships already)* | none | none | |
 | P36 `conflict_referee` | none | none | none | |
 | P37 `eink_ghosting` | none | none | e-ink display | |
-| P38 `signal_compass` | none | none | none | |
+| P38 `signal_compass` | none | none | none | ✅ |
 | P39 `streaks` | none | none | none | ✅ |
 | P40 `multi_adapter` | none | `iw` / `ip` (usually present) | 2+ Wi-Fi adapters | |
 | P41 `auto_timezone` | *(optional `timezonefinder`)* | `timedatectl` + `gpsd` | GPS | ✅ |
