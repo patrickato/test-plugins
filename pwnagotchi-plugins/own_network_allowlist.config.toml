@@ -1,0 +1,17 @@
+# Example config for the "own_network_allowlist" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.own_network_allowlist.enabled = true
+
+# Your own AP MACs (any case/separator accepted). Handshakes from these are tagged as
+# authorized practice and recorded in the ledger.
+main.plugins.own_network_allowlist.bssids = ["aa:bb:cc:dd:ee:ff"]
+
+# Your own SSIDs (exact name, matched case-insensitively).
+main.plugins.own_network_allowlist.ssids = ["MyHomeWifi", "LabAP"]
+
+# Where the authorized-practice ledger (JSON) is stored.
+main.plugins.own_network_allowlist.data_path = "/etc/pwnagotchi/own_network_allowlist.json"
+
+# UI position "x,y" for the "own:" in-range counter.
+main.plugins.own_network_allowlist.position = "0,0"
