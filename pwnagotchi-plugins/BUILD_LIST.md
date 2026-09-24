@@ -1,0 +1,203 @@
+# Pwnagotchi Plugin Project — Build List
+
+**Status:** planning / list locked, details TBD
+**Target platform:** Jayofelony Pwnagotchi image (Debian Trixie aarch64, Python 3.13.x)
+**License intent:** GPLv3 (matches upstream Pwnagotchi)
+**Scope rule:** every plugin here fills a real gap or fixes broken/unfinished behavior in the
+Pwnagotchi ecosystem — nothing that duplicates a bundled or known-good community plugin.
+
+Each entry is a standard Pwnagotchi plugin (a Python class using `on_loaded`,
+`on_ui_setup`, `on_ui_update`, `on_handshake`, `on_epoch`, `on_internet_available`,
+`on_wifi_update`, `on_bcap_*`, and/or a web handler). Details (config schema, exact
+hooks, UI placement, storage) get ironed out per-plugin before we build it.
+
+Legend — **Status:** `planned` · `speccing` · `building` · `testing` · `done`
+Legend — **Lift:** S (small) · M (medium) · L (large)
+
+---
+
+## Batch A — Capture lifecycle (the biggest hole in the ecosystem)
+
+Everything captures; almost nothing manages captures afterward. This batch is the
+project's flagship because it's near-total whitespace.
+
+### P01 — Handshake Janitor  `handshake_janitor`
+- **Purpose:** de-duplicate partial/duplicate `.pcap` captures per BSSID, keep the most
+  complete EAPOL set, reclaim SD space.
+- **Gap:** no maintained plugin manages capture files after they're written.
+- **Hooks:** `on_handshake`, `on_epoch` (periodic sweep), web view for the keep/drop log.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #1
+
+### P02 — Capture Quality Grader  `capture_grader`
+- **Purpose:** score each capture (full 4-way handshake? PMKID? beacon present?) so only
+  crackable files get uploaded/kept.
+- **Gap:** uploaders fire on everything, including dead files.
+- **Hooks:** `on_handshake`, UI badge, web list.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #2
+
+### P03 — Crack-Status Reconciler  `crack_reconciler`
+- **Purpose:** one local view merging wpa-sec / OHC / local hashcat results back onto each
+  capture, so solved handshakes aren't re-uploaded.
+- **Gap:** results live in three silos; nothing reconciles them on-device.
+- **Hooks:** `on_internet_available` (pull results), web dashboard.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #3
+
+### P04 — Retention / Expiry Engine  `capture_retention`
+- **Purpose:** age- and SD-pressure-based cleanup with an owner-visible "about to delete"
+  queue and a grace window.
+- **Gap:** no policy-driven retention exists; cards fill until something breaks.
+- **Hooks:** `on_epoch`, web review queue.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #4
+
+### P05 — Own-Network Allowlist  `own_network_allowlist`
+- **Purpose:** tag the owner's home/lab BSSIDs as authorized practice; separate them from
+  field logs and change device reactions to them.
+- **Gap:** no first-class notion of "my own gear" for authorized testing.
+- **Hooks:** `on_wifi_update`, `on_handshake`, config-driven allowlist, UI marker.
+- **Lift:** S · **Status:** planned · **Brainstorm ref:** #5
+
+---
+
+## Batch B — Device health & self-repair
+
+`watchdog` restarts wedged services, but nothing *explains* or *protects the card*.
+
+### P06 — Doctor / Explain  `doctor`
+- **Purpose:** read recent logs + state and produce a concise "what's wrong, why, and what
+  to do" (stuck wifi driver, low disk, pwngrid down, noisy plugin, bt-tether fail).
+- **Gap:** diagnosis is manual log-reading today.
+- **Hooks:** `on_epoch`, web report, optional UI health glyph.
+- **Lift:** L · **Status:** planned · **Brainstorm ref:** #6
+
+### P07 — SD-Wear Estimator  `sd_wear`
+- **Purpose:** track write volume over time, estimate remaining card life, warn before it
+  dies. Complements a RAM-buffered logging strategy.
+- **Gap:** SD death kills more Pis than anything and nobody measures it.
+- **Hooks:** `on_epoch`, UI counter, web trend.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #7
+
+### P30 — Boot POST Card  `boot_post`
+- **Purpose:** one startup screen — "everything checked out (or didn't)": radio, GPS,
+  disk, services, clock, key plugins.
+- **Gap:** no consolidated power-on self-test surface exists.
+- **Hooks:** `on_ready`/`on_loaded`, one-shot UI card, web detail.
+- **Lift:** S · **Status:** planned · **Brainstorm ref:** #30
+
+---
+
+## Batch C — Power & thermal (beyond reading a UPS)
+
+### P12 — Battery Health Historian  `battery_historian`
+- **Purpose:** learned runtime curve per charge cycle; warn as a cell ages. UPS plugins
+  show instantaneous % only.
+- **Gap:** no longitudinal battery-health tracking.
+- **Hooks:** `on_epoch` (sample), web trend chart. Reads existing UPS/PiSugar data.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #12
+
+### P13 — PWM Fan Curve  `fan_curve`
+- **Purpose:** real temperature-driven PWM fan control with a configurable curve and
+  hysteresis; today it's mostly on/off or manual.
+- **Gap:** no clean temp→PWM curve plugin.
+- **Hooks:** `on_epoch`, GPIO PWM, UI RPM/temp readout. **HW:** PWM-capable fan.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #13
+
+### P14 — Thermal-Throttle Predictor  `thermal_predictor`
+- **Purpose:** from the temperature slope, act *before* the throttle hits (warn / shed
+  optional load / spin fan early).
+- **Gap:** everything reacts after throttling, not before.
+- **Hooks:** `on_epoch`, integrates with P13, UI warning.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #14
+
+---
+
+## Batch D — Connectivity that isn't just "tether"
+
+### P18 — Home Assistant MQTT Discovery  `ha_mqtt`
+- **Purpose:** auto-register temp / captures / mood / battery / uptime as Home Assistant
+  sensors via MQTT discovery.
+- **Gap:** widely wanted, no clean maintained plugin.
+- **Hooks:** `on_epoch` (publish), `on_internet_available`, MQTT client. **Dep:** broker.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #18
+
+### P20 — Tailscale / WireGuard Presence  `mesh_vpn_presence`
+- **Purpose:** bring the unit up on the owner's own tailnet/WG so the companion reaches it
+  anywhere — no port-forwarding.
+- **Gap:** remote reach today means manual VPN setup outside pwnagotchi.
+- **Hooks:** `on_loaded` (bring up), `on_internet_available`, UI status, web link.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #20
+
+---
+
+## Batch E — Passive RF awareness (observe, never attack)
+
+### P21 — Channel Occupancy Logger  `channel_occupancy`
+- **Purpose:** log which 2.4/5 GHz channels are busiest over time; render a simple heatmap.
+- **Gap:** genuinely useful, nobody logs it cleanly.
+- **Hooks:** `on_wifi_update`/`on_bcap_wifi_ap_new`, web heatmap.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #21
+
+### P24 — rtl_433 Ambient Sniffer  `rtl433_ambient`
+- **Purpose:** if an RTL-SDR is present, passively log 433 MHz weather/TPMS/sensor beacons
+  as ambient environment data.
+- **Gap:** no Pwnagotchi plugin bridges rtl_433.
+- **Hooks:** background reader of `rtl_433 -F json`, `on_epoch` aggregate, web list.
+  **HW:** RTL-SDR. **Dep:** `rtl_433`.
+- **Lift:** L · **Status:** planned · **Brainstorm ref:** #24
+
+### P25 — ADS-B Ambient  `adsb_ambient`
+- **Purpose:** planes overhead (from a local dump1090 feed) as ambient/event data.
+- **Gap:** no plugin consumes ADS-B.
+- **Hooks:** poll dump1090 JSON, `on_epoch`, UI/event trigger. **HW:** RTL-SDR + dump1090.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #25
+
+---
+
+## Batch F — Knowledge / data on-device
+
+### P29 — Offline Reader (Kiwix / ZIM)  `offline_reader`
+- **Purpose:** manuals / wiki on-device via a bundled ZIM reader; a genuinely useful
+  field-computer feature.
+- **Gap:** no offline-library plugin.
+- **Hooks:** web handler serving ZIM content, optional UI shortcut. **Dep:** `libzim`/kiwix.
+- **Lift:** L · **Status:** planned · **Brainstorm ref:** #29
+
+---
+
+## Batch G — Behavior & delight
+
+### P33 — Circadian Faces  `circadian_faces`
+- **Purpose:** shift face/mood by real sunrise/sunset (from GPS or configured location) —
+  no fake data, just time of day.
+- **Gap:** faces are static to time; nothing ties them to the real day cycle.
+- **Hooks:** `on_ui_update`, sun-times calc from GPS/config.
+- **Lift:** S · **Status:** planned · **Brainstorm ref:** #33
+
+### P34 — Achievement / Trophy Engine  `achievements`
+- **Purpose:** a real milestone/badge system (first-of-kind, streaks, totals, hidden ones)
+  — `age` tracks raw stats but there's no achievement layer.
+- **Gap:** no extensible achievement framework exists.
+- **Hooks:** `on_handshake`/`on_epoch`/`on_wifi_update` (triggers), persistent store, web
+  trophy cabinet, UI toast.
+- **Lift:** L · **Status:** planned · **Brainstorm ref:** #34
+
+### P35 — Daily Digest Card  `daily_digest`
+- **Purpose:** a rendered end-of-day summary (captures, distance, new networks, uptime)
+  saved to disk and optionally pushed.
+- **Gap:** no daily rollup surface.
+- **Hooks:** `on_epoch` (day boundary), render to PNG, optional notifier handoff.
+- **Lift:** M · **Status:** planned · **Brainstorm ref:** #35
+
+---
+
+## Cross-cutting decisions to iron out (applies to most plugins)
+- Shared storage location & format (SQLite vs JSON) under `/etc/pwnagotchi/` vs
+  `/var/lib/`.
+- Common UI placement conventions so plugins don't collide on the small display.
+- A shared, optional notifier seam (so P06/P07/P35 etc. can push via one path).
+- Packaging: one repo of independent plugins vs a small shared support module.
+- Test strategy: non-Pi unit tests with fake adapters + a target-Pi validation checklist.
+
+---
+
+_Brainstorm refs map to the working idea list from planning chat. Additional plugin
+ideas beyond this locked set are tracked separately as they're proposed._
