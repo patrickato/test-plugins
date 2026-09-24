@@ -26,3 +26,10 @@ This file defines what will move from `test-plugins` into the standalone release
 ## Final assembly rule
 
 Do not manually maintain duplicate copies of `doctor.py` during development. Assemble the standalone package only from the frozen canonical files after Claude + OpenAI sign-off and physical validation.
+## Generated integrity files
+
+The release assembler generates:
+- `RELEASE_MANIFEST.json` — package name/version plus SHA-256 for every canonical packaged file;
+- `SHA256SUMS` — verification hashes for the assembled artifact.
+
+The assembler verifies both before returning success.
