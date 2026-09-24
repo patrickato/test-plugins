@@ -15,6 +15,17 @@ The focus is reliability, diagnostics, recovery and usability.
 
 # Priority A — unusually high leverage
 
+## Architecture rule: one PwnDoctor, modular probes
+
+The user should see **one Doctor**. Radio, display, storage, connectivity,
+plugin/dependency and update diagnostics should be internal probe families or
+focused views behind the same Doctor evidence/severity/runbook model.
+Standalone names below describe implementation modules/prototypes, not competing
+Doctor products.
+
+The Doctor must remain useful headless through the WebUI/API/support bundle even
+when the display or touch stack is broken.
+
 ## 1. PwnDoctor
 
 A first-class Pwnagotchi health/triage plugin.
@@ -120,9 +131,9 @@ Potential WebUI action:
 
 ---
 
-## 4. RadioDoctor
+## 4. Radio Doctor Probe / View
 
-Dedicated read-only radio/monitor health inspector.
+Dedicated read-only radio/monitor health inspector inside PwnDoctor.
 
 Useful evidence:
 - phy/interface inventory;
@@ -146,9 +157,9 @@ This is intentionally diagnostic. It does not add new offensive behavior.
 
 ---
 
-## 5. DisplayDoctor
+## 5. Display Doctor Probe / View
 
-A Pwnagotchi display/touch diagnostics plugin/helper.
+A Pwnagotchi display/touch diagnostics module/helper surfaced through PwnDoctor.
 
 This addresses a recurring practical gap: “white screen / wrong display type /
 touch does not work” currently turns into manual device-tree and framebuffer
@@ -178,9 +189,9 @@ No blind config rewriting.
 
 ---
 
-## 6. StorageSentinel / SD Rescue
+## 6. Storage Doctor Probe / SD Rescue
 
-Watch for early evidence of storage trouble.
+Watch for early evidence of storage trouble and feed one PwnDoctor incident/recovery path.
 
 Signals:
 - MMC timeout/I/O errors;
@@ -205,9 +216,9 @@ the first response.
 
 # Priority B — strong utility
 
-## 7. PluginDoctor / Dependency Inspector
+## 7. Plugin / Dependency Doctor Probe
 
-Scan installed custom/default plugins and explain:
+Scan installed custom/default plugins and explain through PwnDoctor:
 - enabled/disabled;
 - source/path/version where inferable;
 - import errors;
@@ -464,13 +475,13 @@ valuable problem areas in the current ecosystem.
 
 # Suggested first implementation order
 
-1. **PwnDoctor**
+1. **PwnDoctor core + probe API**
 2. **PwnSupport Bundle**
 3. **PwnLint / ConfigGuard**
-4. **RadioDoctor**
-5. **DisplayDoctor**
-6. **StorageSentinel**
-7. **PluginDoctor**
+4. **Radio probe/view**
+5. **Display probe/view**
+6. **Storage/SD rescue probe**
+7. **Plugin/dependency probe**
 8. **Exact Screen Mirror**
 
 Why:
