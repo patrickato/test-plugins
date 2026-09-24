@@ -715,3 +715,145 @@ def test_shipped_example_pack_loads_and_detects():
     s = _clean(); s["mem_pct"] = 88
     found = {f["id"] for f in doc.diagnose(s, extra_conditions=conds)}
     assert "system.memory_pressure_warn" in found and "low_memory" not in found
+
+
+# ========================================================================================
+# v0.6-pre2 — tri-state verification + chronic/recurrence Patient Chart
+# ========================================================================================
+
+def test_condition_expr_tristate_truth_rules():
+    c = {"a": True, "b": False}
+    assert doc.eval_condition_expr_state({"key": "missing", "is": True}, c) is None
+    assert doc.eval_condition_expr_state({"all": [
+        {"key": "a", "is": True},
+        {"key": "missing", "is": True},
+    ]}, c) is None
+    # False dominates unknown in AND.
+    assert doc.eval_condition_expr_state({"all": [
+        {"key": "b", "is": True},
+        {"key": "missing", "is": True},
+    ]}, c) is False
+    # True dominates unknown in OR.
+    assert doc.eval_condition_expr_state({"any": [
+        {"key": "a", "is": True},
+        {"key": "missing", "is": True},
+    ]}, c) is True
+
+
+def test_version_bounded_pack_does_not_apply_when_runtime_version_unknown():
+    pack = _condition_pack(applies_to={
+        "platform": ["pwnagotchi"], "min_version": "2.9.5", "max_version": "2.9.6"
+    })
+    assert doc.pack_applies(pack, version=None) is False
+    assert doc.pack_applies(pack, version="unknown") is False
+
+
+def _pack_fix_finding():
+    pack = _condition_pack(
+        id="wifi.rfkill_pack_test",
+        signals=["wifi.rfkill.blocked"],
+        detect={"key": "wifi.rfkill.blocked", "is": True},
+        fix={"action": "wifi.rfkill_unblock", "tier": "safe",
+             "verify": {"key": "wifi.rfkill.blocked", "is": False}},
+    )
+    cond = doc.condition_from_pack(pack, allow_remedy=True)
+    return doc.diagnose({"rfkill_blocked": True}, extra_conditions=[cond])
+
+
+def test_pack_fix_uses_explicit_verify_expression():
+    findings = _pack_fix_finding()
+    calls = []
+    out = doc.apply_fixes(
+        findings, {"rfkill_blocked": True}, "conservative",
+        lambda c: calls.append(c), doc.CircuitBreaker(), {},
+        recollect=lambda: {"rfkill_blocked": False}, now=1,
+    )
+    hit = [f for f in out if f["id"] == "wifi.rfkill_pack_test"][0]
+    assert hit["outcome"] == "fixed"
+    assert calls == [["rfkill", "unblock", "wifi"]]
+
+
+def test_pack_fix_verify_missing_signal_is_unknown_not_success():
+    findings = _pack_fix_finding()
+    out = doc.apply_fixes(
+        findings, {"rfkill_blocked": True}, "conservative",
+        lambda c: None, doc.CircuitBreaker(), {},
+        recollect=lambda: {}, now=1,
+    )
+    hit = [f for f in out if f["id"] == "wifi.rfkill_pack_test"][0]
+    assert hit["outcome"] == "executed_verification_unknown"
+
+
+def test_pack_fix_verify_false_is_failure():
+    findings = _pack_fix_finding()
+    out = doc.apply_fixes(
+        findings, {"rfkill_blocked": True}, "conservative",
+        lambda c: None, doc.CircuitBreaker(), {},
+        recollect=lambda: {"rfkill_blocked": True}, now=1,
+    )
+    hit = [f for f in out if f["id"] == "wifi.rfkill_pack_test"][0]
+    assert hit["outcome"] == "fix_failed"
+
+
+def test_patient_chart_counts_episodes_not_scans(tmp_path):
+    chart = doc.PatientChart(str(tmp_path / "patient.json"))
+    writes = []
+    chart._write = lambda: writes.append(chart.data["updated_at"]) or True
+    signals = {"services": {"pwnagotchi": {"active": True}}}
+    finding = [{"id": "bettercap_down", "outcome": "needs_user", "fix": None}]
+
+    assert chart.observe(signals, finding, "ACTION_REQUIRED", now=10) is True
+    # Same unresolved episode: no new episode, no extra persistent write.
+    assert chart.observe(signals, finding, "ACTION_REQUIRED", now=20) is False
+    row = chart.chronic_summary("bettercap_down")
+    assert row["episodes"] == 1 and row["active"] is True
+
+    # Clear, then recur = second episode.
+    assert chart.observe(signals, [], "OK", now=30) is True
+    assert chart.observe(signals, finding, "ACTION_REQUIRED", now=40) is True
+    row = chart.chronic_summary("bettercap_down")
+    assert row["episodes"] == 2 and row["active"] is True
+    assert chart.summary()["recurring_condition_count"] == 1
+    assert len(writes) == 3
+
+
+def test_patient_chart_tracks_verified_remedy_outcomes(tmp_path):
+    chart = doc.PatientChart(str(tmp_path / "patient.json"))
+    chart._write = lambda: True
+    signals = {"services": {"pwnagotchi": {"active": True}}}
+
+    fixed = [{"id": "pwngrid_down", "outcome": "fixed",
+              "fix": {"action": "restart_service"}}]
+    chart.observe(signals, fixed, "HEALED", now=1)
+    row = chart.chronic_summary("pwngrid_down")
+    assert row["episodes"] == 1
+    assert row["remedy_attempts"] == 1
+    assert row["remedy_successes"] == 1
+    assert row["active"] is False
+    assert row["last_resolved"] == 1
+
+    failed = [{"id": "pwngrid_down", "outcome": "fix_failed",
+               "fix": {"action": "restart_service"}}]
+    chart.observe(signals, failed, "ACTION_REQUIRED", now=2)
+    row = chart.chronic_summary("pwngrid_down")
+    assert row["episodes"] == 2
+    assert row["remedy_attempts"] == 2
+    assert row["remedy_failures"] == 1
+    assert row["active"] is True
+
+
+def test_patient_chart_persists_chronic_memory_across_reload(tmp_path):
+    path = tmp_path / "patient.json"
+    chart = doc.PatientChart(str(path))
+    signals = {"services": {"pwnagotchi": {"active": True}}}
+    chart.observe(signals, [{"id": "x", "outcome": "needs_user", "fix": None}],
+                  "DEGRADED", now=1)
+    chart.observe(signals, [], "OK", now=2)
+    chart.observe(signals, [{"id": "x", "outcome": "needs_user", "fix": None}],
+                  "DEGRADED", now=3)
+
+    restored = doc.PatientChart(str(path))
+    row = restored.chronic_summary("x")
+    assert row["episodes"] == 2
+    assert row["active"] is True
+    assert restored.summary()["recurring_condition_count"] == 1
