@@ -73,6 +73,7 @@ import re
 import shutil
 import socket
 import subprocess
+import sys
 import time
 
 import pwnagotchi
@@ -88,6 +89,42 @@ _CONF_RANK = {"high": 0, "medium": 1, "low": 2}
 # ======================================================================================
 # Pure parsers (unit-tested; no I/O)
 # ======================================================================================
+
+def parse_os_release(text):
+    """Parse /etc/os-release style KEY=VALUE lines into a small dictionary."""
+    out = {}
+    for raw in (text or "").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        out[key.strip()] = value
+    return out
+
+
+def compatibility_fingerprint(os_release_text=None):
+    """Stable, privacy-light environment fingerprint for upstream compatibility work."""
+    if os_release_text is None:
+        try:
+            with open("/etc/os-release", "rt", errors="ignore") as fp:
+                os_release_text = fp.read()
+        except Exception:
+            os_release_text = ""
+    osr = parse_os_release(os_release_text)
+    return {
+        "pwnagotchi_version": getattr(pwnagotchi, "__version__", None),
+        "python_version": "%d.%d.%d" % tuple(sys.version_info[:3]),
+        "architecture": platform.machine() or None,
+        "kernel": platform.release() or None,
+        "os_id": osr.get("ID"),
+        "os_version_id": osr.get("VERSION_ID"),
+        "os_build_id": osr.get("BUILD_ID") or osr.get("IMAGE_ID"),
+    }
+
+
 def parse_throttled(value):
     s = str(value).strip()
     if "=" in s:
@@ -1263,11 +1300,16 @@ class PatientChart:
                 model = fp.read().replace(chr(0), "").strip() or None
         except Exception:
             pass
+        compat = compatibility_fingerprint()
         return {
             "model": model,
-            "architecture": platform.machine() or None,
-            "kernel": platform.release() or None,
-            "pwnagotchi_version": getattr(pwnagotchi, "__version__", None),
+            "architecture": compat.get("architecture"),
+            "kernel": compat.get("kernel"),
+            "pwnagotchi_version": compat.get("pwnagotchi_version"),
+            "python_version": compat.get("python_version"),
+            "os_id": compat.get("os_id"),
+            "os_version_id": compat.get("os_version_id"),
+            "os_build_id": compat.get("os_build_id"),
             "configured_iface": (s.get("iface", {}) or {}).get("configured"),
             "interfaces": (s.get("iface", {}) or {}).get("present"),
             "services": sorted((s.get("services", {}) or {}).keys()),
