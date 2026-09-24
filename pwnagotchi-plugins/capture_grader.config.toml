@@ -1,0 +1,13 @@
+# Example config for the "capture_grader" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.capture_grader.enabled = true
+
+# Directory holding capture files (used by the web sweep).
+main.plugins.capture_grader.handshakes = "/root/handshakes"
+
+# Write a <capture>.grade sidecar file for each graded capture.
+main.plugins.capture_grader.write_sidecar = true
+
+# UI position "x,y" for the "grade:" readout.
+main.plugins.capture_grader.position = "0,0"
