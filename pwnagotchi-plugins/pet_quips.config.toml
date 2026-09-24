@@ -1,0 +1,17 @@
+# Example config for the "pet_quips" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library). Purely cosmetic, offline.
+
+main.plugins.pet_quips.enabled = true
+
+# How long a quip stays on screen (seconds).
+main.plugins.pet_quips.show_secs = 6
+
+# Optional per-category overrides (leave out to use the built-in packs).
+# main.plugins.pet_quips.quips.handshake = ["gotcha!", "nom nom"]
+# main.plugins.pet_quips.quips.lonely    = ["anybody out there?"]
+# main.plugins.pet_quips.quips.bored     = ["is this all there is?"]
+# main.plugins.pet_quips.quips.excited   = ["so many networks!"]
+
+# UI position "x,y" (text wraps at ~40 chars).
+main.plugins.pet_quips.position = "0,0"
