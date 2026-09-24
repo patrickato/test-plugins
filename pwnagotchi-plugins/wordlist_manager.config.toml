@@ -1,0 +1,17 @@
+# Example config for the "wordlist_manager" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library; fetching uses urllib).
+
+main.plugins.wordlist_manager.enabled = true
+
+# Directory holding your wordlists.
+main.plugins.wordlist_manager.wordlist_dir = "/root/wordlists"
+
+# File extensions treated as wordlists.
+main.plugins.wordlist_manager.extensions = ["txt", "lst", "dic", "dict"]
+
+# Optional URLs to fetch wordlists from on demand.
+main.plugins.wordlist_manager.sources = []
+
+# UI position "x,y" for the "wl:" wordlist-count readout.
+main.plugins.wordlist_manager.position = "0,0"
