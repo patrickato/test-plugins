@@ -1,0 +1,11 @@
+# Example config for the "channel_occupancy" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library).
+
+main.plugins.channel_occupancy.enabled = true
+
+# Where cumulative per-channel counts are persisted (JSON).
+main.plugins.channel_occupancy.data_path = "/etc/pwnagotchi/channel_occupancy.json"
+
+# UI position "x,y" for the "ch:" busiest-channel readout.
+main.plugins.channel_occupancy.position = "0,0"

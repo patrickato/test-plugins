@@ -36,7 +36,7 @@ tested off-Pi.
 | P14 `thermal_predictor` | none | none | none | ✅ |
 | P18 `ha_mqtt` | `paho-mqtt` | reachable MQTT broker | none | |
 | P20 `mesh_vpn_presence` | none | `tailscale` **or** `wireguard-tools` | none | |
-| P21 `channel_occupancy` | none | none | none | |
+| P21 `channel_occupancy` | none | none | none | ✅ |
 | P24 `rtl433_ambient` | none | `rtl_433` binary | RTL-SDR | |
 | P25 `adsb_ambient` | none | `dump1090` (JSON feed) | RTL-SDR | |
 | P29 `offline_reader` | `libzim` *(or `kiwix-tools`)* | none | a `.zim` file | |
