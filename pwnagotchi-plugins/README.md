@@ -53,7 +53,7 @@ tested off-Pi.
 | P42 `wordlist_manager` | none | none | none | |
 | P43 `ble_console` | `bluezero` | BlueZ | BLE adapter | ✅ |
 | P44 `env_sensors` | `smbus2` + per-sensor libs | I²C enabled | I²C sensor(s) | ✅ |
-| P45 `auto_dim` | *(optional `smbus2`)* | backlight sysfs/GPIO | light sensor (optional) | |
+| P45 `auto_dim` | *(optional light-sensor lib)* | backlight sysfs/GPIO | light sensor (optional) | ✅ |
 | P46 `field_notes` | none | `gpsd` (optional) | GPS (optional) | ✅ |
 
 Each plugin also states its requirements in its module docstring and in a `Requires:` line

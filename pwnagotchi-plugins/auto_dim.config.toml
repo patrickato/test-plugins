@@ -1,0 +1,35 @@
+# Example config for the "auto_dim" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: a controllable backlight (sysfs /sys/class/backlight device, or a PWM GPIO pin).
+#   source="lux" also needs a light sensor + its library; otherwise use the time schedule.
+
+main.plugins.auto_dim.enabled = true
+
+# "time" (day/night schedule, needs no sensor) or "lux" (ambient light sensor).
+main.plugins.auto_dim.source = "time"
+
+# "sysfs" writes /sys/class/backlight/<dev>/brightness; "gpio" drives a PWM pin.
+main.plugins.auto_dim.method = "sysfs"
+
+# sysfs backlight directory. Leave empty to auto-detect the first device.
+main.plugins.auto_dim.backlight_path = ""
+
+# BCM pin for method="gpio".
+main.plugins.auto_dim.gpio_pin = 18
+
+# Brightness bounds (percent).
+main.plugins.auto_dim.min_brightness = 10
+main.plugins.auto_dim.max_brightness = 100
+
+# Lux mapping for source="lux": at/below lux_low -> min, at/above lux_high -> max.
+main.plugins.auto_dim.lux_low = 5
+main.plugins.auto_dim.lux_high = 300
+
+# Time schedule for source="time" (local hours).
+main.plugins.auto_dim.day_start = 8
+main.plugins.auto_dim.night_start = 22
+main.plugins.auto_dim.day_brightness = 100
+main.plugins.auto_dim.night_brightness = 20
+
+# UI position "x,y" for the "dim:" brightness readout.
+main.plugins.auto_dim.position = "0,0"
