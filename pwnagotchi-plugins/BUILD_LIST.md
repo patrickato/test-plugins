@@ -83,6 +83,15 @@ project's flagship because it's near-total whitespace.
 - **Hooks:** `on_ready`/`on_loaded`, one-shot UI card, web detail.
 - **Lift:** S · **Status:** planned · **Brainstorm ref:** #30
 
+### P36 — Plugin Conflict Referee  `conflict_referee`
+- **Purpose:** detect when two plugins fight over the display, GPIO pins, or `config.toml`
+  keys, and report exactly which plugins and which resource.
+- **Gap:** a huge share of "why is my screen/pin broken" problems are silent plugin
+  collisions with no tooling to spot them.
+- **Hooks:** `on_loaded`/`on_ready` (scan registered UI elements, claimed pins, watched
+  keys), web report, UI warning glyph.
+- **Lift:** M · **Status:** planned · **Added:** Round 2 (2026-09-24)
+
 ---
 
 ## Batch C — Power & thermal (beyond reading a UPS)
@@ -150,6 +159,14 @@ project's flagship because it's near-total whitespace.
 - **Hooks:** poll dump1090 JSON, `on_epoch`, UI/event trigger. **HW:** RTL-SDR + dump1090.
 - **Lift:** M · **Status:** planned · **Brainstorm ref:** #25
 
+### P38 — Signal Compass  `signal_compass`
+- **Purpose:** turn the RSSI trend of a selected BSSID into a warmer/colder "getting
+  closer" readout — useful for locating your own misplaced device or AP.
+- **Gap:** RSSI is shown as a raw number; nothing turns it into directional/proximity
+  guidance.
+- **Hooks:** `on_wifi_update`/`on_bcap_wifi_ap_new` (track target RSSI), UI meter, web view.
+- **Lift:** M · **Status:** planned · **Added:** Round 2 (2026-09-24)
+
 ---
 
 ## Batch F — Knowledge / data on-device
@@ -186,6 +203,28 @@ project's flagship because it's near-total whitespace.
 - **Gap:** no daily rollup surface.
 - **Hooks:** `on_epoch` (day boundary), render to PNG, optional notifier handoff.
 - **Lift:** M · **Status:** planned · **Brainstorm ref:** #35
+
+### P39 — Streak & Milestone Tracker  `streaks`
+- **Purpose:** track days alive, longest outing, most networks in a day, consecutive-day
+  streaks — the longevity stats that make people attached to the device.
+- **Gap:** `age` tracks raw totals; nothing surfaces streaks/records. Complements the
+  achievement engine (P34) but is its own lightweight records board.
+- **Hooks:** `on_epoch`/`on_handshake` (update counters), persistent store, UI record line,
+  web board.
+- **Lift:** S · **Status:** planned · **Added:** Round 2 (2026-09-24)
+
+---
+
+## Batch H — Display & UI integrity
+
+### P37 — E-ink Ghosting Manager  `eink_ghosting`
+- **Purpose:** schedule periodic full refreshes and budget partial updates on e-ink
+  displays to fight ghosting/burn-in, with configurable refresh cadence and hysteresis.
+- **Gap:** e-ink ghosting is a chronic, widely-complained-about problem with no clean
+  dedicated fix.
+- **Hooks:** `on_ui_update` (count partial updates), scheduled full-refresh trigger, config
+  for cadence per display model.
+- **Lift:** M · **Status:** planned · **Added:** Round 2 (2026-09-24)
 
 ---
 
