@@ -39,7 +39,7 @@ tested off-Pi.
 | P21 `channel_occupancy` | none | none | none | ✅ |
 | P24 `rtl433_ambient` | none | `rtl_433` binary | RTL-SDR | ✅ |
 | P25 `adsb_ambient` | none | `dump1090` (JSON feed) | RTL-SDR | ✅ |
-| P29 `offline_reader` | `libzim` *(or `kiwix-tools`)* | none | a `.zim` file | |
+| P29 `offline_reader` | `libzim` *(or `kiwix-tools`)* | none | a `.zim` file | ✅ |
 | P30 `boot_post` | none | none | none | ✅ |
 | P33 `circadian_faces` | none | none | none | ✅ |
 | P34 `achievements` | none | none | none | ✅ |

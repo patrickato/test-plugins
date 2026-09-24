@@ -52,9 +52,16 @@ pending for every plugin below.**
 - ✅ P37 `eink_ghosting` — 5 tests
 - ✅ P36 `conflict_referee` — 6 tests
 
-**Phases 1–6 complete (27 plugins, 188 tests green).**
-Next: Phase 7 — knowledge/delight (P42 wordlist_manager → P35 daily_digest → P34 achievements
-→ P29 offline_reader). Last phase!
+- ✅ P42 `wordlist_manager` — 7 tests
+- ✅ P35 `daily_digest` — 6 tests
+- ✅ P34 `achievements` — 9 tests
+- ✅ P29 `offline_reader` — 6 tests
+
+**🎉 ALL 31 PLUGINS COMPLETE — 216 off-Pi tests green.**
+
+Every plugin ships `.py` + `.config.toml` (with a `Requires:` line) + tests, and is listed
+in the README dependency table. **Off-Pi (source/CI) evidence only — physical Pi validation
+(display legibility, touch, real hardware, thermal behavior) is still pending for all of them.**
 
 ---
 

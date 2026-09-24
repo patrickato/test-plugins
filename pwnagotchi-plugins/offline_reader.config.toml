@@ -1,0 +1,13 @@
+# Example config for the "offline_reader" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: pip 'libzim' (or the 'kiwix-tools' package) to render articles + .zim files in
+#           zim_dir. Without libzim it still lists the files.
+#   sudo pip3 install libzim
+
+main.plugins.offline_reader.enabled = true
+
+# Directory holding your .zim libraries (download from https://library.kiwix.org/).
+main.plugins.offline_reader.zim_dir = "/root/zim"
+
+# UI position "x,y" for the "zim:" file-count readout.
+main.plugins.offline_reader.position = "0,0"
