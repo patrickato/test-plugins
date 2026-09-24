@@ -40,11 +40,11 @@ contracts. **Neither engine ships code inside a pack.**
   },
   "severity": "high",                        // high | warn | info
   "confidence": "high",                      // high (direct) | medium (derived) | low (log-inferred)
-  "signals": ["proc.wpa_supplicant_running", "iface.monitor_present"],
+  "signals": ["wifi.wpa_supplicant.running", "wifi.monitor.present"],
   "detect": {                                // boolean tree; leaves compare canonical keys
     "all": [
-      {"key": "proc.wpa_supplicant_running", "is": true},
-      {"key": "iface.monitor_present", "is": false}
+      {"key": "wifi.wpa_supplicant.running", "is": true},
+      {"key": "wifi.monitor.present", "is": false}
     ]
   },
   "symptom": "wpa_supplicant is holding the Wi-Fi interface",
@@ -54,7 +54,7 @@ contracts. **Neither engine ships code inside a pack.**
     "args": {"unit": "wpa_supplicant"},
     "tier": "safe",                          // safe | risky  (policy handle)
     "guard": "wpa_not_uplink",               // optional named safety guard (engine-provided)
-    "verify": {"key": "iface.monitor_present", "is": true},   // probation re-check
+    "verify": {"key": "wifi.monitor.present", "is": true},   // probation re-check
     "meta": {                                // optional richer attributes (v0.6 policy)
       "reversible": true, "destructive": false, "interrupts_service": true,
       "affects_connectivity": true, "needs_reboot": false
@@ -77,8 +77,10 @@ contracts. **Neither engine ships code inside a pack.**
 - Leaf: `{"key": "<canonical.key>", "<op>": <value>}` where `<op>` ∈
   `is` (strict equality, incl. booleans), `ge` (`>=`), `lt` (`<`), `gt` (`>`), `le` (`<=`),
   `contains` (substring / membership), `present` (key exists and is not null).
-- A leaf whose key is absent/`null` evaluates **false** (unknown ≠ match). This is what keeps
-  "unknown means unknown" mechanical.
+- Internally evaluation is tri-state: **true / false / unknown**. A missing/`null` signal is
+  `unknown`. Detection fires only on proven `true`; `false` and `unknown` are both non-matches.
+  Verification preserves `unknown`, so a remedy whose post-action signal disappears reports
+  `executed_verification_unknown` rather than claiming success or failure.
 
 ---
 
@@ -110,7 +112,7 @@ user packs from a directory (offline), then (v0.8) cached/opt-in-fetched communi
 
 ## 5. OpenAI review answers / v0.6-pre1 convergence
 
-### Canonical key namespace — proposed first cut
+### Canonical key namespace — ratified v1 first cut
 
 Prefer stable semantic names that Beast can also expose without inheriting PwnDoctor's internal
 collector layout.
@@ -210,3 +212,66 @@ Pack applicability should eventually include:
 
 v0.6-pre1 implements platform + version range only. More dimensions should be added when real
 compatibility packs need them, rather than guessing a premature schema.
+
+---
+
+## 6. Canonical key registry rules (ratified for v1)
+
+Claude + OpenAI convergence rule:
+
+1. Keys describe **meaning**, not the command/file/API used to collect them.
+2. Existing keys are stable once shipped in a public Condition Pack.
+3. A new collector should map into an existing semantic key when the meaning is the same.
+4. New keys should be added only when the information itself is new.
+5. Engine-private/raw collector fields may exist, but shared packs should reference only canonical keys.
+6. Dynamic service names use `service.<unit>.*`; do not create one top-level namespace per service.
+7. Pwnagotchi-specific concepts belong under `pwnagotchi.*`; generic Linux/Pi concepts stay under `system.*`, `storage.*`, `power.*`, `network.*` or `wifi.*`.
+
+### v1 canonical families
+
+`system.*`
+- `system.uptime_sec`
+- `system.memory.used_pct`
+- `system.swap.used_pct`
+- `system.temp.cpu_c`
+- `system.journal.bytes`
+
+`storage.*`
+- `storage.root.free_mb`
+- `storage.root.read_only`
+- `storage.sd.io_error_count`
+
+`power.*`
+- `power.undervoltage.current`
+- `power.undervoltage.occurred`
+- `power.throttled.current`
+
+`wifi.*`
+- `wifi.monitor.present`
+- `wifi.rfkill.blocked`
+- `wifi.wpa_supplicant.running`
+- `wifi.iface.configured`
+- `wifi.iface.present`
+
+`network.*`
+- `network.default_route.present`
+- `network.default_route.iface`
+- `network.dns.ok`
+
+`service.<name>.*`
+- `service.<name>.active`
+- `service.<name>.restart_count`
+
+`pwnagotchi.*`
+- `pwnagotchi.config.valid`
+- `pwnagotchi.config.debug`
+- `pwnagotchi.handshakes.writable`
+- `pwnagotchi.bettercap.reachable`
+
+### Compatibility aliases
+
+Engines may accept legacy/experimental aliases while packs are private or pre-release, but public packs should emit only the ratified v1 names. Aliases are migration aids, not parallel standards.
+
+### `signals` declaration
+
+For v1 the `signals` array is documentation/introspection metadata, while `detect` and `fix.verify` are authoritative expressions. A future validator may require that every expression key appears in `signals`, but the loader should not invent truth from that declaration.
