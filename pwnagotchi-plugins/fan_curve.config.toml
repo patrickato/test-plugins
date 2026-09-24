@@ -1,0 +1,27 @@
+# Example config for the "fan_curve" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: pip 'gpiozero' (or 'RPi.GPIO'); PWM available on the pin; a PWM-capable fan.
+#   sudo pip3 install gpiozero
+
+main.plugins.fan_curve.enabled = true
+
+# BCM pin driving the fan's PWM input.
+main.plugins.fan_curve.gpio_pin = 18
+
+# PWM frequency in Hz.
+main.plugins.fan_curve.pwm_freq = 100
+
+# Temperature -> duty curve as [tempC, duty%] points (interpolated between).
+main.plugins.fan_curve.curve = [[50, 0], [55, 40], [65, 70], [75, 100]]
+
+# Once on, never run slower than this (many fans stall below ~30%).
+main.plugins.fan_curve.min_duty = 30
+
+# Switch-off temperature is this many C below switch-on (anti-chatter hysteresis).
+main.plugins.fan_curve.hysteresis_c = 4
+
+# true for active-low fan circuits (inverts the duty output).
+main.plugins.fan_curve.invert = false
+
+# UI position "x,y" for the "fan:" duty readout.
+main.plugins.fan_curve.position = "0,0"

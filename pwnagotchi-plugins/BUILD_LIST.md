@@ -31,9 +31,14 @@ pending for every plugin below.**
 - ✅ P03 `crack_reconciler` — 6 tests
 - ✅ P04 `capture_retention` — 7 tests
 
-**Phase 1 + Phase 2 complete (10 plugins, 74 tests green).**
-Next: Phase 3 — P07 sd_wear → P06 doctor → P12 battery_historian → P14 thermal_predictor
-→ P13 fan_curve.
+- ✅ P07 `sd_wear` — 8 tests
+- ✅ P06 `doctor` — 7 tests
+- ✅ P12 `battery_historian` — 9 tests
+- ✅ P14 `thermal_predictor` — 6 tests
+- ✅ P13 `fan_curve` — 6 tests
+
+**Phases 1–3 complete (15 plugins, 110 tests green).**
+Next: Phase 4 — RF (P21 channel_occupancy → P38 signal_compass → P24 rtl433 → P25 adsb).
 
 ---
 
