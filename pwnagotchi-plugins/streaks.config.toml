@@ -1,0 +1,10 @@
+# Example config for the "streaks" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.streaks.enabled = true
+
+# Where longevity stats / records are persisted (JSON).
+main.plugins.streaks.data_path = "/etc/pwnagotchi/streaks.json"
+
+# UI position "x,y" for the "streak: Nd Ks" readout.
+main.plugins.streaks.position = "0,0"
