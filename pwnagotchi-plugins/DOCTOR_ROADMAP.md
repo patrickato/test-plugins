@@ -51,8 +51,8 @@ safe/reversible problems** and **gives step-by-step instructions for the rest**.
 
 Its whole design rests on one deliberate asymmetry:
 
-- **Sensing is broad and unlimited** — more visibility only ever helps. No downside to reading
-  more.
+- **Sensing is broad but bounded** — cheap local evidence can be read often; expensive,
+  network-active, privacy-sensitive or hardware-intrusive probes are scheduled/on-demand.
 - **Acting is narrow and gated** — every ability to *fix* is also an ability to *break*. So:
   allow-listed actions, evidence-confidence gates, verify-or-rollback, circuit breakers.
 
