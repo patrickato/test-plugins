@@ -55,7 +55,7 @@ tested off-Pi.
 | P44 `env_sensors` | `smbus2` + per-sensor libs | I²C enabled | I²C sensor(s) | ✅ |
 | P45 `auto_dim` | *(optional light-sensor lib)* | backlight sysfs/GPIO | light sensor (optional) | ✅ |
 | P46 `field_notes` | none | `gpsd` (optional) | GPS (optional) | ✅ |
-| P47 `deep_thoughts` | none | none | none | |
+| P47 `deep_thoughts` | none | none | none | ✅ |
 | P48 `happy_thoughts` | none | none | none | |
 | P49 `milestone_fireworks` | none | none | none | |
 | P50 `pet_quips` | none | none | none | |

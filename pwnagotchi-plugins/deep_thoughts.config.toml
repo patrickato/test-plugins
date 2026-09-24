@@ -1,0 +1,17 @@
+# Example config for the "deep_thoughts" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library). Purely cosmetic, offline.
+
+main.plugins.deep_thoughts.enabled = true
+
+# Seconds between thoughts.
+main.plugins.deep_thoughts.interval_secs = 45
+
+# Random order (false = sequential).
+main.plugins.deep_thoughts.random = true
+
+# Optional: path to your own pack (one thought per line; blank lines and # comments ignored).
+main.plugins.deep_thoughts.thoughts_file = ""
+
+# UI position "x,y" (text wraps at ~40 chars).
+main.plugins.deep_thoughts.position = "0,0"
