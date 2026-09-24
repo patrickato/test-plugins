@@ -1,0 +1,17 @@
+# Example config for the "eink_ghosting" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library). Intended for e-ink displays.
+
+main.plugins.eink_ghosting.enabled = true
+
+# Force a full refresh after this many partial updates...
+main.plugins.eink_ghosting.max_partials = 60
+
+# ...or after this many seconds, whichever comes first.
+main.plugins.eink_ghosting.max_interval_s = 600
+
+# Show the partials-since-last-full counter on the display.
+main.plugins.eink_ghosting.show_counter = true
+
+# UI position "x,y" for the "eink:" counter.
+main.plugins.eink_ghosting.position = "0,0"
