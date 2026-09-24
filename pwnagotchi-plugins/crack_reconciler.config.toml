@@ -1,0 +1,19 @@
+# Example config for the "crack_reconciler" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.crack_reconciler.enabled = true
+
+# Directory holding capture files.
+main.plugins.crack_reconciler.handshakes = "/root/handshakes"
+
+# Result files to ingest: wpa-sec "found" exports and/or a local hashcat potfile.
+main.plugins.crack_reconciler.potfiles = [
+  "/root/handshakes/wpa-sec.cracked.potfile",
+  "/root/hashcat.potfile",
+]
+
+# Write a <capture>.cracked sidecar for solved captures.
+main.plugins.crack_reconciler.write_sidecar = true
+
+# UI position "x,y" for the "solved: n/m" readout.
+main.plugins.crack_reconciler.position = "0,0"
