@@ -1,20 +1,32 @@
 # Example config for the "doctor" plugin.
 # Copy into /etc/pwnagotchi/config.toml and edit.
-# Requires: none (Python standard library; reads the Pwnagotchi log + /). Read-only.
+# Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl when
+#           present, all guarded). Auto-fix actions need root (Pwnagotchi already runs as root).
 
 main.plugins.doctor.enabled = true
 
-# Log file to scan (Jayofelony default shown).
+# Auto-fix posture:
+#   "off"  = diagnose only, never change anything
+#   "safe" = automatically apply low-risk, reversible fixes (restart a wedged service, unblock
+#            rfkill, fix the clock, reclaim disk from log bloat); riskier ones give instructions
+#   "all"  = also auto-apply riskier fixes (remount read-only /, quarantine a crashing plugin,
+#            restore a backed-up config). Use with care.
+main.plugins.doctor.autofix = "safe"
+
+# Run a full scan every N epochs (0 = only on startup and when you open the web page).
+main.plugins.doctor.scan_every = 30
+
+# Paths.
 main.plugins.doctor.log_path = "/etc/pwnagotchi/log/pwnagotchi.log"
+main.plugins.doctor.config_path = "/etc/pwnagotchi/config.toml"
+main.plugins.doctor.incident_path = "/etc/pwnagotchi/doctor_incidents.json"
 
-# How many trailing log lines to scan each run.
-main.plugins.doctor.log_lines = 400
-
-# Low-disk threshold (MB free on /).
+# Thresholds.
 main.plugins.doctor.min_free_mb = 200
-
-# High-temperature threshold (Celsius).
 main.plugins.doctor.max_temp_c = 80
 
-# UI position "x,y" for the "dr:" issue-count readout.
+# Services to check are active.
+main.plugins.doctor.services = ["pwnagotchi", "bettercap", "pwngrid-peer"]
+
+# UI position "x,y" for the "dr:" status (OK / healed / N!).
 main.plugins.doctor.position = "0,0"
