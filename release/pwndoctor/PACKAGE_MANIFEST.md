@@ -10,6 +10,7 @@ This file defines what will move from `test-plugins` into the standalone release
 - `pwnagotchi-plugins/doctor.d/` → `examples/doctor.d/`
 - `pwnagotchi-plugins/CONDITION_PACK_SCHEMA.md` → `docs/CONDITION_PACK_SCHEMA.md`
 - `pwnagotchi-plugins/DOCTOR_ROADMAP.md` → `docs/DEVELOPMENT_ROADMAP.md` (optional for public repo)
+- `pwnagotchi-plugins/DOCTOR_COMPATIBILITY_CONTRACT.md` → `docs/UPSTREAM_COMPATIBILITY_CONTRACT.md`
 - `pwnagotchi-plugins/tests/test_doctor.py` + required harness → `tests/`
 - repo `LICENSE` → `LICENSE`
 - `release/pwndoctor/*.md` → top-level/docs as appropriate
