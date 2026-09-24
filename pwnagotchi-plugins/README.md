@@ -42,7 +42,7 @@ tested off-Pi.
 | P29 `offline_reader` | `libzim` *(or `kiwix-tools`)* | none | a `.zim` file | |
 | P30 `boot_post` | none | none | none | ✅ |
 | P33 `circadian_faces` | none | none | none | ✅ |
-| P34 `achievements` | none | none | none | |
+| P34 `achievements` | none | none | none | ✅ |
 | P35 `daily_digest` | none *(Pillow ships already)* | none | none | ✅ |
 | P36 `conflict_referee` | none | none | none | ✅ |
 | P37 `eink_ghosting` | none | none | e-ink display | ✅ |

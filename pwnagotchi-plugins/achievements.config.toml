@@ -1,0 +1,11 @@
+# Example config for the "achievements" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library).
+
+main.plugins.achievements.enabled = true
+
+# Where unlocked achievements + lifetime stats are persisted (JSON).
+main.plugins.achievements.data_path = "/etc/pwnagotchi/achievements.json"
+
+# UI position "x,y" for the "ach:" unlocked/total readout.
+main.plugins.achievements.position = "0,0"
