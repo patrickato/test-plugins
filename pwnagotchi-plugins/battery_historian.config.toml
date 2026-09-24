@@ -1,0 +1,25 @@
+# Example config for the "battery_historian" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none required. Reads Linux power-supply sysfs (exposed by many UPS HAT drivers)
+#           or a file. Optional 'smbus2' only if you later add a direct-I2C reader.
+
+main.plugins.battery_historian.enabled = true
+
+# "sysfs" (default) reads /sys/class/power_supply/<name>/{capacity,status};
+# "file" reads a plain percentage from file_path.
+main.plugins.battery_historian.source = "sysfs"
+
+# sysfs power-supply name (e.g. "bat"). Leave empty to auto-detect the first Battery.
+main.plugins.battery_historian.power_supply = ""
+
+# For source="file": path to a file containing the battery percentage.
+main.plugins.battery_historian.file_path = ""
+
+# Where discharge-session history is persisted (JSON).
+main.plugins.battery_historian.data_path = "/etc/pwnagotchi/battery_historian.json"
+
+# Minimum % drop for a discharge session to count toward the learned runtime curve.
+main.plugins.battery_historian.min_drop_pct = 10
+
+# UI position "x,y" for the "bat:" readout.
+main.plugins.battery_historian.position = "0,0"
