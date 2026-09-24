@@ -29,7 +29,7 @@ tested off-Pi.
 | P03 `crack_reconciler` | none | none | none | ✅ |
 | P04 `capture_retention` | none | none | none | ✅ |
 | P05 `own_network_allowlist` | none | none | none | ✅ |
-| P06 `doctor` | none | none | none | |
+| P06 `doctor` | none | none | none | ✅ |
 | P07 `sd_wear` | none | none | none | ✅ |
 | P12 `battery_historian` | none *(optional `smbus2`)* | none | UPS/PiSugar (optional) | |
 | P13 `fan_curve` | `RPi.GPIO` or `gpiozero` | PWM enabled | PWM-capable fan | |

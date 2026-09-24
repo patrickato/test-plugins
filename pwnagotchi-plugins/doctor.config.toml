@@ -1,0 +1,20 @@
+# Example config for the "doctor" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library; reads the Pwnagotchi log + /). Read-only.
+
+main.plugins.doctor.enabled = true
+
+# Log file to scan (Jayofelony default shown).
+main.plugins.doctor.log_path = "/etc/pwnagotchi/log/pwnagotchi.log"
+
+# How many trailing log lines to scan each run.
+main.plugins.doctor.log_lines = 400
+
+# Low-disk threshold (MB free on /).
+main.plugins.doctor.min_free_mb = 200
+
+# High-temperature threshold (Celsius).
+main.plugins.doctor.max_temp_c = 80
+
+# UI position "x,y" for the "dr:" issue-count readout.
+main.plugins.doctor.position = "0,0"
