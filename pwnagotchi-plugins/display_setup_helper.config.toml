@@ -1,0 +1,11 @@
+# Example config for the "display_setup_helper" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (reads /boot config + /sys/class/graphics). Read-only advisor.
+
+main.plugins.display_setup_helper.enabled = true
+
+# Boot config path. Leave empty to auto-detect (/boot/firmware/config.txt or /boot/config.txt).
+main.plugins.display_setup_helper.config_path = ""
+
+# UI position "x,y" for the "disp:" detected-panel readout.
+main.plugins.display_setup_helper.position = "0,0"
