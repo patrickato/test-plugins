@@ -56,6 +56,15 @@ project's flagship because it's near-total whitespace.
 - **Hooks:** `on_wifi_update`, `on_handshake`, config-driven allowlist, UI marker.
 - **Lift:** S · **Status:** planned · **Brainstorm ref:** #5
 
+### P42 — Wordlist Manager  `wordlist_manager`
+- **Purpose:** manage/rotate/dedupe local wordlists for the cracking backends
+  (quickdic/hashcat), fetch from configured sources, report sizes/coverage. Supports
+  authorized cracking of the owner's own captures without being another cracker.
+- **Gap:** wordlist handling is manual and ad-hoc; no plugin curates them on-device.
+- **Hooks:** `on_internet_available` (fetch/refresh), web manager view, config for sources
+  and dedupe policy.
+- **Lift:** M · **Status:** planned · **Added:** Round 3 (2026-09-24)
+
 ---
 
 ## Batch B — Device health & self-repair
@@ -135,6 +144,14 @@ project's flagship because it's near-total whitespace.
 - **Hooks:** `on_loaded` (bring up), `on_internet_available`, UI status, web link.
 - **Lift:** M · **Status:** planned · **Brainstorm ref:** #20
 
+### P43 — Companion BLE Serial Console  `ble_console`
+- **Purpose:** expose status and a small set of safe, allow-listed commands over a BLE
+  UART service so a phone can reach the unit when there is no IP network at all.
+- **Gap:** remote status today assumes an IP link; nothing offers a no-network BLE path.
+- **Hooks:** `on_loaded` (start BLE service thread), `on_epoch` (refresh advertised status),
+  config for command allow-list and pairing. **HW:** BLE-capable adapter.
+- **Lift:** L · **Status:** planned · **Added:** Round 3 (2026-09-24)
+
 ---
 
 ## Batch E — Passive RF awareness (observe, never attack)
@@ -213,6 +230,13 @@ project's flagship because it's near-total whitespace.
   web board.
 - **Lift:** S · **Status:** planned · **Added:** Round 2 (2026-09-24)
 
+### P46 — Field Notes Annotator  `field_notes`
+- **Purpose:** attach a quick text note to the current session/location from the web UI or
+  a phone ("cool spot", "my house", "test rig") for later review alongside captures/tracks.
+- **Gap:** no way to annotate a session in the moment; context is lost by review time.
+- **Hooks:** web handler (add/list notes), `on_epoch` (stamp time/GPS), persistent store.
+- **Lift:** S · **Status:** planned · **Added:** Round 3 (2026-09-24)
+
 ---
 
 ## Batch H — Display & UI integrity
@@ -228,9 +252,53 @@ project's flagship because it's near-total whitespace.
 
 ---
 
+## Batch I — Sensors, radio & system
+
+### P40 — Multi-Adapter Role Manager  `multi_adapter`
+- **Purpose:** with two or more Wi-Fi adapters, cleanly assign roles (one monitor, one
+  uplink) and keep them from stepping on each other; surface which adapter has which role.
+- **Gap:** dual-adapter setups are common but role assignment is manual and fragile.
+- **Hooks:** `on_loaded` (enumerate/assign), `on_wifi_update`, UI role line, web control.
+  **HW:** 2+ Wi-Fi adapters.
+- **Lift:** L · **Status:** planned · **Added:** Round 3 (2026-09-24)
+
+### P41 — Auto-Timezone from GPS  `auto_timezone`
+- **Purpose:** set the system timezone from the current GPS location so timestamps and
+  time-of-day features stay correct while traveling.
+- **Gap:** no plugin syncs TZ to location; travelling units log in the wrong local time.
+- **Hooks:** `on_epoch` (check fix, resolve TZ, apply), config for manual override.
+  **HW/Dep:** GPS + offline lat/lon→TZ lookup.
+- **Lift:** S · **Status:** planned · **Added:** Round 3 (2026-09-24)
+
+### P44 — Environmental Sensor Logger  `env_sensors`
+- **Purpose:** log real ambient conditions (temperature, humidity, pressure, gas/air
+  quality, lux) from attached sensors — actual field weather, not CPU temp. Support
+  **multiple sensor types** behind one driver interface (e.g. BME280/BME680, DHT22,
+  SHT31, TSL2591), each toggled and addressed in config.
+- **Gap:** `memtemp` reads the SoC only; nothing logs the surrounding environment, and no
+  plugin abstracts several sensor chips under one config.
+- **Hooks:** `on_epoch` (sample enabled sensors), UI readout, web trend, config selecting
+  sensor type(s), I2C address, and sample cadence per sensor. **HW:** I2C sensors.
+- **Lift:** L · **Status:** planned · **Added:** Round 3 (2026-09-24)
+
+### P45 — Ambient Light Auto-Dim  `auto_dim`
+- **Purpose:** dim or blank the display based on measured ambient light (or fall back to
+  a time schedule) to save power and reduce glare.
+- **Gap:** brightness is static; no light-reactive control exists.
+- **Hooks:** `on_ui_update`/`on_epoch` (read lux, adjust backlight), config for thresholds
+  and time fallback. **HW:** light sensor (optional; time fallback otherwise).
+- **Lift:** M · **Status:** planned · **Added:** Round 3 (2026-09-24)
+
+---
+
 ## Cross-cutting decisions to iron out (applies to most plugins)
 - Shared storage location & format (SQLite vs JSON) under `/etc/pwnagotchi/` vs
   `/var/lib/`.
+- **Per-plugin config:** Pwnagotchi merges plugin settings into the single
+  `/etc/pwnagotchi/config.toml` under `main.plugins.<name>.*`. Each plugin ships its own
+  documented example config snippet (a `config.toml` block with sane defaults) beside its
+  source, which the installer/user pastes into the main file. We keep one example per
+  plugin so options are discoverable and copy-pasteable.
 - Common UI placement conventions so plugins don't collide on the small display.
 - A shared, optional notifier seam (so P06/P07/P35 etc. can push via one path).
 - Packaging: one repo of independent plugins vs a small shared support module.
