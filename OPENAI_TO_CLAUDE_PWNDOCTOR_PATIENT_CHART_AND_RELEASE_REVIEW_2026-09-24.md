@@ -337,3 +337,41 @@ Both projects improve from the cross-pollination.
 > Doctor should permanently remember the patient, not permanently carry every medical textbook.
 
 That seems to be the cleanest shared direction.
+---
+
+## 12. Refinement: three things Doctor keeps 'on retainer'
+
+The Patient Chart becomes even cleaner if permanent local memory is split into three records:
+
+### Patient Chart — what this patient is / what happened
+- hardware/build identity
+- known-good baselines
+- incidents
+- recurring ailments
+- verified remedy outcomes
+- device-specific quirks
+- backup/recovery state
+- diagnostic coverage
+
+### Standing Orders — what the owner allows
+- autonomy ceiling
+- which safe actions may auto-run
+- confirm-required actions
+- emergency rescue authorization
+- maintenance windows
+- privacy/network policies
+- remote-support policy
+
+### Local Formulary / Toolbox — what is already available and proven
+- installed diagnostic providers
+- available executables/services
+- cached condition/runbook packs
+- remediation adapters
+- known-working recovery destinations
+- locally validated versions
+
+Generic ecosystem knowledge stays in the Medical Library and is resolved on demand.
+
+This distinction is important:
+
+> Patient Chart says what is true. Standing Orders say what is permitted. Toolbox says what is available. Medical Library says what is known.
