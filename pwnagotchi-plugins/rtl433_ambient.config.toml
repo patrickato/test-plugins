@@ -1,0 +1,18 @@
+# Example config for the "rtl433_ambient" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: the 'rtl_433' binary on PATH and an RTL-SDR dongle.
+#   sudo apt install rtl-433    (package name varies; or build from source)
+
+main.plugins.rtl433_ambient.enabled = true
+
+# Path/name of the rtl_433 binary.
+main.plugins.rtl433_ambient.rtl_433_bin = "rtl_433"
+
+# Extra rtl_433 CLI args, e.g. tune a frequency or restrict decoders.
+main.plugins.rtl433_ambient.extra_args = []
+
+# Cap on distinct devices tracked in memory.
+main.plugins.rtl433_ambient.max_devices = 200
+
+# UI position "x,y" for the "433:" device-count readout.
+main.plugins.rtl433_ambient.position = "0,0"
