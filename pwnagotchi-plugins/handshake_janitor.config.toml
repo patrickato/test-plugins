@@ -1,5 +1,6 @@
 # Example config for the "handshake_janitor" plugin.
 # Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library; Pillow already ships with Pwnagotchi).
 
 main.plugins.handshake_janitor.enabled = true
 

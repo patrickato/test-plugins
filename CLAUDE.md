@@ -32,9 +32,18 @@ not from memory. Key points:
 A plugin isn't done until it has:
 1. `<name>.py` — the plugin, matching the real API and house rules above.
 2. `<name>.config.toml` — example config block documenting **every** option + default
-   (Pwnagotchi merges these into the single `/etc/pwnagotchi/config.toml`).
+   (Pwnagotchi merges these into the single `/etc/pwnagotchi/config.toml`). The header must
+   include a `# Requires:` line.
 3. `tests/test_<name>.py` — off-Pi unit test using the fakes in `tests/conftest.py`.
 4. A short usage note (README section or header docstring): what it does, options, hardware.
+
+## Documenting dependencies (required)
+Any pip package, system binary/service, or hardware a plugin needs goes in **all three**:
+- the plugin's module docstring (an `Options`/notes block already there),
+- a `# Requires:` line at the top of its `config.toml`, and
+- the Dependencies table in `pwnagotchi-plugins/README.md` (flip the "Built" mark to ✅).
+If a plugin needs nothing beyond the stdlib (+ Pillow/numpy, which ship with Pwnagotchi),
+say `Requires: none` explicitly. Keep optional deps clearly marked "optional".
 
 ## Testing
 - Off-Pi harness lives in `pwnagotchi-plugins/tests/conftest.py` — it registers a fake

@@ -1,5 +1,6 @@
 # Example config for the "auto_timezone" plugin.
 # Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: system 'timedatectl' + gpsd for auto-detect; optional pip 'timezonefinder' for precise IANA zones.
 #
 # For precise IANA zones install timezonefinder on the Pi:
 #   sudo pip3 install timezonefinder

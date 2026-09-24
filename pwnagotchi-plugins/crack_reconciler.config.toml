@@ -1,5 +1,6 @@
 # Example config for the "crack_reconciler" plugin.
 # Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library; Pillow already ships with Pwnagotchi).
 
 main.plugins.crack_reconciler.enabled = true
 

@@ -1,5 +1,6 @@
 # Example config for the "field_notes" plugin.
 # Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none for notes; optional gpsd running for geo-stamping.
 
 main.plugins.field_notes.enabled = true
 

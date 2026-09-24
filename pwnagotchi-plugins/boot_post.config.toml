@@ -1,5 +1,6 @@
 # Example config for the "boot_post" plugin.
 # Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library; Pillow already ships with Pwnagotchi).
 
 main.plugins.boot_post.enabled = true
 
