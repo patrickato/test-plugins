@@ -37,8 +37,13 @@ pending for every plugin below.**
 - ✅ P14 `thermal_predictor` — 6 tests
 - ✅ P13 `fan_curve` — 6 tests
 
-**Phases 1–3 complete (15 plugins, 110 tests green).**
-Next: Phase 4 — RF (P21 channel_occupancy → P38 signal_compass → P24 rtl433 → P25 adsb).
+- ✅ P21 `channel_occupancy` — 5 tests
+- ✅ P38 `signal_compass` — 7 tests
+- ✅ P24 `rtl433_ambient` — 7 tests
+- ✅ P25 `adsb_ambient` — 6 tests
+
+**Phases 1–4 complete (19 plugins, 135 tests green).**
+Next: Phase 5 — connectivity (P18 ha_mqtt → P20 mesh_vpn_presence → P43 ble_console).
 
 ---
 

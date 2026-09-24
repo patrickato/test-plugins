@@ -1,0 +1,19 @@
+# Example config for the "adsb_ambient" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: a running dump1090 serving aircraft.json + an RTL-SDR on 1090 MHz.
+#   dump1090-fa default: http://127.0.0.1:8080/data/aircraft.json
+#   dump1090-mutability:  http://127.0.0.1:8080/dump1090/data/aircraft.json
+
+main.plugins.adsb_ambient.enabled = true
+
+# dump1090 aircraft.json URL.
+main.plugins.adsb_ambient.url = "http://127.0.0.1:8080/data/aircraft.json"
+
+# Minimum seconds between polls.
+main.plugins.adsb_ambient.interval_secs = 15
+
+# Cap on distinct aircraft remembered this session.
+main.plugins.adsb_ambient.max_seen = 5000
+
+# UI position "x,y" for the "adsb:" overhead-count readout.
+main.plugins.adsb_ambient.position = "0,0"
