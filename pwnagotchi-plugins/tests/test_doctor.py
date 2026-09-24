@@ -932,3 +932,51 @@ def test_plugin_scan_queues_confirm_then_force_applies(load_plugin, tmp_path):
     assert ["systemctl", "restart", "pwngrid-peer"] in calls
     pg2 = [f for f in res2["findings"] if f["id"] == "pwngrid_down"][0]
     assert pg2["outcome"] == "fixed"
+
+
+# ========================================================================================
+# v0.6-pre3 — bundled/external Condition Pack trust boundary + provenance
+# ========================================================================================
+
+def test_condition_pack_loader_records_sha_and_source_class(tmp_path):
+    pack = _condition_pack()
+    raw = json.dumps(pack, sort_keys=True).encode()
+    path = tmp_path / "x.json"
+    path.write_bytes(raw)
+    conds, errors = doc.load_condition_packs(str(tmp_path), source_class="external")
+    assert errors == [] and len(conds) == 1
+    prov = conds[0]["provenance"]
+    assert prov["source_class"] == "external"
+    assert prov["source"] == "test"  # explicit pack provenance is preserved
+    assert prov["sha256"] == __import__("hashlib").sha256(raw).hexdigest()
+
+
+def test_bundled_pack_can_keep_existing_allowlisted_remedy(tmp_path):
+    pack = _condition_pack(
+        id="wifi.bundled_rfkill",
+        signals=["wifi.rfkill.blocked"],
+        detect={"key": "wifi.rfkill.blocked", "is": True},
+        fix={"action": "wifi.rfkill_unblock", "tier": "safe",
+             "verify": {"key": "wifi.rfkill.blocked", "is": False}},
+    )
+    (tmp_path / "bundled.json").write_text(json.dumps(pack))
+    conds, errors = doc.load_condition_packs(
+        str(tmp_path), allow_remedies=True, source_class="bundled")
+    assert errors == [] and len(conds) == 1
+    assert conds[0]["fix"]["action"] == "rfkill_unblock"
+    assert conds[0]["provenance"]["source_class"] == "bundled"
+
+
+def test_external_pack_same_remedy_stays_explain_only_by_default(tmp_path):
+    pack = _condition_pack(
+        id="wifi.external_rfkill",
+        signals=["wifi.rfkill.blocked"],
+        detect={"key": "wifi.rfkill.blocked", "is": True},
+        fix={"action": "wifi.rfkill_unblock", "tier": "safe",
+             "verify": {"key": "wifi.rfkill.blocked", "is": False}},
+    )
+    (tmp_path / "external.json").write_text(json.dumps(pack))
+    conds, errors = doc.load_condition_packs(str(tmp_path), source_class="external")
+    assert errors == [] and len(conds) == 1
+    assert conds[0]["fix"] is None
+    assert any("explain-only" in line for line in conds[0]["howto"])
