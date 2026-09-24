@@ -1,0 +1,16 @@
+# Example config for the "plugin_template" plugin.
+#
+# Pwnagotchi keeps ALL plugin settings in the single /etc/pwnagotchi/config.toml under
+# main.plugins.<name>.*  — there is no separate per-plugin file loaded at runtime. Copy the
+# block below into that file (rename "plugin_template" to your plugin's name) and adjust.
+
+main.plugins.plugin_template.enabled = true
+
+# Label shown on the display (short — screen space is tight).
+main.plugins.plugin_template.label = "TMPL"
+
+# UI position as "x,y" for the reference 480x320 / e-ink layouts.
+main.plugins.plugin_template.position = "0,0"
+
+# Extra logging.
+main.plugins.plugin_template.verbose = false
