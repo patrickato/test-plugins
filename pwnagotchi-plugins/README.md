@@ -60,7 +60,7 @@ tested off-Pi.
 | P49 `milestone_fireworks` | none | none | none | ✅ |
 | P50 `pet_quips` | none | none | none | ✅ |
 | P51 `display_setup_helper` | none | none | none | ✅ |
-| P52 `why_no_handshakes` | none | `iw`/`ip` (usually present) | none | |
+| P52 `why_no_handshakes` | none | `iw`/`ip` (usually present) | none | ✅ |
 | P53 `captive_portal` | none | none | none | |
 | P54 `stat_source_bridge` | none | Korrie71 Theme Manager installed | none | |
 

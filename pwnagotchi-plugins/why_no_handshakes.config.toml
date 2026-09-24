@@ -1,0 +1,11 @@
+# Example config for the "why_no_handshakes" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (uses 'iw'/'ip', usually present). Read-only troubleshooter.
+
+main.plugins.why_no_handshakes.enabled = true
+
+# Capture directory to count existing handshakes in.
+main.plugins.why_no_handshakes.handshakes = "/root/handshakes"
+
+# UI position "x,y" for the "hs?:" issue-count readout.
+main.plugins.why_no_handshakes.position = "0,0"
