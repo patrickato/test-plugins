@@ -30,3 +30,17 @@ Release documentation should distinguish:
 - physically tested on a named Pi/image;
 - community reported;
 - unknown/unverified.
+## Compatibility fingerprint
+
+PwnDoctor stores a privacy-light compatibility fingerprint in the Patient Chart:
+- Pwnagotchi version;
+- Python version;
+- architecture;
+- kernel;
+- OS ID/version/build ID when available.
+
+It intentionally excludes hostnames, MAC addresses, SSIDs, IP addresses, GPS/location and owner identity.
+
+This fingerprint lets a future release distinguish `known/validated`, `community-reported`, `unknown`, and `known-incompatible` environments without pretending that a successful import means full compatibility.
+
+See `UPSTREAM_COMPATIBILITY_CONTRACT.md` in the standalone package for the full policy.
