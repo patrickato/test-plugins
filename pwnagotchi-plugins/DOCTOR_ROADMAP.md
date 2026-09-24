@@ -311,16 +311,16 @@ patching the engine. Signals are referenced by canonical key.
   "id": "wifi.wpa_supplicant_hijack",
   "severity": "high",
   "confidence": "high",
-  "signals": ["proc.wpa_supplicant_running", "iface.monitor_present"],
+  "signals": ["wifi.wpa_supplicant.running", "wifi.monitor.present"],
   "detect": {"all": [
-    {"key": "proc.wpa_supplicant_running", "is": true},
-    {"key": "iface.monitor_present", "is": false}
+    {"key": "wifi.wpa_supplicant.running", "is": true},
+    {"key": "wifi.monitor.present", "is": false}
   ]},
   "symptom": "wpa_supplicant is holding the Wi-Fi interface",
   "cause": "wpa_supplicant grabbed the adapter, so monitor mode / capture can't start",
-  "fix": {"action": "service.stop", "args": {"unit": "wpa_supplicant"},
+  "fix": {"action": "service.stop_wpa_supplicant", "args": {"service": "wpa_supplicant"},
           "tier": "safe", "reversible": true,
-          "verify": {"key": "iface.monitor_present", "is": true}},
+          "verify": {"key": "wifi.monitor.present", "is": true}},
   "howto": ["sudo systemctl stop wpa_supplicant",
             "Confirm iw dev shows a 'type monitor' interface."],
   "causal_chain": ["wifi.no_monitor"]
