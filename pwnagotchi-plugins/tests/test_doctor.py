@@ -1085,3 +1085,47 @@ def test_plugin_loads_bundled_conditions(load_plugin, tmp_path):
 def test_migrated_conditions_clean_on_healthy_signals():
     # nothing migrated should fire on a clean device
     assert not (_MIGRATED_IDS & {f["id"] for f in _diag(_clean())})
+
+
+# ========================================================================================
+# v0.6-pre4 — compatibility fingerprint
+# ========================================================================================
+
+def test_parse_os_release():
+    text = 'ID=debian\nVERSION_ID="13"\nBUILD_ID=20260924\n# comment\n'
+    out = doc.parse_os_release(text)
+    assert out["ID"] == "debian"
+    assert out["VERSION_ID"] == "13"
+    assert out["BUILD_ID"] == "20260924"
+
+
+def test_compatibility_fingerprint_shape(monkeypatch):
+    monkeypatch.setattr(doc.platform, "machine", lambda: "aarch64")
+    monkeypatch.setattr(doc.platform, "release", lambda: "6.12-test")
+    fp = doc.compatibility_fingerprint(
+        'ID=debian\nVERSION_ID="13"\nIMAGE_ID=pwnagotchi-test\n'
+    )
+    assert fp["architecture"] == "aarch64"
+    assert fp["kernel"] == "6.12-test"
+    assert fp["os_id"] == "debian"
+    assert fp["os_version_id"] == "13"
+    assert fp["os_build_id"] == "pwnagotchi-test"
+    assert "python_version" in fp
+    assert "pwnagotchi_version" in fp
+
+
+def test_patient_chart_identity_includes_compatibility_fields(monkeypatch, tmp_path):
+    monkeypatch.setattr(doc, "compatibility_fingerprint", lambda os_release_text=None: {
+        "pwnagotchi_version": "2.9.5.9",
+        "python_version": "3.13.0",
+        "architecture": "aarch64",
+        "kernel": "6.12",
+        "os_id": "debian",
+        "os_version_id": "13",
+        "os_build_id": "image-x",
+    })
+    ident = doc.PatientChart.identity_from({"iface": {}, "services": {}})
+    assert ident["pwnagotchi_version"] == "2.9.5.9"
+    assert ident["python_version"] == "3.13.0"
+    assert ident["os_id"] == "debian"
+    assert ident["os_build_id"] == "image-x"
