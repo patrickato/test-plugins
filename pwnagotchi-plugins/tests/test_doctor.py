@@ -782,7 +782,7 @@ def test_pack_fix_verify_missing_signal_is_unknown_not_success():
         lambda c: None, doc.CircuitBreaker(), {},
         recollect=lambda: {}, now=1,
     )
-    hit = [f for f in out if f["id"] == "wifi.rfkill_pack_test"][0]
+    hit = [f for f in out if f["id"] == "system.pack_verify_test"][0]
     assert hit["outcome"] == "executed_verification_unknown"
 
 
@@ -793,7 +793,7 @@ def test_pack_fix_verify_false_is_failure():
         lambda c: None, doc.CircuitBreaker(), {},
         recollect=lambda: {"rfkill_blocked": True}, now=1,
     )
-    hit = [f for f in out if f["id"] == "wifi.rfkill_pack_test"][0]
+    hit = [f for f in out if f["id"] == "system.pack_verify_test"][0]
     assert hit["outcome"] == "fix_failed"
 
 
