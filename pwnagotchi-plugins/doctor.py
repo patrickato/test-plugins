@@ -840,7 +840,12 @@ def build_causal(finding_ids):
 # ======================================================================================
 def diagnose(signals, extra_conditions=None):
     findings = []
+    seen = set()
+    # Built-ins first so a data pack can never shadow (redefine) a core condition id.
     for c in list(CONDITIONS) + list(extra_conditions or []):
+        if c["id"] in seen:
+            continue
+        seen.add(c["id"])
         try:
             hit = c["detect"](signals)
         except Exception:

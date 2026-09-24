@@ -691,3 +691,27 @@ def test_plugin_loads_local_pack_and_patient_chart(load_plugin, tmp_path):
     assert len(p._pack_conditions) == 1
     assert p._pack_errors == []
     assert isinstance(p._patient, doc.PatientChart) or p._patient.__class__.__name__ == "PatientChart"
+
+
+# ---- pack integration hardening (Claude, on top of OpenAI v0.6-pre1) --------------------
+def test_builtin_condition_wins_over_pack_with_same_id():
+    # a pack tries to redefine a core id; the built-in must take precedence
+    shadow = doc.condition_from_pack(_condition_pack(
+        id="rfkill_blocked", severity="info", confidence="low",
+        symptom="shadow attempt", detect={"key": "system.memory.used_pct", "ge": 0}))
+    s = _clean(); s["rfkill_blocked"] = True
+    hits = [f for f in doc.diagnose(s, extra_conditions=[shadow]) if f["id"] == "rfkill_blocked"]
+    assert len(hits) == 1                      # not duplicated
+    assert hits[0]["symptom"] != "shadow attempt"   # the built-in, not the pack
+
+
+def test_shipped_example_pack_loads_and_detects():
+    example_dir = str(ROOT / "doctor.d")
+    conds, errors = doc.load_condition_packs(example_dir)
+    assert errors == []
+    ids = {c["id"] for c in conds}
+    assert "system.memory_pressure_warn" in ids
+    # it fires as an early (info) warning below the built-in low_memory (92%) threshold
+    s = _clean(); s["mem_pct"] = 88
+    found = {f["id"] for f in doc.diagnose(s, extra_conditions=conds)}
+    assert "system.memory_pressure_warn" in found and "low_memory" not in found

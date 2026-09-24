@@ -3,6 +3,8 @@ name: PwnDoctor collaboration tests
 on:
   push:
     branches:
+      - "main"
+      - "claude/happy-newton-60zxt8"
       - "openai/pwndoctor-v0.6-collab"
   pull_request:
     paths:

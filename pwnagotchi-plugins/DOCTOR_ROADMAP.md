@@ -1,14 +1,24 @@
 # Doctor Plugin — Design Notes & Roadmap
 
-**Plugin:** `doctor` (P06) · **Current version:** v0.5.0 · **Last updated:** 2026-09-24
+**Plugin:** `doctor` (P06) · **Current version:** v0.6.0-pre1 · **Last updated:** 2026-09-24
 **Scope:** stock Pwnagotchi only (this is *not* the Beastagotchi Doctor; see §9 for the link).
 **Status caveat:** everything below is source/CI reasoning + off-Pi tests. **Physical Pi
 validation of the auto-fix effectors is still pending.**
 **Collaboration:** this is now a Claude + OpenAI (ChatGPT) joint effort toward a public
-Pwnagotchi release. Cross-notes live at repo root: ChatGPT's `OPENAI_TO_CLAUDE_*` and
-`OPENAI_CROSSPOLLINATION_*` (currently on `main`), and Claude's reply `CLAUDE_TO_OPENAI_*` (on
-the working branch, co-locating on merge). The shared interop contract is
+Pwnagotchi release. Cross-notes live at repo root (`OPENAI_TO_CLAUDE_*`,
+`OPENAI_CROSSPOLLINATION_*`, `CLAUDE_TO_OPENAI_*`). The shared interop contract is
 `CONDITION_PACK_SCHEMA.md` (this folder).
+
+**Division of labor (by demonstrated strengths):**
+- **ChatGPT owns** the spec / data-model / security seams: Condition Pack schema evolution +
+  loader hardening, Patient Chart evolution (incl. chronic/recurrence memory), canonical-key
+  stewardship, guard *intent* vocabulary, and the future provenance/signing design (v0.8).
+- **Claude owns** integration / content / release: migrating built-in conditions → JSON packs,
+  the `ACTION_META`→policy engine, collectors/effectors + new ailments, the incident/verify
+  loop, test coverage, plugin lifecycle/UI, CI + release engineering, and the physical-validation
+  checklist. Offline-first is a Claude product decision.
+- **Shared:** `CONDITION_PACK_SCHEMA.md` + the canonical-key naming pass; each reviews the
+  other's changes before they land in `doctor.py`.
 
 This document is the single pick-up point for the Doctor. It captures what it is now, the
 design principles, and every idea/recommendation for where it goes next, so any contributor
@@ -55,7 +65,25 @@ Growth happens on four axes plus one structural idea:
 
 ---
 
-## 2. Current state (v0.5.0)
+## 2. Current state (v0.6.0-pre1)
+
+**New in v0.6-pre1 (OpenAI/ChatGPT contribution, reviewed + integrated by Claude):**
+- **Condition Pack v1 runtime** (`canonicalize_signals`, `eval_condition_expr`,
+  `validate_condition_pack`, `pack_applies`, `condition_from_pack`, `load_condition_packs`):
+  data-only boolean grammar over a first canonical namespace cut; bounded local/offline loader
+  (`condition_dir`, default `/etc/pwnagotchi/doctor.d`, ≤128 packs / ≤128 KB each); packs are
+  **explain-only by default** (`allow_pack_remedies=false`), and even when enabled can only call
+  actions already in the allow-list — a downloaded pack gains **zero** execution authority.
+- **Patient Chart v1** (`PatientChart`, default `/var/lib/pwnagotchi/doctor/patient.json`):
+  bounded device identity + coverage + last status + known-good summary + a capped remedy-outcome
+  history; atomic writes, chmod 600, **writes only on meaningful change** (SD-wear discipline).
+- Web status line now shows autonomy, dry-run, loaded pack count, and Patient Chart coverage.
+- **Claude follow-ups on top:** built-ins take precedence over same-id packs (a pack can't shadow
+  a core condition); a shipped example pack (`doctor.d/system.memory_pressure_warn.json`) proves
+  the loader end-to-end; CI broadened to run on all three working branches.
+- Tests: **61** off-Pi unit tests (full repo suite green).
+
+### Baseline carried from v0.5.0
 
 **New in v0.5 (won't-work ailment pack + safety hardening):**
 - Conditions added: `wpa_supplicant_hijack` (+ uplink-safe stop), `iface_mismatch`,
@@ -209,10 +237,10 @@ Chart move up to v0.6** (don't accumulate more hard-coded conditions before the 
   hijack (+ uplink-safe stop), interface mismatch, journald bloat (+ vacuum), debug-log-level;
   verification truth; persistent circuit breaker; media/uplink guards; autonomy dial + dry-run
   + per-condition opt-out + live reload.
-- **v0.6 — Data-driven brain + memory:** condition-pack schema v1 + loader (refactor the
-  built-in conditions into packs; `CONDITION_PACK_SCHEMA.md`); richer **action metadata**
-  drives policy (extend the `ACTION_META` seam); **Patient Chart v1** (bounded persistent
-  device identity + incident/remedy history + coverage).
+- **v0.6 — Data-driven brain + memory** *(pre1 landed)*: condition-pack schema v1 + loader
+  ✅ (ChatGPT); **Patient Chart v1** ✅ (ChatGPT); **remaining for v0.6 final:** refactor the
+  built-in conditions into JSON packs (Claude), richer **action metadata drives policy** (extend
+  the `ACTION_META` seam → Claude), chronic/recurrence counters in the Chart (ChatGPT).
 - **v0.7 — Learn + explain:** recurrence/flap escalation; remedy-efficacy ranking (ranking
   only — never expands authority); **one-click sanitized support bundle**; plain-language
   narrative. (Confirm-required tier lands here too.)
@@ -303,10 +331,10 @@ schema is the real interop opportunity between the two projects.
 - [x] **v0.5 pack shipped** — reboot-loop, wpa_supplicant hijack (+ uplink-safe stop), iface
       mismatch, journald bloat (+ vacuum), debug-log-level; verification truth; persistent
       breaker; guards; autonomy dial + dry-run + opt-out + live reload. 50 tests.
-- [ ] **v0.6 next:** author `CONDITION_PACK_SCHEMA.md` v1 loader and refactor the built-in
-      conditions into packs; extend `ACTION_META` to drive policy; build **Patient Chart v1**
-      (bounded).
-- [ ] Coordinate with ChatGPT via the root cross-notes + `CONDITION_PACK_SCHEMA.md`; ChatGPT
-      reviews / may contribute code (trusted collaborator, still reviewed like a teammate's PR).
+- [x] **v0.6-pre1 landed:** Condition Pack v1 runtime + Patient Chart v1 (ChatGPT), reviewed +
+      integrated by Claude; built-in-wins guard, example pack, broadened CI (Claude). 61 tests.
+- [ ] **v0.6 final:** do the joint canonical-key naming pass, then Claude migrates the built-in
+      conditions into JSON packs and promotes `ACTION_META` to drive policy; ChatGPT adds
+      chronic/recurrence counters to the Patient Chart.
 - [ ] Toward RC: wire the confirm-required tier (v0.7), support bundle, then physical Pi
       validation (only the owner can do this — a scripted checklist ships with v1.0 RC).
