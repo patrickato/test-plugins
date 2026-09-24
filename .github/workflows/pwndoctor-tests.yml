@@ -12,6 +12,8 @@ on:
       - "pwnagotchi-plugins/doctor.config.toml"
       - "pwnagotchi-plugins/CONDITION_PACK_SCHEMA.md"
       - "pwnagotchi-plugins/tests/**"
+      - "pwnagotchi-plugins/doctor_packs/**"
+      - "release/pwndoctor/**"
       - ".github/workflows/pwndoctor-tests.yml"
 
 jobs:
@@ -28,3 +30,15 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q
+
+  release-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Assemble standalone PwnDoctor package
+        run: python release/pwndoctor/build_release.py --output /tmp/pwndoctor-dist
+      - name: Inspect assembled package
+        run: find /tmp/pwndoctor-dist -maxdepth 3 -type f -print | sort
