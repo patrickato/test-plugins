@@ -501,7 +501,8 @@ def condition_from_pack(pack, *, allow_remedy=False):
 
 
 def load_condition_packs(directory, *, allow_remedies=False, max_packs=128,
-                         max_bytes=128 * 1024, platform_name="pwnagotchi", version=None):
+                         max_bytes=128 * 1024, platform_name="pwnagotchi", version=None,
+                         source_class="external"):
     """Bounded local/offline loader. Returns (runtime_conditions, errors)."""
     conditions, errors = [], []
     if not directory or not os.path.isdir(directory):
@@ -515,8 +516,16 @@ def load_condition_packs(directory, *, allow_remedies=False, max_packs=128,
         try:
             if os.path.getsize(pack_path) > max_bytes:
                 raise ValueError("pack exceeds %d byte limit" % max_bytes)
-            with open(pack_path, "rt", encoding="utf-8") as fp:
-                pack = json.load(fp)
+            with open(pack_path, "rb") as fp:
+                raw = fp.read()
+            digest = hashlib.sha256(raw).hexdigest()
+            pack = json.loads(raw.decode("utf-8"))
+            pack = dict(pack)
+            provenance = dict(pack.get("provenance") or {})
+            provenance.setdefault("source", name)
+            provenance["source_class"] = source_class
+            provenance["sha256"] = digest
+            pack["provenance"] = provenance
             schema_errors = validate_condition_pack(pack)
             if schema_errors:
                 raise ValueError("; ".join(schema_errors))
@@ -1430,6 +1439,8 @@ class Doctor(plugins.Plugin):
         self._history = []
         self._breaker_path = None
         self._patient = None
+        self._bundled_conditions = []
+        self._external_conditions = []
         self._pack_conditions = []
         self._pack_errors = []
 
@@ -1483,9 +1494,26 @@ class Doctor(plugins.Plugin):
 
     def _reload_condition_packs(self):
         version = getattr(pwnagotchi, "__version__", None)
-        self._pack_conditions, self._pack_errors = load_condition_packs(
+
+        # First-party bundled Medical Library. These packs ship in the same release artifact as
+        # doctor.py, so moving a built-in condition from Python to JSON must not silently remove
+        # its existing remedy authority. They still cannot introduce executable actions outside
+        # ACTIONS/GUARDS, and all normal confidence/Standing-Order/circuit-breaker rules apply.
+        bundled_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "doctor_packs")
+        self._bundled_conditions, bundled_errors = load_condition_packs(
+            bundled_dir, allow_remedies=True, platform_name="pwnagotchi", version=version,
+            source_class="bundled")
+
+        # User/community packs are a separate trust class. They stay explain-only unless the
+        # owner explicitly opts in, and even then may only call actions already allow-listed.
+        self._external_conditions, external_errors = load_condition_packs(
             self._condition_dir, allow_remedies=self._allow_pack_remedies,
-            platform_name="pwnagotchi", version=version)
+            platform_name="pwnagotchi", version=version, source_class="external")
+
+        # Ordering is authority: core Python conditions win first, then first-party bundled
+        # packs, then external packs. diagnose() also de-duplicates ids in that order.
+        self._pack_conditions = self._bundled_conditions + self._external_conditions
+        self._pack_errors = bundled_errors + external_errors
         for row in self._pack_errors[:10]:
             logging.warning("[doctor] condition pack skipped: %s: %s",
                             row.get("file"), row.get("error"))
