@@ -1,4 +1,4 @@
-# Example config for the "doctor" plugin (v0.5).
+# Example config for the "doctor" plugin (v0.6-pre1 collaboration branch).
 # Copy into /etc/pwnagotchi/config.toml and edit.
 # Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl/
 #           journalctl when present, all guarded). Auto-fix actions need root (Pwnagotchi
@@ -40,6 +40,17 @@ main.plugins.doctor.incident_path = "/etc/pwnagotchi/doctor_incidents.json"
 main.plugins.doctor.checkpoint_path = "/etc/pwnagotchi/doctor_known_good.json"
 # Circuit-breaker history persists here so attempt budgets survive a restart/reboot.
 main.plugins.doctor.breaker_path = "/etc/pwnagotchi/doctor_breaker.json"
+
+# Patient Chart: bounded device-specific identity/coverage/remedy memory.
+# Mutable runtime state belongs under /var/lib rather than /etc.
+main.plugins.doctor.patient_path = "/var/lib/pwnagotchi/doctor/patient.json"
+
+# Local/offline Condition Pack directory. Data-only JSON packs load from here.
+main.plugins.doctor.condition_dir = "/etc/pwnagotchi/doctor.d"
+# SAFETY DEFAULT: external/local packs are explain-only. A pack cannot gain self-healing
+# authority merely by being copied onto the device. Set true only if you explicitly want
+# trusted local packs to reference Doctor actions that are already allow-listed.
+main.plugins.doctor.allow_pack_remedies = false
 
 # Thresholds.
 main.plugins.doctor.min_free_mb = 200
