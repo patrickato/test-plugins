@@ -1,0 +1,18 @@
+# Example config for the "daily_digest" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Pillow ships with Pwnagotchi for the PNG render).
+
+main.plugins.daily_digest.enabled = true
+
+# Directory where the daily digest PNGs are written.
+main.plugins.daily_digest.digest_dir = "/root/digests"
+
+# Where the current-day counters are persisted (JSON).
+main.plugins.daily_digest.data_path = "/etc/pwnagotchi/daily_digest.json"
+
+# Digest card size.
+main.plugins.daily_digest.width = 480
+main.plugins.daily_digest.height = 320
+
+# UI position "x,y" for the "dg:" today's-handshakes readout.
+main.plugins.daily_digest.position = "0,0"
