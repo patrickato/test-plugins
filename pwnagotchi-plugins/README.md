@@ -3,6 +3,10 @@
 Original plugins that fill real gaps in the Pwnagotchi ecosystem — see
 [`BUILD_LIST.md`](BUILD_LIST.md) for the roadmap (P01–P46).
 
+The `doctor` plugin (P06) has its own deep design doc:
+[`DOCTOR_ROADMAP.md`](DOCTOR_ROADMAP.md) — identity, current v0.4 state, principles, the
+feature menu, the version sequence, and the externalized condition-pack schema.
+
 ## Layout
 - `reference/` — the real upstream plugin API, copied verbatim (ground truth; don't edit).
 - `templates/` — copy `plugin_template.py` + `plugin_template.config.toml` to start a plugin.

@@ -1,0 +1,239 @@
+# Doctor Plugin — Design Notes & Roadmap
+
+**Plugin:** `doctor` (P06) · **Current version:** v0.4.0 · **Last updated:** 2026-09-24
+**Scope:** stock Pwnagotchi only (this is *not* the Beastagotchi Doctor; see §9 for the link).
+**Status caveat:** everything below is source/CI reasoning + off-Pi tests. **Physical Pi
+validation of the auto-fix effectors is still pending.**
+
+This document is the single pick-up point for the Doctor. It captures what it is now, the
+design principles, and every idea/recommendation for where it goes next, so any contributor
+(or AI) can resume without re-deriving the plan.
+
+---
+
+## 1. What the Doctor is (identity)
+
+The Doctor is the Pwnagotchi's **immune system**. Toggle it on and it autonomously scans
+everything it can reach, diagnoses against a knowledge base of known ailments, **auto-fixes the
+safe/reversible problems** and **gives step-by-step instructions for the rest**.
+
+Its whole design rests on one deliberate asymmetry:
+
+- **Sensing is broad and unlimited** — more visibility only ever helps. No downside to reading
+  more.
+- **Acting is narrow and gated** — every ability to *fix* is also an ability to *break*. So:
+  allow-listed actions, evidence-confidence gates, verify-or-rollback, circuit breakers.
+
+The thing that lets it scale toward "diagnose everything that's ever gone wrong" without
+becoming a monster of if-statements is that **the knowledge is data, not code** (the condition
+KB). Grow the data → grow the Doctor.
+
+Growth happens on four axes plus one structural idea:
+**See more · Fix more · Explain better · Remember & learn · Become the hub.**
+
+---
+
+## 2. Current state (v0.4.0)
+
+**Collectors (guarded, work on any Pi/screen):** services (`systemctl`), power/throttle
+(`vcgencmd get_throttled` bits), disk free + **read-only-root**, `dmesg` signatures
+(under-voltage, USB resets, OOM, SD I/O errors, wifi firmware), `config.toml` validity,
+bettercap API reach, monitor interface (`iw`), rfkill, clock (year + NTP-sync), memory/swap
+(`/proc/meminfo`), route/DNS, temperature, log signals, uptime.
+
+**Knowledge base — 22 conditions:** sd_readonly, disk_full, log_bloat, bettercap_down,
+pwngrid_down, rfkill_blocked, no_monitor, clock_wrong, ntp_unsynced, config_invalid,
+plugin_crash_loop, handshakes_unwritable, undervoltage, throttled_now, overheat, low_memory,
+swap_thrash, no_route, dns_broken, sd_errors, oom, usb_resets, wpa_sec_errors.
+
+**Treat half — allow-listed actions:** restart_service, rfkill_unblock, set_time, remount_rw,
+make_handshakes_dir, prune_logs, restore_config, quarantine_plugin. Tiered `safe`/`risky`;
+circuit breaker; snapshot; **verified by re-collect + re-detect**; low-confidence findings are
+**never** auto-fixed.
+
+**Discipline (borrowed from Beastagotchi's Doctor/IncidentEngine):** evidence confidence
+(high/medium/low); "unknown means unknown"; boot uptime-gating; incident open/resolve lifecycle
+with a **black-box snapshot** at open time; causal chains; field status vocabulary
+`OK / ATTENTION / DEGRADED / ACTION`.
+
+**Known-good drift (v0.4):** save a device fingerprint (config hash, enabled plugins, `dpkg`
+package versions, kernel, OS) as "known good"; later diff current-vs-known-good on demand →
+"since your checkpoint, plugin X was enabled and bettercap upgraded 2.32→2.33."
+
+**Tests:** 41 off-Pi unit tests.
+
+---
+
+## 3. Design principles (keep these)
+
+1. **Read broad, act narrow.** Never widen write access as casually as read access.
+2. **KB as data.** Conditions are declarative; adding an ailment should not require touching the
+   engine (goal: externalized condition-packs, §7).
+3. **Verify or roll back.** Every action re-checks that the condition actually cleared; if not,
+   revert / escalate. A push that leaves the device worse is worse than no action.
+4. **Honesty.** `unknown` is a first-class value; confidence is explicit; a recommendation is not
+   an executed action. Low-confidence (log-inferred) findings are explained, never auto-fixed.
+5. **Do no harm.** Circuit breaker, snapshots, maintenance windows, and a confirm-required tier
+   keep autonomy from becoming a footgun.
+
+---
+
+## 4. Feature roadmap (the menu)
+
+`⭐` = highest ROI / do first. `[safe]` read-only or reversible. `[risky]` needs gating.
+
+### Axis 1 — See more (new sensors + conditions) — mostly `[safe]`
+- ⭐ **reboot/crash-loop detection** — systemd restart counters / repeated boot markers.
+- ⭐ **`wpa_supplicant` hijack** — the #1 "monitor mode won't work" cause.
+- ⭐ **interface-name mismatch** — `main.iface` vs. actual (`wlan0`/`wlan1`/`wlan0mon`).
+- **journald bloat** (`journalctl --disk-usage`); **debug log level in production**.
+- **missing plugin dependency** (`ModuleNotFoundError` in log → "plugin needs package Y").
+- **gpsd down while gps plugin enabled**; **bt-tether pairing lost**;
+  **wpa-sec/OHC api_key missing but plugin enabled**.
+- **protected-config drift** (main.iface, bettercap.handshakes changed);
+  **clock in the future**; **RTC drift**; **kernel taint / module load failure**;
+  **swap-on-SD anti-pattern**; **huge handshakes dir**.
+
+### Axis 2 — Fix more (allow-listed remedies)
+- ⭐ **stop the hijacking `wpa_supplicant`** `[safe]` — pairs with the sensor; fixes a huge class.
+- ⭐ **vacuum journald** (`--vacuum-size`) `[safe]`.
+- **re-establish monitor mode** (bounce iface / re-run mon setup) `[risky]`.
+- **clear stuck lock/pid files** `[safe]`; **fix path permissions** `[safe]`;
+  **set CPU governor** `[safe]`; **lower log level in config** `[risky]`.
+- **schedule fsck on next boot** `[risky]`; **controlled reboot** `[risky, opt-in]`.
+- ⭐ **confirm-required tier** — queue a fix for one-tap approval from web/phone (middle ground
+  between auto and manual).
+- **maintenance window** — don't auto-act during an active capture/expedition.
+
+### Axis 3 — Explain better
+- ⭐ **composite health score (0–100)** — glanceable + trendable.
+- ⭐ **plain-language narrative** — stitch findings + causal chains + drift into one paragraph.
+- **blast-radius preview before acting** — small hardcoded consumer map
+  ("restarting bettercap pauses capture ~5s; nothing else depends on it").
+- **runbook links per condition** (URL in each how-to).
+- **face reaction** — the pet looks worried on `ACTION_REQUIRED`.
+
+### Axis 4 — Remember & learn (local, weighted, no ML)
+- ⭐ **remedy efficacy tracking** — "restarting bettercap cleared this 8/10 times" → reorder
+  remedies / adjust confidence per-device.
+- ⭐ **flap / recurrence escalation** — a condition that opens-resolves repeatedly is *chronic*;
+  escalate from "restarted again" to "needs real attention" and stop blindly retrying.
+- **health history + MTBF-style stats** (ties into streaks/achievements plugins).
+
+### Cross-cutting
+- ⭐ **one-click sanitized support bundle** — zip logs + redacted config + incident history +
+  known-good diff, forum-ready. Huge for beginners.
+- **notifications** — push on `ACTION_REQUIRED` (ntfy/Telegram/HA); daily health line via
+  `daily_digest`.
+- ⭐ **externalized `condition-pack` files** (§7) — community-extensible KB.
+- **optional local-AI triage** (much later, gated) — advisory only, never acts outside the
+  allow-list.
+- **global safety knobs** — dry-run mode, read-only mode, per-condition autofix override,
+  action budget/cooldown.
+- **"Doctor, heal thyself" self-test** — report which sensors are available on *this* unit.
+
+---
+
+## 5. Become the hub (structural)
+
+The Doctor should **consume the sibling plugins** rather than re-sense:
+- `sd_wear` → chronic finding "SD ~40 days of writes left".
+- `thermal_predictor` → pre-throttle warning feeds `overheat` earlier.
+- `battery_historian` → "cell aging" chronic finding.
+- `captive_portal` → its verdict replaces the Doctor's own DNS guess.
+- `why_no_handshakes` → fold in / treat as a specialist consult.
+- `conflict_referee` → display/GPIO collisions as findings.
+- `boot_post` → the startup intake exam.
+
+Result: not 39 scattered gadgets but **one instrument with one brain** reading all of them.
+Mechanism: each sibling publishes a small JSON/state file the Doctor reads (or emits events the
+Doctor subscribes to). The Doctor also publishes a canonical `doctor.state` others can read.
+
+---
+
+## 6. Proposed version sequence
+
+- **v0.5 — "no-monitor / no-handshakes" pack (recommended next):** reboot-loop,
+  `wpa_supplicant` hijack (+ safe fix), interface mismatch, journald bloat (+ vacuum),
+  debug-log-level. Attacks the two biggest forum-post generators. Low risk.
+- **v0.6 — Remember & learn:** remedy efficacy + flap/recurrence escalation.
+- **v0.7 — Beginner polish:** support bundle + health score + plain-language narrative.
+- **v0.8 — Externalized condition-packs (§7):** community-extensible KB.
+- **v0.9 — Hub integration (§5):** consume the sibling plugins.
+- **v1.0 — hardening + physical validation** on a real Pi across models/screens.
+- **Later (gated):** confirm-required tier, blast-radius preview, optional local-AI triage.
+
+---
+
+## 7. Externalized condition-pack schema (target for v0.8)
+
+Conditions become loadable JSON data so users/community/Beast can contribute ailments without
+patching the engine. Signals are referenced by canonical key.
+
+```json
+{
+  "id": "wifi.wpa_supplicant_hijack",
+  "severity": "high",
+  "confidence": "high",
+  "signals": ["proc.wpa_supplicant_running", "iface.monitor_present"],
+  "detect": {"all": [
+    {"key": "proc.wpa_supplicant_running", "is": true},
+    {"key": "iface.monitor_present", "is": false}
+  ]},
+  "symptom": "wpa_supplicant is holding the Wi-Fi interface",
+  "cause": "wpa_supplicant grabbed the adapter, so monitor mode / capture can't start",
+  "fix": {"action": "service.stop", "args": {"unit": "wpa_supplicant"},
+          "tier": "safe", "reversible": true,
+          "verify": {"key": "iface.monitor_present", "is": true}},
+  "howto": ["sudo systemctl stop wpa_supplicant",
+            "Confirm iw dev shows a 'type monitor' interface."],
+  "causal_chain": ["wifi.no_monitor"]
+}
+```
+
+- `detect` is a tiny boolean tree (`all`/`any`, comparators `is`/`>=`/`<`/`contains`) over
+  canonical keys — pure, testable, no code in a pack.
+- `fix.tier` (`safe`/`risky`) + top-level `confidence` drive gating: auto-execute only
+  `safe` + non-`low`; everything else is explain-only unless the owner escalates.
+- `fix.verify` is the probation re-check; `causal_chain` collapses related findings.
+- Ship the built-in 22 conditions in this format first, then allow user packs from a directory.
+
+---
+
+## 8. Real-world "ailment catalog" to keep filling
+
+Prioritized by how often it hits beginners (from the Pwnagotchi community's common issues):
+1. no monitor mode (wpa_supplicant / adapter / iface name) ← **top**
+2. no handshakes (covered partly by `why_no_handshakes`)
+3. bricked/won't boot after edit (config invalid, crash loop)
+4. SD corruption / read-only / dying card
+5. under-voltage / random reboots (power)
+6. disk full (captures, logs, journal)
+7. clock wrong → wpa-sec/TLS failures
+8. display won't work (see `display_setup_helper`)
+9. plugin crash takes down the UI (see `safe_mode_loader` idea in BUILD_LIST)
+10. bettercap/pwngrid service down
+
+Each becomes a KB entry with detect + confidence + fix-tier + how-to.
+
+---
+
+## 9. Relationship to the Beastagotchi Doctor (cross-project)
+
+Beastagotchi has its own Doctor (`beastcore/doctor.py`, an **Explain** engine over a
+dependency/provider graph) and a Black Box (`beastcore/incidents.py`). They are the
+*complementary half* — explanation/causal/blast-radius vs. our detect+treat. A cross-pollination
+note with 8 ranked recommendations + a shared condition-pack schema was written for that project
+(external branch `claude/pwnagotchi-doctor-crosspollination`, file
+`docs/Beastagotchi_Doctor_Pwnagotchi_CrossPollination_2026-09-24.md`). The condition-pack schema
+in §7 is intentionally the same shape so a condition authored once can serve both — that shared
+schema is the real interop opportunity between the two projects.
+
+---
+
+## 10. Resume checklist (pick up here)
+- [ ] Build v0.5 pack (§6): reboot-loop, wpa_supplicant hijack + fix, iface mismatch, journald
+      bloat + vacuum, debug-log-level. Add tests; push per the one-commit-per-change cadence.
+- [ ] Decide auto-fix default for the new `service.stop wpa_supplicant` (recommend `safe`).
+- [ ] Then v0.6 learn-and-remember, or jump to v0.8 externalized packs if community-sharing is
+      the priority.

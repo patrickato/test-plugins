@@ -121,11 +121,15 @@ project's flagship because it's near-total whitespace.
 `watchdog` restarts wedged services, but nothing *explains* or *protects the card*.
 
 ### P06 — Doctor / Explain  `doctor`
-- **Purpose:** read recent logs + state and produce a concise "what's wrong, why, and what
-  to do" (stuck wifi driver, low disk, pwngrid down, noisy plugin, bt-tether fail).
-- **Gap:** diagnosis is manual log-reading today.
-- **Hooks:** `on_epoch`, web report, optional UI health glyph.
-- **Lift:** L · **Status:** planned · **Brainstorm ref:** #6
+- **Purpose:** autonomously scan → diagnose against a knowledge base → auto-fix the
+  safe/reversible problems and give step-by-step instructions for the rest (the Pwnagotchi's
+  "immune system"). Grew well past the original read-only report.
+- **Gap:** diagnosis is manual log-reading today; nothing safely self-heals.
+- **Hooks:** `on_ready`, `on_epoch`, web report + drift view, UI health status.
+- **Lift:** L · **Status:** building (v0.4.0, 41 tests) · **Brainstorm ref:** #6
+- **Design + roadmap:** see [`DOCTOR_ROADMAP.md`](DOCTOR_ROADMAP.md) — the single pick-up
+  point for identity, current state, principles, feature menu, version sequence (v0.5→v1.0),
+  the externalized condition-pack schema, and the resume checklist.
 
 ### P07 — SD-Wear Estimator  `sd_wear`
 - **Purpose:** track write volume over time, estimate remaining card life, warn before it
