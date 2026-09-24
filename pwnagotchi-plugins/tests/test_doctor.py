@@ -749,15 +749,17 @@ def test_version_bounded_pack_does_not_apply_when_runtime_version_unknown():
 
 
 def _pack_fix_finding():
+    # Use memory pressure for detection so the built-in rfkill condition does not also fire.
+    # The remedy is intentionally synthetic: this test is about explicit pack verification.
     pack = _condition_pack(
-        id="wifi.rfkill_pack_test",
-        signals=["wifi.rfkill.blocked"],
-        detect={"key": "wifi.rfkill.blocked", "is": True},
+        id="system.pack_verify_test",
+        signals=["system.memory.used_pct", "wifi.rfkill.blocked"],
+        detect={"key": "system.memory.used_pct", "ge": 90},
         fix={"action": "wifi.rfkill_unblock", "tier": "safe",
              "verify": {"key": "wifi.rfkill.blocked", "is": False}},
     )
     cond = doc.condition_from_pack(pack, allow_remedy=True)
-    return doc.diagnose({"rfkill_blocked": True}, extra_conditions=[cond])
+    return doc.diagnose({"mem_pct": 95}, extra_conditions=[cond])
 
 
 def test_pack_fix_uses_explicit_verify_expression():
@@ -768,7 +770,7 @@ def test_pack_fix_uses_explicit_verify_expression():
         lambda c: calls.append(c), doc.CircuitBreaker(), {},
         recollect=lambda: {"rfkill_blocked": False}, now=1,
     )
-    hit = [f for f in out if f["id"] == "wifi.rfkill_pack_test"][0]
+    hit = [f for f in out if f["id"] == "system.pack_verify_test"][0]
     assert hit["outcome"] == "fixed"
     assert calls == [["rfkill", "unblock", "wifi"]]
 
