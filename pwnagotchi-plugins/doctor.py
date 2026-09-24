@@ -331,25 +331,41 @@ def canonicalize_signals(signals):
     return {k: v for k, v in out.items() if v is not None}
 
 
-def eval_condition_expr(expr, canonical):
-    """Evaluate the tiny Condition Pack boolean grammar. Missing/null means non-match."""
+def eval_condition_expr_state(expr, canonical):
+    """Tri-state evaluator: True / False / None (unknown).
+
+    Detection treats unknown as a non-match. Verification keeps unknown distinct so a missing
+    post-action signal can never become a false success or false failure.
+    """
     if not isinstance(expr, dict):
-        return False
+        return None
     if "all" in expr:
         rows = expr.get("all")
-        return bool(isinstance(rows, list) and rows and
-                    all(eval_condition_expr(x, canonical) for x in rows))
+        if not isinstance(rows, list) or not rows:
+            return None
+        states = [eval_condition_expr_state(x, canonical) for x in rows]
+        if any(x is False for x in states):
+            return False
+        if any(x is None for x in states):
+            return None
+        return True
     if "any" in expr:
         rows = expr.get("any")
-        return bool(isinstance(rows, list) and rows and
-                    any(eval_condition_expr(x, canonical) for x in rows))
+        if not isinstance(rows, list) or not rows:
+            return None
+        states = [eval_condition_expr_state(x, canonical) for x in rows]
+        if any(x is True for x in states):
+            return True
+        if any(x is None for x in states):
+            return None
+        return False
 
     key = expr.get("key")
     if not isinstance(key, str) or not key:
-        return False
+        return None
     value = canonical.get(key, _MISSING)
     if value is _MISSING or value is None:
-        return False
+        return None
 
     if "present" in expr:
         return bool(expr.get("present")) is True
@@ -360,7 +376,7 @@ def eval_condition_expr(expr, canonical):
         try:
             return needle in value
         except (TypeError, ValueError):
-            return False
+            return None
     for op, fn in (
         ("ge", lambda a, b: a >= b),
         ("gt", lambda a, b: a > b),
@@ -371,9 +387,13 @@ def eval_condition_expr(expr, canonical):
             try:
                 return bool(fn(value, expr.get(op)))
             except (TypeError, ValueError):
-                return False
-    return False
+                return None
+    return None
 
+
+def eval_condition_expr(expr, canonical):
+    """Detection helper: only a proven True matches; False and unknown do not."""
+    return eval_condition_expr_state(expr, canonical) is True
 
 def validate_condition_pack(pack):
     """Return schema errors; empty means structurally loadable."""
@@ -421,6 +441,8 @@ def pack_applies(pack, *, platform_name="pwnagotchi", version=None):
     current = _version_key(version)
     minimum = _version_key(applies.get("min_version"))
     maximum = _version_key(applies.get("max_version"))
+    if (minimum is not None or maximum is not None) and current is None:
+        return False
     if current is not None and minimum is not None and current < minimum:
         return False
     if current is not None and maximum is not None and current > maximum:
@@ -435,8 +457,15 @@ def condition_from_pack(pack, *, allow_remedy=False):
     def detect(signals):
         return eval_condition_expr(canonical_detect, canonicalize_signals(signals))
 
-    fix = None
     raw_fix = pack.get("fix")
+    verify_expr = raw_fix.get("verify") if isinstance(raw_fix, dict) else None
+
+    def verify_state(signals):
+        if not isinstance(verify_expr, dict):
+            return None
+        return eval_condition_expr_state(verify_expr, canonicalize_signals(signals))
+
+    fix = None
     unavailable_action = None
     if allow_remedy and isinstance(raw_fix, dict):
         action = _PACK_ACTION_ALIASES.get(raw_fix.get("action"), raw_fix.get("action"))
@@ -464,6 +493,7 @@ def condition_from_pack(pack, *, allow_remedy=False):
         "detect": detect, "symptom": pack["symptom"], "cause": pack.get("cause", ""),
         "fix": fix, "howto": howto, "runbook": pack.get("runbook"),
         "provenance": pack.get("provenance") or {"source": "local"}, "_pack": True,
+        "_verify_state": verify_state if isinstance(verify_expr, dict) else None,
     }
 
 
@@ -854,7 +884,10 @@ def diagnose(signals, extra_conditions=None):
             findings.append({
                 "id": c["id"], "severity": c["severity"], "confidence": c["confidence"],
                 "symptom": c["symptom"], "cause": c["cause"], "howto": list(c.get("howto", [])),
-                "fix": c.get("fix"), "_detect": c["detect"], "outcome": "detected",
+                "fix": c.get("fix"), "_detect": c["detect"],
+                "_verify_state": c.get("_verify_state"),
+                "provenance": c.get("provenance"),
+                "outcome": "detected",
             })
     findings.sort(key=lambda f: (_SEV_RANK.get(f["severity"], 9), _CONF_RANK.get(f["confidence"], 9)))
     return findings
@@ -1142,7 +1175,20 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
         except Exception:
             f["outcome"] = "executed_verification_unknown"
             continue
-        f["outcome"] = "fix_failed" if f["_detect"](fresh) else "fixed"
+        verify_state = f.get("_verify_state")
+        if callable(verify_state):
+            try:
+                verified = verify_state(fresh)
+            except Exception:
+                verified = None
+            if verified is True:
+                f["outcome"] = "fixed"
+            elif verified is False:
+                f["outcome"] = "fix_failed"
+            else:
+                f["outcome"] = "executed_verification_unknown"
+        else:
+            f["outcome"] = "fix_failed" if f["_detect"](fresh) else "fixed"
     return findings
 
 
@@ -1235,7 +1281,11 @@ class PatientChart:
         }
 
     def observe(self, signals, findings, status, *, now=None, known_good=None):
-        """Persist only meaningful changes/remedy events to reduce SD churn."""
+        """Persist meaningful patient changes, episode transitions and remedy outcomes only.
+
+        IncidentEngine remains the source of truth for open/resolved incidents. The chart keeps
+        compact recurrence memory so Doctor can recognize "this keeps happening" across reboot.
+        """
         now = float(time.time() if now is None else now)
         changed = False
         identity = self.identity_from(signals)
@@ -1261,21 +1311,61 @@ class PatientChart:
                 self.data["known_good"] = summary
                 changed = True
 
+        chronic = self.data.setdefault("chronic", {})
+        present = {f.get("id"): f for f in (findings or []) if f.get("id")}
         action_outcomes = {"fixed", "fix_failed", "executed_verification_unknown"}
-        for finding in findings or []:
+
+        # Open/re-open episodes only on transition, not every scan.
+        for fid, finding in present.items():
+            row = chronic.setdefault(fid, {
+                "episodes": 0, "active": False, "first_seen": now,
+                "last_opened": None, "last_resolved": None, "last_outcome": None,
+                "remedy_attempts": 0, "remedy_successes": 0,
+                "remedy_failures": 0, "verification_unknowns": 0,
+            })
+            if not row.get("active"):
+                row["episodes"] = int(row.get("episodes", 0)) + 1
+                row["active"] = True
+                row["last_opened"] = now
+                if row.get("first_seen") is None:
+                    row["first_seen"] = now
+                changed = True
+
             outcome = finding.get("outcome")
-            if outcome not in action_outcomes:
-                continue
-            event = {
-                "at": now,
-                "condition": finding.get("id"),
-                "outcome": outcome,
-                "action": ((finding.get("fix") or {}).get("action")
-                           if isinstance(finding.get("fix"), dict) else None),
-            }
-            if not self.data["remedies"] or self.data["remedies"][-1] != event:
-                self.data["remedies"].append(event)
-                self.data["remedies"] = self.data["remedies"][-self.max_remedies:]
+            if outcome in action_outcomes:
+                event = {
+                    "at": now,
+                    "condition": fid,
+                    "outcome": outcome,
+                    "action": ((finding.get("fix") or {}).get("action")
+                               if isinstance(finding.get("fix"), dict) else None),
+                }
+                if not self.data["remedies"] or self.data["remedies"][-1] != event:
+                    self.data["remedies"].append(event)
+                    self.data["remedies"] = self.data["remedies"][-self.max_remedies:]
+                    row["remedy_attempts"] = int(row.get("remedy_attempts", 0)) + 1
+                    if outcome == "fixed":
+                        row["remedy_successes"] = int(row.get("remedy_successes", 0)) + 1
+                    elif outcome == "fix_failed":
+                        row["remedy_failures"] = int(row.get("remedy_failures", 0)) + 1
+                    else:
+                        row["verification_unknowns"] = int(row.get("verification_unknowns", 0)) + 1
+                    row["last_outcome"] = outcome
+                    changed = True
+
+            # A condition detected and fixed in the same scan is a complete episode.
+            if outcome == "fixed" and row.get("active"):
+                row["active"] = False
+                row["last_resolved"] = now
+                changed = True
+
+        # If a previously active condition is no longer detected, close the recurrence episode.
+        for fid, row in chronic.items():
+            if row.get("active") and fid not in present:
+                row["active"] = False
+                row["last_resolved"] = now
+                if row.get("last_outcome") not in action_outcomes:
+                    row["last_outcome"] = "cleared"
                 changed = True
 
         if changed:
@@ -1283,7 +1373,17 @@ class PatientChart:
             self._write()
         return changed
 
+    def chronic_summary(self, condition_id=None):
+        chronic = self.data.get("chronic") or {}
+        if condition_id is not None:
+            row = chronic.get(condition_id)
+            return dict(row) if isinstance(row, dict) else None
+        return {k: dict(v) for k, v in chronic.items() if isinstance(v, dict)}
+
     def summary(self):
+        chronic = self.data.get("chronic") or {}
+        recurring = sum(1 for row in chronic.values()
+                        if isinstance(row, dict) and int(row.get("episodes", 0)) >= 2)
         return {
             "schema": self.data.get("schema"),
             "status": self.data.get("status"),
@@ -1291,9 +1391,10 @@ class PatientChart:
             "coverage": dict(self.data.get("coverage") or {}),
             "known_good": dict(self.data.get("known_good") or {}),
             "remedy_count": len(self.data.get("remedies") or []),
+            "condition_count": len(chronic),
+            "recurring_condition_count": recurring,
             "updated_at": self.data.get("updated_at"),
         }
-
 
 
 # ======================================================================================
@@ -1739,12 +1840,14 @@ class Doctor(plugins.Plugin):
         need = [f for f in self._findings if f["outcome"] in ("needs_user", "fix_failed", "gave_up")]
         causal = ("<h3>Likely cause chain</h3><ul>%s</ul>"
                   % "".join("<li>%s</li>" % c for c in self._causal)) if self._causal else ""
-        coverage = (self._patient.summary().get("coverage") if self._patient is not None else {})
+        patient = self._patient.summary() if self._patient is not None else {}
+        coverage = patient.get("coverage") or {}
         covered = sum(1 for v in coverage.values() if v)
+        recurring = int(patient.get("recurring_condition_count", 0) or 0)
         mode = ("<p><small>autonomy: <b>%s</b>%s · condition packs: %d · "
-                "patient coverage: %d/%d</small></p>"
+                "patient coverage: %d/%d · recurring: %d</small></p>"
                 % (self._autofix, " · dry-run" if self._dry_run else "",
-                   len(self._pack_conditions), covered, len(coverage)))
+                   len(self._pack_conditions), covered, len(coverage), recurring))
         if not self._findings:
             body = mode + "<p><b>OK</b> — no issues detected. 🎉</p>"
             return "<html><body><h1>Doctor</h1>{}{}</body></html>".format(body, drift)
