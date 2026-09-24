@@ -1141,6 +1141,156 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
     return findings
 
 
+
+# ======================================================================================
+# Patient Chart v1 — bounded device-specific memory, not an unlimited log archive
+# ======================================================================================
+class PatientChart:
+    SCHEMA = 1
+
+    def __init__(self, path, *, max_remedies=100):
+        self.path = path
+        self.max_remedies = max(10, int(max_remedies))
+        self.data = {
+            "schema": self.SCHEMA,
+            "identity": {},
+            "known_good": {},
+            "coverage": {},
+            "status": None,
+            "chronic": {},
+            "remedies": [],
+            "updated_at": None,
+        }
+        self.load()
+
+    def load(self):
+        try:
+            if self.path and os.path.exists(self.path):
+                with open(self.path, "rt", encoding="utf-8") as fp:
+                    obj = json.load(fp)
+                if isinstance(obj, dict) and obj.get("schema") == self.SCHEMA:
+                    for key in self.data:
+                        if key in obj:
+                            self.data[key] = obj[key]
+        except Exception as exc:
+            logging.debug("[doctor] patient chart load failed: %s", exc)
+        return self
+
+    def _write(self):
+        if not self.path:
+            return False
+        try:
+            parent = os.path.dirname(self.path)
+            if parent:
+                os.makedirs(parent, exist_ok=True)
+            tmp = self.path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as fp:
+                json.dump(self.data, fp, indent=2, sort_keys=True, default=str)
+                fp.write("\n")
+            try:
+                os.chmod(tmp, 0o600)
+            except Exception:
+                pass
+            os.replace(tmp, self.path)
+            return True
+        except Exception as exc:
+            logging.debug("[doctor] patient chart save failed: %s", exc)
+            return False
+
+    @staticmethod
+    def coverage_from(signals):
+        s = signals or {}
+        return {
+            "services": bool(s.get("services")),
+            "storage": bool(s.get("disk")),
+            "power": bool(s.get("throttled")),
+            "radio": s.get("monitor_present") is not None or s.get("rfkill_blocked") is not None,
+            "network": bool(s.get("net")),
+            "pwnagotchi_config": bool(s.get("config")),
+            "logs": s.get("log_size") is not None or bool(s.get("log")),
+        }
+
+    @staticmethod
+    def identity_from(signals):
+        s = signals or {}
+        model = None
+        try:
+            with open("/proc/device-tree/model", "rt", errors="ignore") as fp:
+                model = fp.read().replace(chr(0), "").strip() or None
+        except Exception:
+            pass
+        return {
+            "model": model,
+            "architecture": platform.machine() or None,
+            "kernel": platform.release() or None,
+            "pwnagotchi_version": getattr(pwnagotchi, "__version__", None),
+            "configured_iface": (s.get("iface", {}) or {}).get("configured"),
+            "interfaces": (s.get("iface", {}) or {}).get("present"),
+            "services": sorted((s.get("services", {}) or {}).keys()),
+        }
+
+    def observe(self, signals, findings, status, *, now=None, known_good=None):
+        """Persist only meaningful changes/remedy events to reduce SD churn."""
+        now = float(time.time() if now is None else now)
+        changed = False
+        identity = self.identity_from(signals)
+        coverage = self.coverage_from(signals)
+        if identity != self.data.get("identity"):
+            self.data["identity"] = identity
+            changed = True
+        if coverage != self.data.get("coverage"):
+            self.data["coverage"] = coverage
+            changed = True
+        if status != self.data.get("status"):
+            self.data["status"] = status
+            changed = True
+        if known_good is not None:
+            summary = {
+                "saved_at": known_good.get("saved_at"),
+                "kernel": known_good.get("kernel"),
+                "os": known_good.get("os"),
+                "plugin_count": len(known_good.get("plugins", []) or []),
+                "package_count": len(known_good.get("packages", {}) or {}),
+            }
+            if summary != self.data.get("known_good"):
+                self.data["known_good"] = summary
+                changed = True
+
+        action_outcomes = {"fixed", "fix_failed", "executed_verification_unknown"}
+        for finding in findings or []:
+            outcome = finding.get("outcome")
+            if outcome not in action_outcomes:
+                continue
+            event = {
+                "at": now,
+                "condition": finding.get("id"),
+                "outcome": outcome,
+                "action": ((finding.get("fix") or {}).get("action")
+                           if isinstance(finding.get("fix"), dict) else None),
+            }
+            if not self.data["remedies"] or self.data["remedies"][-1] != event:
+                self.data["remedies"].append(event)
+                self.data["remedies"] = self.data["remedies"][-self.max_remedies:]
+                changed = True
+
+        if changed:
+            self.data["updated_at"] = now
+            self._write()
+        return changed
+
+    def summary(self):
+        return {
+            "schema": self.data.get("schema"),
+            "status": self.data.get("status"),
+            "identity": dict(self.data.get("identity") or {}),
+            "coverage": dict(self.data.get("coverage") or {}),
+            "known_good": dict(self.data.get("known_good") or {}),
+            "remedy_count": len(self.data.get("remedies") or []),
+            "updated_at": self.data.get("updated_at"),
+        }
+
+
+
 # ======================================================================================
 # Plugin
 # ======================================================================================
@@ -1166,6 +1316,9 @@ class Doctor(plugins.Plugin):
         self._open = {}          # id -> {opened_at, severity, summary, snapshot}
         self._history = []
         self._breaker_path = None
+        self._patient = None
+        self._pack_conditions = []
+        self._pack_errors = []
 
     def _read_options(self):
         """Parse options into attrs. Called on load AND on_config_changed (live-editable)."""
@@ -1183,6 +1336,11 @@ class Doctor(plugins.Plugin):
                                                  "/etc/pwnagotchi/doctor_known_good.json")
         self._breaker_path = self.options.get("breaker_path",
                                               "/etc/pwnagotchi/doctor_breaker.json")
+        self._patient_path = self.options.get("patient_path",
+                                              "/var/lib/pwnagotchi/doctor/patient.json")
+        self._condition_dir = self.options.get("condition_dir",
+                                               "/etc/pwnagotchi/doctor.d")
+        self._allow_pack_remedies = bool(self.options.get("allow_pack_remedies", False))
         self._min_free_mb = int(self.options.get("min_free_mb", 200))
         self._max_temp_c = float(self.options.get("max_temp_c", 80))
         self._journal_max_mb = int(self.options.get("journal_max_mb", 200))
@@ -1194,14 +1352,29 @@ class Doctor(plugins.Plugin):
     def on_loaded(self):
         self._read_options()
         self._load_breaker()
-        logging.info("[doctor] loaded v%s (autonomy=%s, dry_run=%s)",
-                     self.__version__, self._autofix, self._dry_run)
+        self._patient = PatientChart(self._patient_path)
+        self._reload_condition_packs()
+        logging.info("[doctor] loaded v%s (autonomy=%s, dry_run=%s, packs=%d)",
+                     self.__version__, self._autofix, self._dry_run, len(self._pack_conditions))
 
     def on_config_changed(self, config):
         # Standing Orders (autonomy dial, opt-outs, thresholds) are editable at any time.
+        old_patient_path = getattr(self, "_patient_path", None)
         self._read_options()
-        logging.info("[doctor] config reloaded (autonomy=%s, dry_run=%s)",
-                     self._autofix, self._dry_run)
+        if old_patient_path != self._patient_path or self._patient is None:
+            self._patient = PatientChart(self._patient_path)
+        self._reload_condition_packs()
+        logging.info("[doctor] config reloaded (autonomy=%s, dry_run=%s, packs=%d)",
+                     self._autofix, self._dry_run, len(self._pack_conditions))
+
+    def _reload_condition_packs(self):
+        version = getattr(pwnagotchi, "__version__", None)
+        self._pack_conditions, self._pack_errors = load_condition_packs(
+            self._condition_dir, allow_remedies=self._allow_pack_remedies,
+            platform_name="pwnagotchi", version=version)
+        for row in self._pack_errors[:10]:
+            logging.warning("[doctor] condition pack skipped: %s: %s",
+                            row.get("file"), row.get("error"))
 
     def _ctx(self):
         return {"log_path": self._log_path, "config_path": self._config_path,
@@ -1394,7 +1567,7 @@ class Doctor(plugins.Plugin):
     def scan(self, runner=None, now=None):
         now = now if now is not None else time.time()
         signals = self.collect(runner)
-        findings = diagnose(signals)
+        findings = diagnose(signals, extra_conditions=self._pack_conditions)
         acting = self._autofix not in ("off", "observe", "notify") and not self._dry_run
         apply_fixes(findings, signals, self._autofix, runner or self._run,
                     self._breaker, self._ctx(),
@@ -1405,6 +1578,9 @@ class Doctor(plugins.Plugin):
         self._status = overall_status(findings)
         self._causal = build_causal(f["id"] for f in findings)
         self._update_incidents(findings, signals, now)
+        if self._patient is not None:
+            self._patient.observe(signals, findings, self._status, now=now,
+                                  known_good=self.load_checkpoint())
         if findings:
             logging.info("[doctor] %s: %d issue(s), %d auto-fixed", self._status,
                          len(findings), sum(1 for f in findings if f["outcome"] == "fixed"))
@@ -1558,8 +1734,12 @@ class Doctor(plugins.Plugin):
         need = [f for f in self._findings if f["outcome"] in ("needs_user", "fix_failed", "gave_up")]
         causal = ("<h3>Likely cause chain</h3><ul>%s</ul>"
                   % "".join("<li>%s</li>" % c for c in self._causal)) if self._causal else ""
-        mode = ("<p><small>autonomy: <b>%s</b>%s</small></p>"
-                % (self._autofix, " · dry-run" if self._dry_run else ""))
+        coverage = (self._patient.summary().get("coverage") if self._patient is not None else {})
+        covered = sum(1 for v in coverage.values() if v)
+        mode = ("<p><small>autonomy: <b>%s</b>%s · condition packs: %d · "
+                "patient coverage: %d/%d</small></p>"
+                % (self._autofix, " · dry-run" if self._dry_run else "",
+                   len(self._pack_conditions), covered, len(coverage)))
         if not self._findings:
             body = mode + "<p><b>OK</b> — no issues detected. 🎉</p>"
             return "<html><body><h1>Doctor</h1>{}{}</body></html>".format(body, drift)
