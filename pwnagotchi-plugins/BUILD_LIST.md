@@ -27,8 +27,13 @@ pending for every plugin below.**
 - ✅ P41 `auto_timezone` — 8 tests
 - ✅ P46 `field_notes` — 8 tests
 - ✅ P01 `handshake_janitor` — 9 tests
+- ✅ P02 `capture_grader` — 6 tests
+- ✅ P03 `crack_reconciler` — 6 tests
+- ✅ P04 `capture_retention` — 7 tests
 
-Next: P02 capture grader → P03 crack reconciler → P04 retention (rest of Phase 2).
+**Phase 1 + Phase 2 complete (10 plugins, 74 tests green).**
+Next: Phase 3 — P07 sd_wear → P06 doctor → P12 battery_historian → P14 thermal_predictor
+→ P13 fan_curve.
 
 ---
 

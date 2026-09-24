@@ -1,0 +1,28 @@
+# Example config for the "capture_retention" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.capture_retention.enabled = true
+
+# Directory holding capture files.
+main.plugins.capture_retention.handshakes = "/root/handshakes"
+
+# Where the review queue is persisted (JSON).
+main.plugins.capture_retention.data_path = "/etc/pwnagotchi/capture_retention.json"
+
+# Expire captures older than this many days (0 = don't expire by age).
+main.plugins.capture_retention.max_age_days = 30
+
+# Below this many MB free, escalate: expire candidates immediately (0 = ignore space).
+main.plugins.capture_retention.min_free_mb = 200
+
+# Review/grace window (days) before a queued capture is actually deleted.
+main.plugins.capture_retention.grace_days = 3
+
+# Keep crackable-but-unsolved captures unless the card is under space pressure.
+main.plugins.capture_retention.protect_unsolved = true
+
+# true = report queue/deletions without removing anything.
+main.plugins.capture_retention.dry_run = false
+
+# UI position "x,y" for the "exp:" queue counter.
+main.plugins.capture_retention.position = "0,0"
