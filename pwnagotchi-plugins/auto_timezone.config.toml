@@ -1,0 +1,25 @@
+# Example config for the "auto_timezone" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+#
+# For precise IANA zones install timezonefinder on the Pi:
+#   sudo pip3 install timezonefinder
+# Without it, the plugin falls back to a coarse longitude-based Etc/GMT offset (no DST).
+
+main.plugins.auto_timezone.enabled = true
+
+# false = only log the zone it would set (dry run), don't touch the system clock.
+main.plugins.auto_timezone.apply = true
+
+# Minimum minutes between GPS checks.
+main.plugins.auto_timezone.min_interval_min = 30
+
+# gpsd endpoint to read the fix from.
+main.plugins.auto_timezone.gpsd_host = "127.0.0.1"
+main.plugins.auto_timezone.gpsd_port = 2947
+
+# Optional manual override (skips gpsd entirely).
+# main.plugins.auto_timezone.latitude = 51.5
+# main.plugins.auto_timezone.longitude = -0.13
+
+# UI position "x,y" for the "tz:" readout.
+main.plugins.auto_timezone.position = "0,0"
