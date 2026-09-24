@@ -1,0 +1,25 @@
+# Example config for the "circadian_faces" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.circadian_faces.enabled = true
+
+# Optional: set your location to use real sunrise/sunset. Leave unset to use the
+# simple local-time schedule (day_start/night_start) below.
+main.plugins.circadian_faces.latitude = 51.5
+main.plugins.circadian_faces.longitude = -0.13
+
+# Dawn/dusk window half-width in minutes (around sunrise/sunset).
+main.plugins.circadian_faces.twilight_min = 30
+
+# Actually change the displayed face (false = compute only, no override).
+main.plugins.circadian_faces.override_face = true
+
+# Fallback schedule (local hours) used only when latitude/longitude are unset.
+main.plugins.circadian_faces.day_start = 7
+main.plugins.circadian_faces.night_start = 20
+
+# Face per phase (any string your display can render).
+main.plugins.circadian_faces.faces.day = "(◕‿‿◕)"
+main.plugins.circadian_faces.faces.night = "(-_-)zzz"
+main.plugins.circadian_faces.faces.dawn = "(◕ᴗ◕)"
+main.plugins.circadian_faces.faces.dusk = "(⇀‿‿↼)"
