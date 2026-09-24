@@ -1,0 +1,14 @@
+# Example config for the "field_notes" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.field_notes.enabled = true
+
+# Where notes are stored (JSON).
+main.plugins.field_notes.data_path = "/etc/pwnagotchi/field_notes.json"
+
+# gpsd endpoint used to geo-stamp notes (best effort; notes still work without a fix).
+main.plugins.field_notes.gpsd_host = "127.0.0.1"
+main.plugins.field_notes.gpsd_port = 2947
+
+# UI position "x,y" for the "notes:" counter.
+main.plugins.field_notes.position = "0,0"

@@ -62,12 +62,23 @@ def test_state_persists_across_instances(load_plugin, tmp_path):
     assert p2._state["days_alive"] == 3
 
 
-def test_ui_and_missing_options(load_plugin, ui):
-    p = load_plugin("streaks.py")   # no data_path
-    p.on_loaded()
+def test_ui(load_plugin, ui, tmp_path):
+    p = _make(load_plugin, tmp_path)   # hermetic tmp data_path
     p.record_activity(today="2026-01-01")
     p.on_ui_setup(ui)
     p.on_ui_update(ui)
     assert ui.get("streaks") == "1d 1s"
     p.on_unload(ui)
     assert not ui.has_element("streaks")
+
+
+def test_missing_options_does_not_crash(load_plugin, ui, tmp_path):
+    # No options at all: defaults apply and load+UI must not raise. Redirect the data path
+    # afterwards so the test never persists to the real /etc default.
+    p = load_plugin("streaks.py")
+    p.on_loaded()
+    p._path = str(tmp_path / "s.json")
+    p.on_ui_setup(ui)
+    p.on_ui_update(ui)
+    assert ui.get("streaks").endswith("s")
+    p.on_unload(ui)
