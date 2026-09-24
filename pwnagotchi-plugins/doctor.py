@@ -41,6 +41,10 @@ Options (main.plugins.doctor.*):
     confirm_required = []              # condition ids that queue for one-tap approval instead
                                        #   of auto-fixing (outcome "awaiting_confirm"; approve
                                        #   from the web page)
+    deny_actions     = []              # action names the owner forbids entirely (explain only)
+    allow_reboot_actions = false       # allow reboot-class actions (restore_config,
+                                       #   quarantine_plugin) to auto-run; otherwise they queue
+                                       #   for confirmation even at "assertive"
     scan_every       = 30              # full scan every N epochs (0 = only on start / web)
     boot_grace_s     = 25              # don't flag service-down before this many seconds uptime
     log_path         = "/etc/pwnagotchi/log/pwnagotchi.log"
@@ -659,14 +663,7 @@ CONDITIONS = [
      "fix": {"action": "rfkill_unblock", "tier": "safe"},
      "howto": ["sudo rfkill unblock wifi"]},
 
-    {"id": "no_monitor", "severity": "high", "confidence": "high",
-     "detect": lambda s: s.get("monitor_present") is False,
-     "symptom": "no monitor-mode interface found",
-     "cause": "the adapter isn't in monitor mode or doesn't support it",
-     "fix": None,
-     "howto": ["Confirm your Wi-Fi adapter supports monitor mode.",
-               "Check bettercap's interface (main.iface).",
-               "iw dev  should list an interface of 'type monitor'."]},
+    # NOTE: no_monitor migrated to a first-party bundled Condition Pack (doctor_packs/no_monitor.json).
 
     {"id": "wpa_supplicant_hijack", "severity": "high", "confidence": "high",
      "detect": lambda s: (s.get("wpa_supplicant", {}).get("running") is True
@@ -713,13 +710,7 @@ CONDITIONS = [
      "howto": ["sudo journalctl --vacuum-size=100M",
                "On an SD-based Pi, consider Storage=volatile for journald."]},
 
-    {"id": "debug_log_level", "severity": "info", "confidence": "high",
-     "detect": lambda s: s.get("config", {}).get("debug") is True,
-     "symptom": "debug logging is enabled",
-     "cause": "verbose debug logs fill the disk and wear the SD in normal operation",
-     "fix": None,
-     "howto": ["Turn logging back to info/warning in /etc/pwnagotchi/config.toml.",
-               "Debug is great while troubleshooting, but not for daily wardriving."]},
+    # NOTE: debug_log_level migrated to a bundled Condition Pack (doctor_packs/debug_log_level.json).
 
     {"id": "clock_wrong", "severity": "high", "confidence": "high",
      "detect": lambda s: s.get("time", {}).get("year_ok") is False,
@@ -788,42 +779,8 @@ CONDITIONS = [
      "fix": None,
      "howto": ["Add a heatsink/fan (see fan_curve). Improve airflow."]},
 
-    {"id": "low_memory", "severity": "warn", "confidence": "high",
-     "detect": lambda s: s.get("mem_pct") is not None and s["mem_pct"] >= 92,
-     "symptom": "memory is nearly exhausted",
-     "cause": "too many plugins / a memory leak",
-     "fix": None,
-     "howto": ["Disable heavy plugins; look for a leak in the log."]},
-
-    {"id": "swap_thrash", "severity": "warn", "confidence": "medium",
-     "detect": lambda s: s.get("swap_used_pct") is not None and s["swap_used_pct"] >= 60,
-     "symptom": "heavy swap usage",
-     "cause": "RAM pressure is spilling to the SD card (slow + SD wear)",
-     "fix": None,
-     "howto": ["Reduce memory use; avoid large swap on SD."]},
-
-    {"id": "no_route", "severity": "warn", "confidence": "high",
-     "detect": lambda s: s.get("net", {}).get("default_route") is False,
-     "symptom": "no default network route",
-     "cause": "no uplink — uploads (wpa-sec, grid) can't reach the internet",
-     "fix": None,
-     "howto": ["Check bt-tether/USB/Wi-Fi uplink is connected."]},
-
-    {"id": "dns_broken", "severity": "warn", "confidence": "medium",
-     "detect": lambda s: (s.get("net", {}).get("default_route") is True
-                          and s.get("net", {}).get("dns_ok") is False),
-     "symptom": "DNS resolution is failing",
-     "cause": "a route exists but names don't resolve",
-     "fix": None,
-     "howto": ["Check /etc/resolv.conf and your uplink's DNS."]},
-
-    {"id": "sd_errors", "severity": "high", "confidence": "medium",
-     "detect": lambda s: s.get("dmesg", {}).get("sd_error", 0) >= 1,
-     "symptom": "SD card I/O errors in the kernel log",
-     "cause": "the SD card is degrading",
-     "fix": None,
-     "howto": ["Back up now. Reflash to a fresh, reputable SD card.",
-               "See the sd_wear plugin to track write wear."]},
+    # NOTE: low_memory, swap_thrash, no_route, dns_broken, sd_errors migrated to bundled
+    # Condition Packs (doctor_packs/*.json). Threshold/boot-gated/computed conditions stay below.
 
     {"id": "oom", "severity": "warn", "confidence": "medium",
      "detect": lambda s: s.get("dmesg", {}).get("oom", 0) >= 1,
@@ -1127,18 +1084,30 @@ def policy_allows(tier, level):
     return False
 
 
+def _action_meta(action):
+    return ACTION_META.get(action, {})
+
+
 def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
-                recollect=None, now=None, dry_run=False, disabled=None, confirm=None):
+                recollect=None, now=None, dry_run=False, disabled=None, confirm=None,
+                force=None, denied_actions=None, allow_reboot=False):
     """Attempt allowed fixes; guard; verify; set each finding's outcome. Returns findings.
 
     Truth rules:
       * a low-confidence (log-inferred) finding is NEVER auto-fixed, only explained;
       * a guard that says "not safe right now" blocks the action (outcome blocked_guard);
       * an action that runs but can't be re-verified is executed_verification_unknown, not fixed.
+
+    ACTION_META-driven policy:
+      * an action the owner listed in `denied_actions` is never run (explain only);
+      * a reboot-requiring action is held for confirmation unless `allow_reboot` is set;
+      * `force` (from the web "Confirm & apply" link) approves a held id for this pass only.
     """
     now = now if now is not None else time.time()
     disabled = set(disabled or ())
     confirm = set(confirm or ())
+    force = set(force or ())
+    denied_actions = set(denied_actions or ())
     level = normalize_level(autofix)
     for f in findings:
         fix = f.get("fix")
@@ -1149,6 +1118,9 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
             f["outcome"] = "needs_user"
             continue
         if f["id"] in disabled:                     # owner opted this condition out of auto-fix
+            f["outcome"] = "needs_user"
+            continue
+        if fix.get("action") in denied_actions:     # owner forbade this action entirely
             f["outcome"] = "needs_user"
             continue
         if not policy_allows(fix.get("tier", "risky"), level):
@@ -1164,7 +1136,12 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
             if not safe:                            # unsafe right now -> explain, don't act
                 f["outcome"] = "blocked_guard"
                 continue
-        if f["id"] in confirm and not dry_run:      # owner wants to approve this one first
+        # Hold for owner approval when the condition is confirm-required, or when the action
+        # would require a reboot and the owner hasn't opted into reboot-class actions. `force`
+        # (a one-tap approval) overrides either hold for this pass.
+        needs_reboot = bool(_action_meta(fix.get("action")).get("needs_reboot"))
+        held = (f["id"] in confirm) or (needs_reboot and not allow_reboot)
+        if held and f["id"] not in force and not dry_run:
             f["outcome"] = "awaiting_confirm"
             continue
         if not breaker.allow(f["id"], now):
@@ -1425,7 +1402,7 @@ _UI_STATUS = {"OK": "OK", "HEALED": "healed", "ATTENTION": "attn",
 
 class Doctor(plugins.Plugin):
     __author__ = "patrickato"
-    __version__ = "0.6.0-pre2"
+    __version__ = "0.6.0-pre3"
     __license__ = "GPL3"
     __description__ = "Autonomous health scan, diagnosis, causal explanation, guarded self-healing and known-good drift."
 
@@ -1450,6 +1427,8 @@ class Doctor(plugins.Plugin):
         self._dry_run = bool(self.options.get("dry_run", False))
         self._disabled = set(self.options.get("disable_autofix", []) or [])
         self._confirm_required = set(self.options.get("confirm_required", []) or [])
+        self._deny_actions = set(self.options.get("deny_actions", []) or [])
+        self._allow_reboot = bool(self.options.get("allow_reboot_actions", False))
         self._scan_every = int(self.options.get("scan_every", 30))
         self._boot_grace = float(self.options.get("boot_grace_s", 25))
         self._log_path = self.options.get("log_path", "/etc/pwnagotchi/log/pwnagotchi.log")
@@ -1711,13 +1690,14 @@ class Doctor(plugins.Plugin):
         signals = self.collect(runner)
         findings = diagnose(signals, extra_conditions=self._pack_conditions)
         acting = self._autofix not in ("off", "observe", "notify") and not self._dry_run
-        # confirm-required conditions wait for owner approval; force_ids (from the web
-        # "Confirm & apply" link) approve a specific one for this pass only.
-        confirm = self._confirm_required - set(force_ids or ())
+        # confirm-required conditions (and reboot-class actions) wait for owner approval;
+        # force_ids (from the web "Confirm & apply" link) approve a specific one for this pass.
         apply_fixes(findings, signals, self._autofix, runner or self._run,
                     self._breaker, self._ctx(),
                     recollect=(lambda: self.collect(runner)) if acting else None,
-                    now=now, dry_run=self._dry_run, disabled=self._disabled, confirm=confirm)
+                    now=now, dry_run=self._dry_run, disabled=self._disabled,
+                    confirm=self._confirm_required, force=set(force_ids or ()),
+                    denied_actions=self._deny_actions, allow_reboot=self._allow_reboot)
         self._save_breaker()
         self._findings = findings
         self._status = overall_status(findings)

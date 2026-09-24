@@ -1,0 +1,18 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "no_monitor",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "high",
+  "confidence": "high",
+  "signals": ["wifi.monitor.present"],
+  "detect": {"key": "wifi.monitor.present", "is": false},
+  "symptom": "no monitor-mode interface found",
+  "cause": "the adapter isn't in monitor mode or doesn't support it",
+  "howto": [
+    "Confirm your Wi-Fi adapter supports monitor mode.",
+    "Check bettercap's interface (main.iface).",
+    "iw dev  should list an interface of 'type monitor'."
+  ],
+  "causal_chain": []
+}

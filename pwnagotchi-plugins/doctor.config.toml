@@ -30,6 +30,15 @@ main.plugins.doctor.disable_autofix = []
 # The middle ground between fully automatic and fully manual. e.g. ["bettercap_down"]
 main.plugins.doctor.confirm_required = []
 
+# Deny specific actions outright (owner veto): the Doctor will explain but never run them.
+# Action names: restart_service, rfkill_unblock, set_time, remount_rw, make_handshakes_dir,
+# prune_logs, stop_wpa_supplicant, vacuum_journal, restore_config, quarantine_plugin.
+main.plugins.doctor.deny_actions = []
+
+# Reboot-class actions (restore_config, quarantine_plugin) queue for confirmation by default,
+# even at "assertive". Set true to let them auto-run.
+main.plugins.doctor.allow_reboot_actions = false
+
 # Run a full scan every N epochs (0 = only on startup and when you open the web page).
 main.plugins.doctor.scan_every = 30
 

@@ -32,7 +32,7 @@ pending for every plugin below.**
 - ✅ P04 `capture_retention` — 7 tests
 
 - ✅ P07 `sd_wear` — 8 tests
-- ✅ P06 `doctor` — 74 tests (v0.6-pre2)
+- ✅ P06 `doctor` — 87 tests (v0.6-pre3)
 - ✅ P12 `battery_historian` — 9 tests
 - ✅ P14 `thermal_predictor` — 6 tests
 - ✅ P13 `fan_curve` — 6 tests
@@ -126,7 +126,7 @@ project's flagship because it's near-total whitespace.
   "immune system"). Grew well past the original read-only report.
 - **Gap:** diagnosis is manual log-reading today; nothing safely self-heals.
 - **Hooks:** `on_ready`, `on_epoch`, web report + drift view, UI health status.
-- **Lift:** L · **Status:** building (v0.6.0-pre2, 74 tests) · **Brainstorm ref:** #6
+- **Lift:** L · **Status:** building (v0.6.0-pre3, 87 tests) · **Brainstorm ref:** #6
 - **Design + roadmap:** see [`DOCTOR_ROADMAP.md`](DOCTOR_ROADMAP.md) — the single pick-up
   point for identity, current state, principles, feature menu, version sequence (v0.5→v1.0),
   the externalized condition-pack schema, and the resume checklist.

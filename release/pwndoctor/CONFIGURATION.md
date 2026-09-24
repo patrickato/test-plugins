@@ -29,6 +29,10 @@ Run this way first, inspect findings, then choose your Standing Orders.
 
 `confirm_required = ["condition.id"]` holds an otherwise-eligible action until the owner approves it from the Doctor WebUI. Held actions do not consume circuit-breaker budget.
 
+`deny_actions = ["action_name"]` is an owner veto on specific actions (e.g. `restart_service`): the Doctor will still diagnose and explain, but never run them. Action names: `restart_service`, `rfkill_unblock`, `set_time`, `remount_rw`, `make_handshakes_dir`, `prune_logs`, `stop_wpa_supplicant`, `vacuum_journal`, `restore_config`, `quarantine_plugin`.
+
+`allow_reboot_actions = false` (default) holds reboot-class actions (`restore_config`, `quarantine_plugin`) for confirmation even at `assertive`, since they typically require a restart to take effect. Set `true` to let them auto-run. This gate is driven by each action's metadata, not its condition.
+
 ## Condition Packs
 
 `condition_dir` defaults to `/etc/pwnagotchi/doctor.d` for user/community data-only packs.

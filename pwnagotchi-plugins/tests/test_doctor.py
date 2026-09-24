@@ -7,6 +7,16 @@ spec = importlib.util.spec_from_file_location("doctor", ROOT / "doctor.py")
 doc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(doc)
 
+# First-party bundled Condition Packs (migrated from Python) live beside doctor.py. Load them
+# the way the plugin does so tests can diagnose over "built-ins + bundled" just like runtime.
+_BUNDLED = doc.load_condition_packs(str(ROOT / "doctor_packs"), allow_remedies=True,
+                                    source_class="bundled")[0]
+
+
+def _diag(signals):
+    """diagnose() over Python built-ins + first-party bundled packs (runtime-equivalent)."""
+    return doc.diagnose(signals, extra_conditions=_BUNDLED)
+
 
 # ---- pure parsers ----------------------------------------------------------------------
 def test_parse_throttled():
@@ -84,7 +94,7 @@ def test_new_conditions_detect():
     s["handshakes"] = {"writable": False}   # handshakes_unwritable
     s["time"] = {"year_ok": True, "ntp": False}   # ntp_unsynced
     s["throttled"] = {"throttled_now": True, "undervoltage_now": False}  # throttled_now
-    ids = {f["id"] for f in doc.diagnose(s)}
+    ids = {f["id"] for f in _diag(s)}   # low_memory/swap_thrash/no_route are now bundled packs
     for e in ("low_memory", "swap_thrash", "no_route", "handshakes_unwritable",
               "ntp_unsynced", "throttled_now"):
         assert e in ids, e
@@ -392,7 +402,7 @@ def test_journald_bloat_and_debug_level_detect():
     s = _clean()
     s["journal_bytes"] = 300 * 1024 * 1024
     s["config"] = {"valid": True, "debug": True}
-    ids = {f["id"] for f in doc.diagnose(s)}
+    ids = {f["id"] for f in _diag(s)}   # debug_log_level is now a bundled pack
     assert "journald_bloat" in ids and "debug_log_level" in ids
 
 
@@ -688,7 +698,11 @@ def test_plugin_loads_local_pack_and_patient_chart(load_plugin, tmp_path):
         "scan_every": 0,
     })
     p.on_loaded()
-    assert len(p._pack_conditions) == 1
+    # one user/external pack, plus the first-party bundled packs shipped beside doctor.py
+    assert len(p._external_conditions) == 1
+    assert "system.high_memory" in {c["id"] for c in p._external_conditions}
+    assert len(p._bundled_conditions) >= len(_MIGRATED_IDS)
+    assert p._pack_conditions == p._bundled_conditions + p._external_conditions
     assert p._pack_errors == []
     assert isinstance(p._patient, doc.PatientChart) or p._patient.__class__.__name__ == "PatientChart"
 
@@ -980,3 +994,94 @@ def test_external_pack_same_remedy_stays_explain_only_by_default(tmp_path):
     assert errors == [] and len(conds) == 1
     assert conds[0]["fix"] is None
     assert any("explain-only" in line for line in conds[0]["howto"])
+
+
+# ---- ACTION_META-driven policy (Claude, v0.6-pre3) --------------------------------------
+def _reboot_finding():
+    # restore_config is a reboot-class action in ACTION_META
+    return [{"id": "config_invalid", "severity": "high", "confidence": "high",
+             "fix": {"action": "restore_config", "tier": "risky"},
+             "_detect": lambda s: False, "outcome": "detected", "howto": []}]
+
+
+def test_deny_actions_blocks_action():
+    calls = []
+    out = doc.apply_fixes(_safe_finding(), {}, "conservative", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: {},
+                          denied_actions={"rfkill_unblock"})
+    assert out[0]["outcome"] == "needs_user" and calls == []
+
+
+def test_reboot_action_held_even_at_assertive():
+    calls = []
+    out = doc.apply_fixes(_reboot_finding(), {}, "assertive", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: {})
+    assert out[0]["outcome"] == "awaiting_confirm" and calls == []
+
+
+def test_reboot_action_runs_when_allowed():
+    calls = []
+    out = doc.apply_fixes(_reboot_finding(), {}, "assertive", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: {}, allow_reboot=True)
+    # restore_config needs a backup file to succeed; without one it reports fix_failed, but the
+    # point here is that it was *attempted* (not held) once reboot-class actions are allowed
+    assert out[0]["outcome"] in ("fixed", "fix_failed")
+
+
+def test_reboot_action_runs_when_forced():
+    calls = []
+    out = doc.apply_fixes(_reboot_finding(), {}, "assertive", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: {},
+                          force={"config_invalid"})
+    assert out[0]["outcome"] in ("fixed", "fix_failed")
+
+
+def test_action_meta_needs_reboot_flags():
+    assert doc.ACTION_META["restore_config"]["needs_reboot"] is True
+    assert doc.ACTION_META["quarantine_plugin"]["needs_reboot"] is True
+    assert doc.ACTION_META["rfkill_unblock"]["needs_reboot"] is False
+
+
+# ---- built-in -> bundled Condition Pack migration (Claude, v0.6-pre3) --------------------
+_MIGRATED_IDS = {"no_monitor", "no_route", "dns_broken", "sd_errors",
+                 "low_memory", "swap_thrash", "debug_log_level"}
+
+
+def test_migrated_conditions_left_python_conditions():
+    python_ids = {c["id"] for c in doc.CONDITIONS}
+    assert not (_MIGRATED_IDS & python_ids)   # removed from Python
+
+
+def test_bundled_packs_load_as_trusted_first_party():
+    ids = {c["id"] for c in _BUNDLED}
+    assert _MIGRATED_IDS <= ids
+    for c in _BUNDLED:
+        if c["id"] in _MIGRATED_IDS:
+            assert (c.get("provenance") or {}).get("source_class") == "bundled"
+
+
+def test_migrated_conditions_still_detect_via_bundled():
+    checks = [
+        ("no_monitor", {"monitor_present": False}),
+        ("no_route", {"net": {"default_route": False}}),
+        ("dns_broken", {"net": {"default_route": True, "dns_ok": False}}),
+        ("sd_errors", {"dmesg": {"sd_error": 2}}),
+        ("low_memory", {"mem_pct": 95}),
+        ("swap_thrash", {"swap_used_pct": 70}),
+        ("debug_log_level", {"config": {"valid": True, "debug": True}}),
+    ]
+    for cid, patch in checks:
+        s = _clean()
+        s.update(patch)
+        assert cid in {f["id"] for f in _diag(s)}, cid
+
+
+def test_plugin_loads_bundled_conditions(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path)
+    bundled_ids = {c["id"] for c in p._bundled_conditions}
+    assert _MIGRATED_IDS <= bundled_ids
+
+
+def test_migrated_conditions_clean_on_healthy_signals():
+    # nothing migrated should fire on a clean device
+    assert not (_MIGRATED_IDS & {f["id"] for f in _diag(_clean())})

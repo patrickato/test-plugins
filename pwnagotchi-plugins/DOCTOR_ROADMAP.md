@@ -1,6 +1,6 @@
 # Doctor Plugin — Design Notes & Roadmap
 
-**Plugin:** `doctor` (P06) · **Current version:** v0.6.0-pre2 · **Last updated:** 2026-09-24
+**Plugin:** `doctor` (P06) · **Current version:** v0.6.0-pre3 · **Last updated:** 2026-09-24
 **Scope:** stock Pwnagotchi only (this is *not* the Beastagotchi Doctor; see §9 for the link).
 **Status caveat:** everything below is source/CI reasoning + off-Pi tests. **Physical Pi
 validation of the auto-fix effectors is still pending.**
@@ -65,7 +65,28 @@ Growth happens on four axes plus one structural idea:
 
 ---
 
-## 2. Current state (v0.6.0-pre2)
+## 2. Current state (v0.6.0-pre3)
+
+**New in v0.6-pre3:**
+- **Trusted bundled-pack loader + provenance** (ChatGPT): `doctor_packs/` beside `doctor.py`
+  loads as a first-party trust class (may carry remedies, still gated by ACTIONS/guards/
+  confidence/Standing-Orders/breaker/verify); external `/etc/pwnagotchi/doctor.d` stays
+  explain-only; precedence Python-core → bundled → external; SHA-256 + source_class provenance
+  (audit-only). Migration seams ruled: bundled-trust **approved**, threshold parameterization
+  **deferred** (principled code/data split).
+- **First built-in → JSON migration** (Claude): the fix-less pure-boolean diagnostics
+  (`no_monitor`, `no_route`, `dns_broken`, `sd_errors`, `low_memory`, `swap_thrash`,
+  `debug_log_level`) now ship as bundled Condition Packs — identical detection, zero authority
+  change. Threshold/boot-gated/computed conditions stay in Python per the ruling.
+- **ACTION_META drives policy** (Claude): `deny_actions` (owner veto on specific actions) and a
+  reboot-class gate — `restore_config`/`quarantine_plugin` hold for confirmation even at
+  `assertive` unless `allow_reboot_actions=true`. Both surface via `awaiting_confirm`/`needs_user`.
+- **Release staging** (ChatGPT): `release/pwndoctor/` docs set (README/INSTALL/CONFIGURATION/
+  DEPENDENCIES/USAGE/SECURITY/COMPATIBILITY/TROUBLESHOOTING/RELEASE_CHECKLIST/PACKAGE_MANIFEST);
+  corrected canonical install path to `/etc/pwnagotchi/custom-plugins/` (`main.custom_plugins`).
+  Claude reviewed for correctness (INSTALL ships `doctor_packs/` alongside; CONFIGURATION covers
+  the new options).
+- Tests: **87** off-Pi doctor tests (full repo suite 349 green).
 
 **New in v0.6-pre2:**
 - **Tri-state condition truth + explicit pack verification** (ChatGPT): the evaluator is
@@ -251,18 +272,15 @@ Chart move up to v0.6** (don't accumulate more hard-coded conditions before the 
   hijack (+ uplink-safe stop), interface mismatch, journald bloat (+ vacuum), debug-log-level;
   verification truth; persistent circuit breaker; media/uplink guards; autonomy dial + dry-run
   + per-condition opt-out + live reload.
-- **v0.6 — Data-driven brain + memory** *(pre2 landed)*: condition-pack schema v1 + loader
-  ✅ (ChatGPT); **Patient Chart v1** ✅ (ChatGPT); tri-state verify + chronic/recurrence
-  counters ✅ (ChatGPT); **canonical key registry ratified** ✅; **confirm-required tier** ✅
-  (Claude, pulled forward from v0.7). **Remaining for v0.6 final:** migrate built-in conditions
-  → JSON packs (Claude) — *blocked on two shared-review seams below* — and promote `ACTION_META`
-  to drive policy (Claude).
-  - *Migration prerequisites (shared review — treatment-authority + schema):* (1) a **trusted
-    bundled-pack** class shipped with the plugin that may carry remedies (first-party = as
-    trusted as the plugin's own code), distinct from user/external packs which stay explain-only;
-    (2) **threshold parameterization** so config-tunable conditions (disk_full, overheat, …) can
-    live as packs. Conditions needing boot-gating or computed helpers (iface_mismatch) may stay
-    as code.
+- **v0.6 — Data-driven brain + memory** *(pre3 landed)*: condition-pack schema v1 + loader
+  ✅; Patient Chart v1 + tri-state verify + chronic/recurrence ✅ (ChatGPT); canonical key
+  registry ratified ✅; confirm-required tier ✅; **trusted bundled-pack loader + provenance** ✅
+  (ChatGPT); **ACTION_META→policy** (deny_actions + reboot gate) ✅ (Claude); **first built-in→JSON
+  migration** ✅ (Claude — fix-less pure-boolean diagnostics). **Remaining for v0.6 final:**
+  migrate the *remedy-carrying* pure-boolean built-ins (`rfkill_blocked`, `sd_readonly`,
+  `wpa_supplicant_hijack`, `config_invalid`, `handshakes_unwritable`) into bundled packs and
+  verify the bundled-remedy path end-to-end (Claude). Threshold/boot-gated/computed conditions
+  stay in Python per the ruling (no threshold parameterization in v0.6).
 - **v0.7 — Learn + explain:** remedy-efficacy ranking (ranking only — never expands authority);
   **one-click sanitized support bundle**; plain-language narrative. (Confirm-required tier already
   landed in v0.6-pre2.)
@@ -357,10 +375,13 @@ schema is the real interop opportunity between the two projects.
       integrated by Claude; built-in-wins guard, example pack, broadened CI (Claude). 61 tests.
 - [x] **v0.6-pre2 landed:** tri-state verify + chronic/recurrence memory (ChatGPT); canonical key
       registry ratified; confirm-required tier (Claude). 74 tests / 336 repo.
-- [ ] **Shared review (unblocks migration):** ratify the *trusted bundled-pack* remedy class and
-      *threshold parameterization* in `CONDITION_PACK_SCHEMA.md` (treatment-authority + schema
-      change → ChatGPT + Claude).
-- [ ] **v0.6 final (Claude):** once the two seams are agreed, migrate built-in conditions → JSON
-      packs and promote `ACTION_META` to drive policy.
+- [x] **Shared review resolved:** ChatGPT ruled — trusted bundled-pack class **approved**,
+      threshold parameterization **deferred**; loader split + SHA/provenance implemented.
+- [x] **v0.6-pre3 landed:** ACTION_META→policy (deny_actions + reboot gate) and the first
+      built-in→JSON migration (fix-less diagnostics) (Claude); release/ docs staged (ChatGPT),
+      reviewed by Claude. 87 tests / 349 repo.
+- [ ] **v0.6 final (Claude):** migrate the remedy-carrying pure-boolean built-ins
+      (`rfkill_blocked`, `sd_readonly`, `wpa_supplicant_hijack`, `config_invalid`,
+      `handshakes_unwritable`) into bundled packs; verify the bundled-remedy path end-to-end.
 - [ ] Toward RC: support bundle + plain-language narrative (v0.7), then physical Pi validation
       (only the owner can do this — a scripted checklist ships with v1.0 RC).
