@@ -1,0 +1,8 @@
+# Example config for the "conflict_referee" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library). Read-only diagnostic.
+
+main.plugins.conflict_referee.enabled = true
+
+# UI position "x,y" for the "conf:" conflict-count readout.
+main.plugins.conflict_referee.position = "0,0"

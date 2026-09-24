@@ -44,7 +44,7 @@ tested off-Pi.
 | P33 `circadian_faces` | none | none | none | ✅ |
 | P34 `achievements` | none | none | none | |
 | P35 `daily_digest` | none *(Pillow ships already)* | none | none | |
-| P36 `conflict_referee` | none | none | none | |
+| P36 `conflict_referee` | none | none | none | ✅ |
 | P37 `eink_ghosting` | none | none | e-ink display | ✅ |
 | P38 `signal_compass` | none | none | none | ✅ |
 | P39 `streaks` | none | none | none | ✅ |

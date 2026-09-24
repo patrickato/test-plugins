@@ -46,9 +46,15 @@ pending for every plugin below.**
 - ✅ P20 `mesh_vpn_presence` — 8 tests
 - ✅ P43 `ble_console` — 8 tests
 
-**Phases 1–5 complete (22 plugins, 156 tests green).**
-Next: Phase 6 — sensors/system/display (P44 env_sensors → P45 auto_dim → P40 multi_adapter
-→ P37 eink_ghosting → P36 conflict_referee), then Phase 7 (P42, P35, P34, P29).
+- ✅ P44 `env_sensors` — 8 tests
+- ✅ P45 `auto_dim` — 6 tests
+- ✅ P40 `multi_adapter` — 7 tests
+- ✅ P37 `eink_ghosting` — 5 tests
+- ✅ P36 `conflict_referee` — 6 tests
+
+**Phases 1–6 complete (27 plugins, 188 tests green).**
+Next: Phase 7 — knowledge/delight (P42 wordlist_manager → P35 daily_digest → P34 achievements
+→ P29 offline_reader). Last phase!
 
 ---
 
