@@ -61,6 +61,8 @@ import hashlib
 import json
 import logging
 import os
+import platform
+import re
 import shutil
 import socket
 import subprocess
@@ -252,6 +254,248 @@ def iface_mismatch(configured, present):
         return False
     base = configured[:-3] if configured.endswith("mon") else configured
     return base not in present and configured not in present
+
+
+
+# ======================================================================================
+# Condition Pack v1 runtime (data-only shared PwnDoctor <-> Beast contract)
+# ======================================================================================
+_MISSING = object()
+_PACK_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{2,127}$")
+_PACK_ACTION_ALIASES = {
+    "service.restart": "restart_service",
+    "wifi.rfkill_unblock": "rfkill_unblock",
+    "time.enable_ntp": "set_time",
+    "storage.remount_rw": "remount_rw",
+    "filesystem.ensure_handshakes_dir": "make_handshakes_dir",
+    "logs.prune_pwnagotchi": "prune_logs",
+    "service.stop_wpa_supplicant": "stop_wpa_supplicant",
+    "logs.vacuum_journal": "vacuum_journal",
+    "config.restore_backup": "restore_config",
+    "plugin.quarantine": "quarantine_plugin",
+}
+_PACK_GUARD_ALIASES = {
+    "not_uplink": "wpa_not_uplink",
+    "uplink.not_wlan": "wpa_not_uplink",
+    "media_ok": "media_ok",
+    "storage.media_ok": "media_ok",
+}
+
+
+def _strict_equal(left, right):
+    """Schema is-operator means strict equality; bool does not silently equal int 1/0."""
+    return type(left) is type(right) and left == right
+
+
+def canonicalize_signals(signals):
+    """Flatten collector output into the first shared canonical namespace cut."""
+    s = signals or {}
+    disk = s.get("disk", {}) or {}
+    throttled = s.get("throttled", {}) or {}
+    dmesg = s.get("dmesg", {}) or {}
+    net = s.get("net", {}) or {}
+    cfg = s.get("config", {}) or {}
+    iface = s.get("iface", {}) or {}
+    hs = s.get("handshakes", {}) or {}
+    wpa = s.get("wpa_supplicant", {}) or {}
+    out = {
+        "system.uptime_sec": s.get("uptime_sec"),
+        "system.memory.used_pct": s.get("mem_pct"),
+        "system.swap.used_pct": s.get("swap_used_pct"),
+        "system.temp.cpu_c": s.get("temp_c"),
+        "storage.root.free_mb": disk.get("free_mb"),
+        "storage.root.read_only": disk.get("root_ro"),
+        "storage.sd.io_error_count": dmesg.get("sd_error"),
+        "power.undervoltage.current": throttled.get("undervoltage_now"),
+        "power.undervoltage.occurred": throttled.get("undervoltage_occurred"),
+        "power.throttled.current": throttled.get("throttled_now"),
+        "wifi.monitor.present": s.get("monitor_present"),
+        "wifi.rfkill.blocked": s.get("rfkill_blocked"),
+        "wifi.wpa_supplicant.running": wpa.get("running"),
+        "wifi.iface.configured": iface.get("configured"),
+        "wifi.iface.present": iface.get("present"),
+        "network.default_route.present": net.get("default_route"),
+        "network.default_route.iface": net.get("default_iface"),
+        "network.dns.ok": net.get("dns_ok"),
+        "pwnagotchi.config.valid": cfg.get("valid"),
+        "pwnagotchi.config.debug": cfg.get("debug"),
+        "pwnagotchi.handshakes.writable": hs.get("writable"),
+        "pwnagotchi.bettercap.reachable": s.get("bettercap_reachable"),
+        "system.journal.bytes": s.get("journal_bytes"),
+    }
+    for name, row in (s.get("services", {}) or {}).items():
+        if isinstance(row, dict):
+            out["service.%s.active" % name] = row.get("active")
+    for name, count in (s.get("service_restarts", {}) or {}).items():
+        out["service.%s.restart_count" % name] = count
+    return {k: v for k, v in out.items() if v is not None}
+
+
+def eval_condition_expr(expr, canonical):
+    """Evaluate the tiny Condition Pack boolean grammar. Missing/null means non-match."""
+    if not isinstance(expr, dict):
+        return False
+    if "all" in expr:
+        rows = expr.get("all")
+        return bool(isinstance(rows, list) and rows and
+                    all(eval_condition_expr(x, canonical) for x in rows))
+    if "any" in expr:
+        rows = expr.get("any")
+        return bool(isinstance(rows, list) and rows and
+                    any(eval_condition_expr(x, canonical) for x in rows))
+
+    key = expr.get("key")
+    if not isinstance(key, str) or not key:
+        return False
+    value = canonical.get(key, _MISSING)
+    if value is _MISSING or value is None:
+        return False
+
+    if "present" in expr:
+        return bool(expr.get("present")) is True
+    if "is" in expr:
+        return _strict_equal(value, expr.get("is"))
+    if "contains" in expr:
+        needle = expr.get("contains")
+        try:
+            return needle in value
+        except (TypeError, ValueError):
+            return False
+    for op, fn in (
+        ("ge", lambda a, b: a >= b),
+        ("gt", lambda a, b: a > b),
+        ("le", lambda a, b: a <= b),
+        ("lt", lambda a, b: a < b),
+    ):
+        if op in expr:
+            try:
+                return bool(fn(value, expr.get(op)))
+            except (TypeError, ValueError):
+                return False
+    return False
+
+
+def validate_condition_pack(pack):
+    """Return schema errors; empty means structurally loadable."""
+    errors = []
+    if not isinstance(pack, dict):
+        return ["pack must be a JSON object"]
+    if pack.get("schema") != "condition-pack/v1":
+        errors.append("schema must be condition-pack/v1")
+    pid = pack.get("id")
+    if not isinstance(pid, str) or not _PACK_ID_RE.fullmatch(pid):
+        errors.append("id must be a lowercase namespaced identifier")
+    if pack.get("severity") not in ("high", "warn", "info"):
+        errors.append("severity must be high|warn|info")
+    if pack.get("confidence") not in ("high", "medium", "low"):
+        errors.append("confidence must be high|medium|low")
+    if not isinstance(pack.get("detect"), dict):
+        errors.append("detect must be an expression object")
+    if not isinstance(pack.get("symptom"), str) or not pack.get("symptom"):
+        errors.append("symptom is required")
+    if not isinstance(pack.get("cause"), str):
+        errors.append("cause must be a string")
+    howto = pack.get("howto", [])
+    if not isinstance(howto, list) or any(not isinstance(x, str) for x in howto):
+        errors.append("howto must be a list of strings")
+    fix = pack.get("fix")
+    if fix is not None and (not isinstance(fix, dict) or not isinstance(fix.get("action"), str)):
+        errors.append("fix.action must be a string when fix is present")
+    return errors
+
+
+def _version_key(value):
+    if not value:
+        return None
+    nums = [int(x) for x in re.findall(r"\d+", str(value))[:8]]
+    return tuple(nums) if nums else None
+
+
+def pack_applies(pack, *, platform_name="pwnagotchi", version=None):
+    applies = pack.get("applies_to") if isinstance(pack, dict) else None
+    if not isinstance(applies, dict):
+        return True
+    platforms = applies.get("platform")
+    if isinstance(platforms, list) and platforms and platform_name not in platforms:
+        return False
+    current = _version_key(version)
+    minimum = _version_key(applies.get("min_version"))
+    maximum = _version_key(applies.get("max_version"))
+    if current is not None and minimum is not None and current < minimum:
+        return False
+    if current is not None and maximum is not None and current > maximum:
+        return False
+    return True
+
+
+def condition_from_pack(pack, *, allow_remedy=False):
+    """Compile a validated data pack into runtime condition shape."""
+    canonical_detect = pack["detect"]
+
+    def detect(signals):
+        return eval_condition_expr(canonical_detect, canonicalize_signals(signals))
+
+    fix = None
+    raw_fix = pack.get("fix")
+    unavailable_action = None
+    if allow_remedy and isinstance(raw_fix, dict):
+        action = _PACK_ACTION_ALIASES.get(raw_fix.get("action"), raw_fix.get("action"))
+        if action in globals().get("ACTIONS", {}):
+            fix = dict(raw_fix)
+            fix["action"] = action
+            guard = fix.get("guard")
+            if guard:
+                mapped = _PACK_GUARD_ALIASES.get(guard, guard)
+                if mapped in globals().get("GUARDS", {}):
+                    fix["guard"] = mapped
+                else:
+                    fix = None
+        else:
+            unavailable_action = raw_fix.get("action")
+
+    howto = list(pack.get("howto", []))
+    if raw_fix and not allow_remedy:
+        howto.append("This external condition pack is explain-only under current Doctor policy.")
+    elif unavailable_action:
+        howto.append("Pack remedy action '%s' is not allow-listed on this Doctor." % unavailable_action)
+
+    return {
+        "id": pack["id"], "severity": pack["severity"], "confidence": pack["confidence"],
+        "detect": detect, "symptom": pack["symptom"], "cause": pack.get("cause", ""),
+        "fix": fix, "howto": howto, "runbook": pack.get("runbook"),
+        "provenance": pack.get("provenance") or {"source": "local"}, "_pack": True,
+    }
+
+
+def load_condition_packs(directory, *, allow_remedies=False, max_packs=128,
+                         max_bytes=128 * 1024, platform_name="pwnagotchi", version=None):
+    """Bounded local/offline loader. Returns (runtime_conditions, errors)."""
+    conditions, errors = [], []
+    if not directory or not os.path.isdir(directory):
+        return conditions, errors
+    try:
+        names = sorted(x for x in os.listdir(directory) if x.lower().endswith(".json"))
+    except Exception as exc:
+        return [], [{"file": str(directory), "error": "list failed: %s" % exc}]
+    for name in names[:max_packs]:
+        pack_path = os.path.join(directory, name)
+        try:
+            if os.path.getsize(pack_path) > max_bytes:
+                raise ValueError("pack exceeds %d byte limit" % max_bytes)
+            with open(pack_path, "rt", encoding="utf-8") as fp:
+                pack = json.load(fp)
+            schema_errors = validate_condition_pack(pack)
+            if schema_errors:
+                raise ValueError("; ".join(schema_errors))
+            if not pack_applies(pack, platform_name=platform_name, version=version):
+                continue
+            conditions.append(condition_from_pack(pack, allow_remedy=allow_remedies))
+        except Exception as exc:
+            errors.append({"file": name, "error": str(exc)[:240]})
+    if len(names) > max_packs:
+        errors.append({"file": str(directory), "error": "pack count exceeds %d; extras ignored" % max_packs})
+    return conditions, errors
+
 
 
 # ======================================================================================
@@ -594,9 +838,9 @@ def build_causal(finding_ids):
 # ======================================================================================
 # Diagnosis (pure over signals)
 # ======================================================================================
-def diagnose(signals):
+def diagnose(signals, extra_conditions=None):
     findings = []
-    for c in CONDITIONS:
+    for c in list(CONDITIONS) + list(extra_conditions or []):
         try:
             hit = c["detect"](signals)
         except Exception:
@@ -909,7 +1153,7 @@ _UI_STATUS = {"OK": "OK", "HEALED": "healed", "ATTENTION": "attn",
 
 class Doctor(plugins.Plugin):
     __author__ = "patrickato"
-    __version__ = "0.5.0"
+    __version__ = "0.6.0-pre1"
     __license__ = "GPL3"
     __description__ = "Autonomous health scan, diagnosis, causal explanation, guarded self-healing and known-good drift."
 
