@@ -1,0 +1,21 @@
+# Example config for the "milestone_fireworks" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library). Purely cosmetic.
+
+main.plugins.milestone_fireworks.enabled = true
+
+# Fixed milestones to celebrate; after the largest, it also celebrates every 1000.
+main.plugins.milestone_fireworks.milestones = [10, 25, 50, 100, 250, 500, 1000]
+
+# How long the celebration stays on screen (seconds).
+main.plugins.milestone_fireworks.celebrate_secs = 8
+
+# Celebration face + message.
+main.plugins.milestone_fireworks.face = "(^o^)/"
+main.plugins.milestone_fireworks.message = "MILESTONE!"
+
+# Where the running count is persisted (JSON).
+main.plugins.milestone_fireworks.data_path = "/etc/pwnagotchi/milestone_fireworks.json"
+
+# UI position "x,y" for the celebration banner.
+main.plugins.milestone_fireworks.position = "0,0"

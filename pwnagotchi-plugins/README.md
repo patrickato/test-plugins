@@ -57,7 +57,7 @@ tested off-Pi.
 | P46 `field_notes` | none | `gpsd` (optional) | GPS (optional) | ✅ |
 | P47 `deep_thoughts` | none | none | none | ✅ |
 | P48 `happy_thoughts` | none | none | none | ✅ |
-| P49 `milestone_fireworks` | none | none | none | |
+| P49 `milestone_fireworks` | none | none | none | ✅ |
 | P50 `pet_quips` | none | none | none | |
 | P51 `display_setup_helper` | none | none | none | |
 | P52 `why_no_handshakes` | none | `iw`/`ip` (usually present) | none | |
