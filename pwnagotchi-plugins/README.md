@@ -62,7 +62,7 @@ tested off-Pi.
 | P51 `display_setup_helper` | none | none | none | ✅ |
 | P52 `why_no_handshakes` | none | `iw`/`ip` (usually present) | none | ✅ |
 | P53 `captive_portal` | none | none | none | ✅ |
-| P54 `stat_source_bridge` | none | Korrie71 Theme Manager installed | none | |
+| P54 `stat_source_bridge` | none | Korrie71 Theme Manager installed | none | ✅ |
 
 Each plugin also states its requirements in its module docstring and in a `Requires:` line
 at the top of its `config.toml`. Rows without pip/system/hardware needs run on a stock

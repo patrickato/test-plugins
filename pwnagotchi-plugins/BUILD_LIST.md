@@ -354,6 +354,9 @@ grounded interop with Korrie71's Theme Manager.
 - P54 `stat_source_bridge` — feed real values into Korrie71 Theme Manager's `STAT_SOURCE` hook
   (non-destructively wrapping any existing source).
 
+**✅ Round 4 complete (8 plugins). Project total: 39 plugins, 269 off-Pi tests green.**
+(Still source/CI evidence only — physical Pi validation pending for all.)
+
 ---
 
 ## Cross-cutting decisions to iron out (applies to most plugins)

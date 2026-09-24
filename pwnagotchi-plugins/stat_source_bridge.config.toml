@@ -1,0 +1,18 @@
+# Example config for the "stat_source_bridge" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: Korrie71's Theme Manager installed & loaded. Without it this plugin does nothing.
+#   Theme Manager: https://github.com/Korrie71/pwnagotchi-theme-manager
+#
+# Once enabled, use tokens like {pwn_temp} {pwn_handshakes} in a Theme Manager theme's text.
+
+main.plugins.stat_source_bridge.enabled = true
+
+# Token prefix. Keep it flat (no dots): Theme Manager expands with format_map, and a dotted
+# name would raise and blank the whole line.
+main.plugins.stat_source_bridge.prefix = "pwn_"
+
+# Which values to expose (token = prefix + key).
+main.plugins.stat_source_bridge.keys = ["temp", "cpu", "mem", "uptime", "handshakes", "name"]
+
+# UI position "x,y" for the "tmbridge:" on/off readout.
+main.plugins.stat_source_bridge.position = "0,0"
