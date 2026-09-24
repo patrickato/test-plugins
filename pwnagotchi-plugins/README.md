@@ -55,6 +55,14 @@ tested off-Pi.
 | P44 `env_sensors` | `smbus2` + per-sensor libs | I²C enabled | I²C sensor(s) | ✅ |
 | P45 `auto_dim` | *(optional light-sensor lib)* | backlight sysfs/GPIO | light sensor (optional) | ✅ |
 | P46 `field_notes` | none | `gpsd` (optional) | GPS (optional) | ✅ |
+| P47 `deep_thoughts` | none | none | none | |
+| P48 `happy_thoughts` | none | none | none | |
+| P49 `milestone_fireworks` | none | none | none | |
+| P50 `pet_quips` | none | none | none | |
+| P51 `display_setup_helper` | none | none | none | |
+| P52 `why_no_handshakes` | none | `iw`/`ip` (usually present) | none | |
+| P53 `captive_portal` | none | none | none | |
+| P54 `stat_source_bridge` | none | Korrie71 Theme Manager installed | none | |
 
 Each plugin also states its requirements in its module docstring and in a `Requires:` line
 at the top of its `config.toml`. Rows without pip/system/hardware needs run on a stock

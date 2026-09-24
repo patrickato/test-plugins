@@ -340,6 +340,22 @@ project's flagship because it's near-total whitespace.
 
 ---
 
+## Round 4 — fun & fixes (added 2026-09-24)
+A follow-up set: playful personality plugins plus high-value ecosystem fixes, including one
+grounded interop with Korrie71's Theme Manager.
+
+- P47 `deep_thoughts` — rotating shower-thoughts / philosophical quips on screen (offline pack).
+- P48 `happy_thoughts` — the same, but a funny/absurd quips-and-jokes pack.
+- P49 `milestone_fireworks` — brief celebration face/message when a count milestone is crossed.
+- P50 `pet_quips` — the pet reacts with a pun/quip on handshakes and mood changes.
+- P51 `display_setup_helper` — detect the TFT/e-ink panel + suggest the right overlay/config.
+- P52 `why_no_handshakes` — targeted troubleshooter for the #1 "I get no handshakes" complaint.
+- P53 `captive_portal` — detect captive portals / no-internet so uploaders don't waste attempts.
+- P54 `stat_source_bridge` — feed real values into Korrie71 Theme Manager's `STAT_SOURCE` hook
+  (non-destructively wrapping any existing source).
+
+---
+
 ## Cross-cutting decisions to iron out (applies to most plugins)
 - Shared storage location & format (SQLite vs JSON) under `/etc/pwnagotchi/` vs
   `/var/lib/`.
