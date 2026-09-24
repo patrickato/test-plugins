@@ -42,8 +42,13 @@ pending for every plugin below.**
 - ✅ P24 `rtl433_ambient` — 7 tests
 - ✅ P25 `adsb_ambient` — 6 tests
 
-**Phases 1–4 complete (19 plugins, 135 tests green).**
-Next: Phase 5 — connectivity (P18 ha_mqtt → P20 mesh_vpn_presence → P43 ble_console).
+- ✅ P18 `ha_mqtt` — 5 tests
+- ✅ P20 `mesh_vpn_presence` — 8 tests
+- ✅ P43 `ble_console` — 8 tests
+
+**Phases 1–5 complete (22 plugins, 156 tests green).**
+Next: Phase 6 — sensors/system/display (P44 env_sensors → P45 auto_dim → P40 multi_adapter
+→ P37 eink_ghosting → P36 conflict_referee), then Phase 7 (P42, P35, P34, P29).
 
 ---
 

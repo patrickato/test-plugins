@@ -51,7 +51,7 @@ tested off-Pi.
 | P40 `multi_adapter` | none | `iw` / `ip` (usually present) | 2+ Wi-Fi adapters | |
 | P41 `auto_timezone` | *(optional `timezonefinder`)* | `timedatectl` + `gpsd` | GPS | ✅ |
 | P42 `wordlist_manager` | none | none | none | |
-| P43 `ble_console` | `bleak` *(or `dbus-python`)* | BlueZ | BLE adapter | |
+| P43 `ble_console` | `bluezero` | BlueZ | BLE adapter | ✅ |
 | P44 `env_sensors` | `smbus2` + per-sensor libs | I²C enabled | I²C sensor(s) | |
 | P45 `auto_dim` | *(optional `smbus2`)* | backlight sysfs/GPIO | light sensor (optional) | |
 | P46 `field_notes` | none | `gpsd` (optional) | GPS (optional) | ✅ |

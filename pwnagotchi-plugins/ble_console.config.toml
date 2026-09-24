@@ -1,0 +1,16 @@
+# Example config for the "ble_console" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: BlueZ + pip 'bluezero' and a BLE adapter for the radio link.
+#   sudo pip3 install bluezero
+# Without them the allow-listed command core still works, but there is no BLE transport.
+
+main.plugins.ble_console.enabled = true
+
+# Advertised BLE device name.
+main.plugins.ble_console.device_name = "pwnagotchi"
+
+# Allow-listed, read-only commands the phone may run. Keep this conservative.
+main.plugins.ble_console.allowed = ["help", "status", "uptime", "ip", "handshakes"]
+
+# UI position "x,y" for the "ble:" on/off readout.
+main.plugins.ble_console.position = "0,0"
