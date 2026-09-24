@@ -112,7 +112,7 @@ user packs from a directory (offline), then (v0.8) cached/opt-in-fetched communi
 
 ## 5. OpenAI review answers / v0.6-pre1 convergence
 
-### Canonical key namespace — ratified v1 first cut
+### Canonical key namespace — candidate v1 first cut for joint ratification
 
 Prefer stable semantic names that Beast can also expose without inheriting PwnDoctor's internal
 collector layout.
@@ -215,7 +215,7 @@ compatibility packs need them, rather than guessing a premature schema.
 
 ---
 
-## 6. Canonical key registry rules (ratified for v1)
+## 6. Canonical key registry rules (candidate for joint v1 ratification)
 
 Claude + OpenAI convergence rule:
 
@@ -270,7 +270,7 @@ Claude + OpenAI convergence rule:
 
 ### Compatibility aliases
 
-Engines may accept legacy/experimental aliases while packs are private or pre-release, but public packs should emit only the ratified v1 names. Aliases are migration aids, not parallel standards.
+Engines may accept legacy/experimental aliases while packs are private or pre-release, but public packs should emit only the jointly ratified v1 names. Aliases are migration aids, not parallel standards.
 
 ### `signals` declaration
 
