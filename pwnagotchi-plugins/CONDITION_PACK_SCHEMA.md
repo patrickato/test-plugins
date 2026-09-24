@@ -104,3 +104,109 @@ user packs from a directory (offline), then (v0.8) cached/opt-in-fetched communi
 - Whether `guard` names are standardized across engines or engine-local (lean: local, with a
   shared vocabulary of intents like `not_uplink`, `media_ok`, `not_during_capture`).
 - Pack signing/provenance for the eventual fetch path (v0.8) — hash + trusted catalog.
+
+
+---
+
+## 5. OpenAI review answers / v0.6-pre1 convergence
+
+### Canonical key namespace — proposed first cut
+
+Prefer stable semantic names that Beast can also expose without inheriting PwnDoctor's internal
+collector layout.
+
+Initial families:
+
+- `system.*`
+  - `system.uptime_sec`
+  - `system.memory.used_pct`
+  - `system.swap.used_pct`
+  - `system.temp.cpu_c`
+  - `system.journal.bytes`
+- `storage.*`
+  - `storage.root.free_mb`
+  - `storage.root.read_only`
+  - `storage.sd.io_error_count`
+- `power.*`
+  - `power.undervoltage.current`
+  - `power.undervoltage.occurred`
+  - `power.throttled.current`
+- `wifi.*`
+  - `wifi.monitor.present`
+  - `wifi.rfkill.blocked`
+  - `wifi.wpa_supplicant.running`
+  - `wifi.iface.configured`
+  - `wifi.iface.present`
+- `network.*`
+  - `network.default_route.present`
+  - `network.default_route.iface`
+  - `network.dns.ok`
+- `service.<name>.*`
+  - `service.bettercap.active`
+  - `service.bettercap.restart_count`
+- `pwnagotchi.*`
+  - `pwnagotchi.config.valid`
+  - `pwnagotchi.config.debug`
+  - `pwnagotchi.handshakes.writable`
+  - `pwnagotchi.bettercap.reachable`
+
+Rule: prefer nouns/meaning over collector implementation. Do not create a canonical key merely
+because one command happens to output a value.
+
+The OpenAI v0.6-pre1 branch implements this first cut in `canonicalize_signals()`.
+
+### Guard names — shared intent vocabulary, engine-local implementation
+
+Recommendation: standardize **guard intent names**, not guard code.
+
+Examples:
+- `not_uplink`
+- `media_ok`
+- `not_during_capture`
+- `backup_available`
+- `power_stable`
+
+Each engine maps those intents to its own policy implementation.
+
+This gives a shared pack meaning while allowing Beast to use its Capability/Action graph and
+PwnDoctor to use small local guard functions.
+
+The pre1 implementation accepts aliases such as `uplink.not_wlan` and
+`storage.media_ok`, but normalizing on short intent names is preferable.
+
+### Provenance / signing
+
+For the **offline local-loader stage**:
+- bound file size/count;
+- schema validation;
+- source path;
+- optional SHA-256 recorded by installer/catalog;
+- remedies disabled by default for external/local packs.
+
+For later fetched packs:
+1. HTTPS is transport protection, not package trust.
+2. Catalog records expected SHA-256.
+3. Pack stores source/repository/version/provenance.
+4. Trusted catalogs may later add Ed25519 signatures.
+5. A valid signature proves publisher provenance; it still does **not** grant action authority.
+6. Remedy execution remains independently gated by the engine's allow-list and Standing Orders.
+
+### External remedies default to explain-only
+
+The loader should treat a local/fetched JSON condition as diagnostic knowledge first.
+
+Even if the JSON names a valid allow-listed action, the current OpenAI branch strips the remedy
+unless `allow_pack_remedies = true` is explicitly configured.
+
+This is deliberate: **knowledge acquisition and treatment authority are different privileges.**
+
+### Applicability
+
+Pack applicability should eventually include:
+- platform;
+- Pwnagotchi/Beast version range;
+- OS/image generation;
+- hardware/capability predicates.
+
+v0.6-pre1 implements platform + version range only. More dimensions should be added when real
+compatibility packs need them, rather than guessing a premature schema.
