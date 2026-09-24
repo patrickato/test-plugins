@@ -48,7 +48,7 @@ tested off-Pi.
 | P37 `eink_ghosting` | none | none | e-ink display | |
 | P38 `signal_compass` | none | none | none | ✅ |
 | P39 `streaks` | none | none | none | ✅ |
-| P40 `multi_adapter` | none | `iw` / `ip` (usually present) | 2+ Wi-Fi adapters | |
+| P40 `multi_adapter` | none | `iw` / `ip` (usually present) | 2+ Wi-Fi adapters | ✅ |
 | P41 `auto_timezone` | *(optional `timezonefinder`)* | `timedatectl` + `gpsd` | GPS | ✅ |
 | P42 `wordlist_manager` | none | none | none | |
 | P43 `ble_console` | `bluezero` | BlueZ | BLE adapter | ✅ |

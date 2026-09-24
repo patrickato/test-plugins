@@ -1,0 +1,12 @@
+# Example config for the "multi_adapter" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: 'iw' and 'ip' (iproute2), normally already present. 2+ Wi-Fi adapters to be useful.
+
+main.plugins.multi_adapter.enabled = true
+
+# Optional explicit role overrides (leave empty to auto-classify by mode + IP presence).
+main.plugins.multi_adapter.monitor_iface = ""
+main.plugins.multi_adapter.uplink_iface = ""
+
+# UI position "x,y" for the "if:" adapter-count readout (a trailing ! flags a conflict).
+main.plugins.multi_adapter.position = "0,0"
