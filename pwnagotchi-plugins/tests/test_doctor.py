@@ -1,4 +1,5 @@
 import importlib.util
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -532,3 +533,161 @@ def test_on_config_changed_reloads_autonomy(load_plugin, tmp_path):
     p.options["dry_run"] = True
     p.on_config_changed({})
     assert p._autofix == "assertive" and p._dry_run is True
+
+
+# ========================================================================================
+# v0.6-pre1 — Condition Pack runtime + Patient Chart collaboration foundation
+# ========================================================================================
+
+def _condition_pack(**overrides):
+    pack = {
+        "schema": "condition-pack/v1",
+        "id": "system.high_memory",
+        "version": "1.0.0",
+        "applies_to": {"platform": ["pwnagotchi"]},
+        "severity": "warn",
+        "confidence": "high",
+        "signals": ["system.memory.used_pct"],
+        "detect": {"key": "system.memory.used_pct", "ge": 90},
+        "symptom": "memory pressure is high",
+        "cause": "memory use crossed the configured condition threshold",
+        "howto": ["Disable unnecessary plugins or inspect memory consumers."],
+        "provenance": {"source": "test"},
+    }
+    pack.update(overrides)
+    return pack
+
+
+def test_condition_expr_unknown_strict_and_boolean_tree():
+    c = {"wifi.monitor.present": False, "system.memory.used_pct": 95, "roles": ["monitor", "uplink"]}
+    assert doc.eval_condition_expr({"key": "wifi.monitor.present", "is": False}, c) is True
+    assert doc.eval_condition_expr({"key": "missing.key", "is": False}, c) is False
+    assert doc.eval_condition_expr({"key": "wifi.monitor.present", "is": 0}, c) is False
+    assert doc.eval_condition_expr({"all": [
+        {"key": "system.memory.used_pct", "ge": 90},
+        {"key": "roles", "contains": "monitor"},
+    ]}, c) is True
+    assert doc.eval_condition_expr({"any": [
+        {"key": "missing.key", "present": True},
+        {"key": "system.memory.used_pct", "lt": 50},
+    ]}, c) is False
+
+
+def test_canonical_signal_binding_first_cut():
+    signals = {
+        "uptime_sec": 10, "mem_pct": 91, "monitor_present": True,
+        "disk": {"free_mb": 123, "root_ro": False},
+        "services": {"bettercap": {"active": True}},
+        "service_restarts": {"bettercap": 2},
+        "net": {"default_route": True, "default_iface": "eth0", "dns_ok": True},
+        "config": {"valid": True, "debug": False},
+        "iface": {"configured": "wlan0mon", "present": ["wlan0", "wlan0mon"]},
+    }
+    c = doc.canonicalize_signals(signals)
+    assert c["system.memory.used_pct"] == 91
+    assert c["storage.root.read_only"] is False
+    assert c["service.bettercap.active"] is True
+    assert c["service.bettercap.restart_count"] == 2
+    assert c["network.default_route.iface"] == "eth0"
+    assert c["wifi.iface.configured"] == "wlan0mon"
+
+
+def test_validate_condition_pack_and_version_gate():
+    pack = _condition_pack()
+    assert doc.validate_condition_pack(pack) == []
+    bad = dict(pack); bad["id"] = "NOT VALID"
+    assert doc.validate_condition_pack(bad)
+    gated = _condition_pack(applies_to={"platform": ["pwnagotchi"],
+                                        "min_version": "2.9.5", "max_version": "2.9.6"})
+    assert doc.pack_applies(gated, version="2.9.5.9") is True
+    assert doc.pack_applies(gated, version="2.9.7") is False
+    assert doc.pack_applies(gated, platform_name="beast", version="2.9.5.9") is False
+
+
+def test_local_condition_pack_loader_is_explain_only_by_default(tmp_path):
+    pack = _condition_pack(fix={
+        "action": "wifi.rfkill_unblock",
+        "tier": "safe",
+        "verify": {"key": "wifi.rfkill.blocked", "is": False},
+    })
+    (tmp_path / "memory.json").write_text(json.dumps(pack))
+    conditions, errors = doc.load_condition_packs(str(tmp_path))
+    assert errors == [] and len(conditions) == 1
+    assert conditions[0]["fix"] is None
+    assert any("explain-only" in x for x in conditions[0]["howto"])
+    findings = doc.diagnose({"mem_pct": 95}, extra_conditions=conditions)
+    assert any(x["id"] == "system.high_memory" for x in findings)
+
+
+def test_pack_remedy_requires_explicit_opt_in_and_existing_allowlist(tmp_path):
+    pack = _condition_pack(
+        id="wifi.rfkill_test",
+        signals=["wifi.rfkill.blocked"],
+        detect={"key": "wifi.rfkill.blocked", "is": True},
+        fix={"action": "wifi.rfkill_unblock", "tier": "safe",
+             "verify": {"key": "wifi.rfkill.blocked", "is": False}},
+    )
+    (tmp_path / "rfkill.json").write_text(json.dumps(pack))
+    conditions, errors = doc.load_condition_packs(str(tmp_path), allow_remedies=True)
+    assert errors == [] and conditions[0]["fix"]["action"] == "rfkill_unblock"
+
+    pack["fix"]["action"] = "shell.run_anything"
+    (tmp_path / "rfkill.json").write_text(json.dumps(pack))
+    conditions, errors = doc.load_condition_packs(str(tmp_path), allow_remedies=True)
+    assert errors == [] and conditions[0]["fix"] is None
+    assert any("not allow-listed" in x for x in conditions[0]["howto"])
+
+
+def test_pack_loader_is_bounded_and_reports_bad_files(tmp_path):
+    (tmp_path / "bad.json").write_text("{nope")
+    (tmp_path / "huge.json").write_text("x" * 500)
+    conditions, errors = doc.load_condition_packs(str(tmp_path), max_bytes=100)
+    assert conditions == []
+    assert {e["file"] for e in errors} == {"bad.json", "huge.json"}
+
+
+def test_patient_chart_only_writes_on_meaningful_change(tmp_path):
+    chart = doc.PatientChart(str(tmp_path / "patient.json"))
+    writes = []
+    chart._write = lambda: writes.append("write") or True
+    signals = {"services": {"pwnagotchi": {"active": True}},
+               "disk": {"free_mb": 1000, "root_ro": False},
+               "monitor_present": True, "net": {"default_route": True},
+               "config": {"valid": True}, "log_size": 10}
+    assert chart.observe(signals, [], "OK", now=1) is True
+    assert chart.observe(signals, [], "OK", now=2) is False
+    assert writes == ["write"]
+    assert chart.data["updated_at"] == 1
+
+
+def test_patient_chart_bounds_remedy_history(tmp_path):
+    chart = doc.PatientChart(str(tmp_path / "patient.json"), max_remedies=10)
+    chart._write = lambda: True
+    signals = {"services": {"pwnagotchi": {"active": True}}}
+    for i in range(15):
+        finding = {"id": "x%d" % i, "outcome": "fixed", "fix": {"action": "restart_service"}}
+        chart.observe(signals, [finding], "HEALED", now=i)
+    assert len(chart.data["remedies"]) == 10
+    assert chart.data["remedies"][0]["condition"] == "x5"
+    assert chart.summary()["remedy_count"] == 10
+
+
+def test_plugin_loads_local_pack_and_patient_chart(load_plugin, tmp_path):
+    packs = tmp_path / "packs"; packs.mkdir()
+    patient = tmp_path / "patient.json"
+    (packs / "memory.json").write_text(json.dumps(_condition_pack()))
+    p = load_plugin("doctor.py", options={
+        "condition_dir": str(packs),
+        "patient_path": str(patient),
+        "breaker_path": str(tmp_path / "breaker.json"),
+        "incident_path": str(tmp_path / "incidents.json"),
+        "checkpoint_path": str(tmp_path / "known_good.json"),
+        "config_path": str(tmp_path / "config.toml"),
+        "log_path": str(tmp_path / "pwn.log"),
+        "handshakes": str(tmp_path / "hs"),
+        "scan_every": 0,
+    })
+    p.on_loaded()
+    assert len(p._pack_conditions) == 1
+    assert p._pack_errors == []
+    assert isinstance(p._patient, doc.PatientChart) or p._patient.__class__.__name__ == "PatientChart"
