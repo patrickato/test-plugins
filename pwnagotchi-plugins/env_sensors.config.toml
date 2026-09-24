@@ -1,0 +1,17 @@
+# Example config for the "env_sensors" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: I2C enabled (raspi-config) + the driver library for your sensor:
+#   bme280/sht3x -> pip 'smbus2' (bme280 also needs pip 'RPi.bme280')
+#   tsl2591      -> pip 'adafruit-circuitpython-tsl2591'
+# Unavailable sensors are skipped automatically.
+
+main.plugins.env_sensors.enabled = true
+
+# One entry per attached sensor. type is one of: bme280, sht3x, tsl2591 (mock is for tests).
+main.plugins.env_sensors.sensors = [
+  { type = "bme280", address = "0x76", name = "weather" },
+  # { type = "tsl2591", name = "light" },
+]
+
+# UI position "x,y" for the "env:" primary-reading readout.
+main.plugins.env_sensors.position = "0,0"
