@@ -34,6 +34,7 @@ Options (main.plugins.doctor.*):
 Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl when
 present, all guarded). Auto-fix actions need root, which Pwnagotchi already runs as.
 """
+import hashlib
 import json
 import logging
 import os
@@ -162,6 +163,60 @@ def parse_log_signals(text):
         "wpa_sec_errors": count("wpa-sec", "error"),
         "plugins_failed": plugins_failed,
     }
+
+
+# ======================================================================================
+# "Known-good checkpoint" fingerprint + diff (answers "what changed since it worked?")
+# ======================================================================================
+def parse_dpkg(text):
+    """Parse `dpkg -l` into {package: version} for installed (ii) packages."""
+    out = {}
+    for line in (text or "").splitlines():
+        if line.startswith("ii "):
+            parts = line.split()
+            if len(parts) >= 3:
+                out[parts[1]] = parts[2]
+    return out
+
+
+def parse_enabled_plugins(config_text):
+    """Sorted list of plugin names with enabled = true in config.toml."""
+    try:
+        import tomllib
+        data = tomllib.loads(config_text or "")
+        plugins_cfg = (data.get("main", {}) or {}).get("plugins", {}) or {}
+        return sorted(n for n, o in plugins_cfg.items()
+                      if isinstance(o, dict) and o.get("enabled"))
+    except Exception:
+        import re
+        found = set()
+        for m in re.finditer(r"main\.plugins\.([A-Za-z0-9_\-]+)\.enabled\s*=\s*true",
+                             config_text or ""):
+            found.add(m.group(1))
+        return sorted(found)
+
+
+def diff_fingerprint(old, new):
+    """Structured diff between two known-good fingerprints."""
+    old, new = old or {}, new or {}
+    op, np = set(old.get("plugins", [])), set(new.get("plugins", []))
+    opk, npk = old.get("packages", {}) or {}, new.get("packages", {}) or {}
+    changed_pkgs = sorted(n for n in set(opk) & set(npk) if opk[n] != npk[n])
+    res = {
+        "config_changed": old.get("config_hash") != new.get("config_hash"),
+        "plugins_added": sorted(np - op),
+        "plugins_removed": sorted(op - np),
+        "packages_added": sorted(set(npk) - set(opk)),
+        "packages_removed": sorted(set(opk) - set(npk)),
+        "packages_changed": changed_pkgs,
+        "kernel_changed": old.get("kernel") != new.get("kernel"),
+        "os_changed": old.get("os") != new.get("os"),
+    }
+    res["has_changes"] = any([
+        res["config_changed"], res["plugins_added"], res["plugins_removed"],
+        res["packages_added"], res["packages_removed"], res["packages_changed"],
+        res["kernel_changed"], res["os_changed"]])
+    return res
 
 
 # ======================================================================================
@@ -585,9 +640,9 @@ _UI_STATUS = {"OK": "OK", "HEALED": "healed", "ATTENTION": "attn",
 
 class Doctor(plugins.Plugin):
     __author__ = "patrickato"
-    __version__ = "0.3.0"
+    __version__ = "0.4.0"
     __license__ = "GPL3"
-    __description__ = "Autonomous health scan, diagnosis, causal explanation and safe self-healing."
+    __description__ = "Autonomous health scan, diagnosis, causal explanation, self-healing and known-good drift."
 
     def __init__(self):
         self.options = dict()
@@ -607,6 +662,8 @@ class Doctor(plugins.Plugin):
         self._handshakes = self.options.get("handshakes", "/root/handshakes")
         self._incident_path = self.options.get("incident_path",
                                                "/etc/pwnagotchi/doctor_incidents.json")
+        self._checkpoint_path = self.options.get("checkpoint_path",
+                                                 "/etc/pwnagotchi/doctor_known_good.json")
         self._min_free_mb = int(self.options.get("min_free_mb", 200))
         self._max_temp_c = float(self.options.get("max_temp_c", 80))
         self._services = list(self.options.get("services",
@@ -788,6 +845,61 @@ class Doctor(plugins.Plugin):
         except Exception as e:
             logging.debug("[doctor] incident persist failed: %s", e)
 
+    # -- known-good checkpoint ("what changed since it worked?") -----------------------
+    def build_fingerprint(self, runner=None):
+        runner = runner or self._run
+        fp = {}
+        try:
+            with open(self._config_path, "rt", errors="ignore") as fp_cfg:
+                text = fp_cfg.read()
+            fp["config_hash"] = hashlib.sha256(text.encode("utf-8", "ignore")).hexdigest()
+            fp["plugins"] = parse_enabled_plugins(text)
+        except Exception:
+            pass
+        try:
+            fp["packages"] = parse_dpkg(runner(["dpkg", "-l"]))
+        except Exception:
+            fp["packages"] = {}
+        try:
+            fp["kernel"] = runner(["uname", "-r"]).strip()
+        except Exception:
+            pass
+        try:
+            with open("/etc/os-release") as osr:
+                for line in osr:
+                    if line.startswith("PRETTY_NAME="):
+                        fp["os"] = line.split("=", 1)[1].strip().strip('"')
+                        break
+        except Exception:
+            pass
+        fp["saved_at"] = time.time()
+        return fp
+
+    def save_checkpoint(self, runner=None):
+        fp = self.build_fingerprint(runner)
+        try:
+            os.makedirs(os.path.dirname(self._checkpoint_path), exist_ok=True)
+            with open(self._checkpoint_path, "w") as f:
+                json.dump(fp, f)
+        except Exception as e:
+            logging.debug("[doctor] checkpoint save failed: %s", e)
+        return fp
+
+    def load_checkpoint(self):
+        try:
+            if os.path.exists(self._checkpoint_path):
+                with open(self._checkpoint_path) as f:
+                    return json.load(f)
+        except Exception:
+            pass
+        return None
+
+    def diff_since_checkpoint(self, runner=None):
+        old = self.load_checkpoint()
+        if not old:
+            return None
+        return diff_fingerprint(old, self.build_fingerprint(runner))
+
     # -- events ------------------------------------------------------------------------
     def on_ready(self, agent):
         self.scan()
@@ -815,7 +927,40 @@ class Doctor(plugins.Plugin):
                 ui.remove_element("doctor")
 
     # -- web ---------------------------------------------------------------------------
+    def _drift_html(self, request):
+        saved = None
+        try:
+            if request is not None and request.args.get("action") == "save_checkpoint":
+                self.save_checkpoint()
+                return "<h3>Known-good checkpoint saved. ✅</h3>"
+            saved = self.load_checkpoint()
+        except Exception:
+            pass
+        if not saved:
+            return ("<h3>Known good</h3><p>No checkpoint yet. "
+                    "<a href='?action=save_checkpoint'>Save current state as known-good</a> "
+                    "while everything works.</p>")
+        d = self.diff_since_checkpoint() or {}
+        if not d.get("has_changes"):
+            return "<h3>Known good</h3><p>Nothing has changed since your known-good checkpoint.</p>"
+        rows = []
+        for label, key in (("config.toml changed", "config_changed"),
+                           ("kernel changed", "kernel_changed"), ("OS changed", "os_changed")):
+            if d.get(key):
+                rows.append("<li>%s</li>" % label)
+        for label, key in (("plugins enabled", "plugins_added"),
+                           ("plugins disabled", "plugins_removed"),
+                           ("packages installed", "packages_added"),
+                           ("packages removed", "packages_removed"),
+                           ("packages upgraded/changed", "packages_changed")):
+            if d.get(key):
+                rows.append("<li>%s: %s</li>" % (label, ", ".join(d[key][:20])))
+        return ("<h3>Changed since known-good</h3><ul>%s</ul>"
+                "<p><a href='?action=save_checkpoint'>Re-save current state as known-good</a></p>"
+                % "".join(rows))
+
     def on_webhook(self, path, request):
+        drift = self._drift_html(request)
         self.scan()
         fixed = [f for f in self._findings if f["outcome"] == "fixed"]
         need = [f for f in self._findings if f["outcome"] in ("needs_user", "fix_failed", "gave_up")]
@@ -835,4 +980,4 @@ class Doctor(plugins.Plugin):
                     "<th>cause</th><th>outcome</th><th>what to do</th></tr>{rows}</table>").format(
                         st=self._status, nf=len(fixed), nn=len(need), causal=causal,
                         rows="".join(block(f) for f in self._findings))
-        return "<html><body><h1>Doctor</h1>{}</body></html>".format(body)
+        return "<html><body><h1>Doctor</h1>{}{}</body></html>".format(body, drift)

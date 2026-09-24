@@ -23,6 +23,8 @@ main.plugins.doctor.log_path = "/etc/pwnagotchi/log/pwnagotchi.log"
 main.plugins.doctor.config_path = "/etc/pwnagotchi/config.toml"
 main.plugins.doctor.handshakes = "/root/handshakes"
 main.plugins.doctor.incident_path = "/etc/pwnagotchi/doctor_incidents.json"
+# Known-good checkpoint (for "what changed since it worked?"). Save it from the web page.
+main.plugins.doctor.checkpoint_path = "/etc/pwnagotchi/doctor_known_good.json"
 
 # Thresholds.
 main.plugins.doctor.min_free_mb = 200

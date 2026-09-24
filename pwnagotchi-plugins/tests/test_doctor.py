@@ -241,3 +241,76 @@ def test_ui_status_vocabulary(load_plugin, tmp_path, ui):
         assert ui.get("doctor") == expected
     p.on_unload(ui)
     assert not ui.has_element("doctor")
+
+
+# ---- known-good checkpoint / drift (v0.4) ----------------------------------------------
+def test_parse_dpkg():
+    text = ("Desired=... \n||/ Name  Version  Arch  Description\n"
+            "ii  python3  3.13.5-1  arm64  interpreter\n"
+            "ii  bettercap  2.32  arm64  net tool\n"
+            "rc  oldpkg  1.0  arm64  removed\n")
+    assert doc.parse_dpkg(text) == {"python3": "3.13.5-1", "bettercap": "2.32"}
+
+
+def test_parse_enabled_plugins():
+    cfg = ('main.plugins.gps.enabled = true\n'
+           'main.plugins.doctor.enabled = true\n'
+           'main.plugins.off.enabled = false\n')
+    assert doc.parse_enabled_plugins(cfg) == ["doctor", "gps"]
+
+
+def test_diff_fingerprint():
+    old = {"config_hash": "a", "plugins": ["gps"], "kernel": "6.1", "os": "trixie",
+           "packages": {"bettercap": "2.32", "python3": "3.13.4"}}
+    new = {"config_hash": "b", "plugins": ["gps", "doctor"], "kernel": "6.1", "os": "trixie",
+           "packages": {"bettercap": "2.32", "python3": "3.13.5", "newpkg": "1.0"}}
+    d = doc.diff_fingerprint(old, new)
+    assert d["config_changed"] is True
+    assert d["plugins_added"] == ["doctor"] and d["plugins_removed"] == []
+    assert d["packages_added"] == ["newpkg"]
+    assert d["packages_changed"] == ["python3"]
+    assert d["kernel_changed"] is False and d["has_changes"] is True
+    # identical -> no changes
+    assert doc.diff_fingerprint(old, old)["has_changes"] is False
+
+
+def test_build_and_diff_checkpoint(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path)
+    p._checkpoint_path = str(tmp_path / "known_good.json")
+
+    def runner(cmd):
+        if cmd[:2] == ["dpkg", "-l"]:
+            return "ii  bettercap  2.32  arm64  x\nii  python3  3.13.4  arm64  y\n"
+        if cmd == ["uname", "-r"]:
+            return "6.1.0\n"
+        return ""
+
+    # save a known-good checkpoint
+    fp = p.save_checkpoint(runner=runner)
+    assert fp["packages"]["bettercap"] == "2.32"
+    assert (tmp_path / "known_good.json").exists()
+    # no drift yet
+    assert p.diff_since_checkpoint(runner=runner)["has_changes"] is False
+
+    # now the config changes (enable a plugin) and a package upgrades
+    (tmp_path / "config.toml").write_text('main.plugins.x.enabled = true\n'
+                                          'main.plugins.newone.enabled = true\n')
+
+    def runner2(cmd):
+        if cmd[:2] == ["dpkg", "-l"]:
+            return "ii  bettercap  2.33  arm64  x\nii  python3  3.13.4  arm64  y\n"
+        if cmd == ["uname", "-r"]:
+            return "6.1.0\n"
+        return ""
+
+    d = p.diff_since_checkpoint(runner=runner2)
+    assert d["has_changes"] is True
+    assert d["config_changed"] is True
+    assert "newone" in d["plugins_added"]
+    assert "bettercap" in d["packages_changed"]
+
+
+def test_diff_none_without_checkpoint(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path)
+    p._checkpoint_path = str(tmp_path / "nope.json")
+    assert p.diff_since_checkpoint(runner=lambda c: "") is None
