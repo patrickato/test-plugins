@@ -281,3 +281,70 @@ Engines may accept legacy/experimental aliases while packs are private or pre-re
 ### `signals` declaration
 
 For v1 the `signals` array is documentation/introspection metadata, while `detect` and `fix.verify` are authoritative expressions. A future validator may require that every expression key appears in `signals`, but the loader should not invent truth from that declaration.
+
+---
+
+## 7. Pack trust classes and runtime provenance
+
+Condition Pack v1 separates **knowledge format** from **distribution trust**.
+
+### First-party bundled packs
+
+Directory in a normal PwnDoctor install: `doctor_packs/` beside `doctor.py`.
+
+These files are part of the same reviewed/released artifact as the executable plugin. They may retain remedy mappings when a condition moves from Python into JSON because that does not expand authority relative to the previous first-party implementation.
+
+Bundled remedies are still constrained by:
+- Doctor's compiled `ACTIONS` allow-list;
+- known guard intents/implementations;
+- evidence confidence;
+- Standing Orders/autonomy;
+- confirm-required policy;
+- circuit breaker;
+- verification.
+
+### External/local user packs
+
+Default directory: `/etc/pwnagotchi/doctor.d/`.
+
+These are a separate trust class and remain **explain-only by default**. The owner may explicitly opt into external remedies, but even then a pack can only reference an action Doctor already knows and allows.
+
+### Runtime provenance
+
+Every JSON pack loaded by the current runtime gets runtime provenance fields:
+
+- `source_class`: `bundled` or `external`;
+- `sha256`: SHA-256 of the exact bytes read;
+- `source`: preserved from the pack when supplied, otherwise the local filename.
+
+These runtime fields are evidence/audit metadata. They do not grant authority.
+
+### Precedence
+
+Authority order is:
+
+1. core Python conditions;
+2. first-party bundled packs;
+3. external/user packs.
+
+The first definition of a condition id wins. This prevents an external pack from shadowing a first-party condition.
+
+### Future catalog/fetch path
+
+A future opt-in catalog may provide expected SHA-256 and publisher signatures. Transport security, hash match and signature provenance remain separate from treatment authority. A downloaded/signed pack does not become executable code and does not receive new actions simply because its provenance is valid.
+
+## 8. v0.6 code/data boundary for migration
+
+For v0.6, migrate **pure declarative conditions** into first-party JSON packs.
+
+Keep conditions in Python when they currently depend on configurable thresholds, boot-time gates, helper functions or other computed logic that would require schema parameter substitution.
+
+Examples that should stay in code for v0.6 unless simplified cleanly:
+- `disk_full` (`min_free_mb`);
+- `overheat` (`max_temp_c`);
+- `journald_bloat` (`journal_max_mb`);
+- `reboot_loop` (`restart_loop_threshold` and boot gate);
+- `iface_mismatch` (computed helper);
+- other conditions whose meaning cannot be represented faithfully by the existing tiny expression grammar.
+
+This is deliberate. Condition Pack v1 should not gain a generic templating/expression language merely to achieve a 100% JSON migration. Add parameterization later only when a concrete cross-project requirement justifies it.
