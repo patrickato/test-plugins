@@ -1,0 +1,24 @@
+# Example config for the "ha_mqtt" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: pip 'paho-mqtt' + a reachable MQTT broker (the one Home Assistant uses).
+#   sudo pip3 install paho-mqtt
+
+main.plugins.ha_mqtt.enabled = true
+
+# MQTT broker.
+main.plugins.ha_mqtt.host = "127.0.0.1"
+main.plugins.ha_mqtt.port = 1883
+main.plugins.ha_mqtt.username = ""
+main.plugins.ha_mqtt.password = ""
+
+# HA discovery base topic (must match Home Assistant's discovery prefix).
+main.plugins.ha_mqtt.base_topic = "homeassistant"
+
+# Node id (device name in HA). Defaults to the hostname if empty.
+main.plugins.ha_mqtt.node_id = ""
+
+# Seconds between state publishes.
+main.plugins.ha_mqtt.interval = 30
+
+# UI position "x,y" for the "mqtt:" on/off readout.
+main.plugins.ha_mqtt.position = "0,0"

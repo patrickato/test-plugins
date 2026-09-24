@@ -34,7 +34,7 @@ tested off-Pi.
 | P12 `battery_historian` | none *(optional `smbus2`)* | none | UPS/PiSugar (optional) | ✅ |
 | P13 `fan_curve` | `RPi.GPIO` or `gpiozero` | PWM enabled | PWM-capable fan | ✅ |
 | P14 `thermal_predictor` | none | none | none | ✅ |
-| P18 `ha_mqtt` | `paho-mqtt` | reachable MQTT broker | none | |
+| P18 `ha_mqtt` | `paho-mqtt` | reachable MQTT broker | none | ✅ |
 | P20 `mesh_vpn_presence` | none | `tailscale` **or** `wireguard-tools` | none | |
 | P21 `channel_occupancy` | none | none | none | ✅ |
 | P24 `rtl433_ambient` | none | `rtl_433` binary | RTL-SDR | ✅ |
