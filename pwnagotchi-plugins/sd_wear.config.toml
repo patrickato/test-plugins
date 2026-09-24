@@ -1,0 +1,23 @@
+# Example config for the "sd_wear" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library; reads /proc/diskstats and /proc/mounts).
+
+main.plugins.sd_wear.enabled = true
+
+# Block device to track (e.g. "mmcblk0"). Leave empty to auto-detect from the / mount.
+main.plugins.sd_wear.device = ""
+
+# Endurance rating in terabytes-written (TBW). Consumer cards vary widely; check your card.
+main.plugins.sd_wear.rated_tbw = 30
+
+# Warn once wear reaches this percentage of the rating.
+main.plugins.sd_wear.warn_pct = 80
+
+# Where cumulative write state is persisted (JSON).
+main.plugins.sd_wear.data_path = "/etc/pwnagotchi/sd_wear.json"
+
+# Minimum seconds between state saves (keeps the plugin from adding wear itself).
+main.plugins.sd_wear.persist_secs = 600
+
+# UI position "x,y" for the "sd:" written-GB readout.
+main.plugins.sd_wear.position = "0,0"
