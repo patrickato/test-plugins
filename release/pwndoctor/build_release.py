@@ -66,6 +66,8 @@ def assemble(output_root: Path) -> Path:
               package / "docs" / "CONDITION_PACK_SCHEMA.md")
     copy_file(PLUGINS / "DOCTOR_ROADMAP.md",
               package / "docs" / "DEVELOPMENT_ROADMAP.md")
+    copy_file(PLUGINS / "DOCTOR_COMPATIBILITY_CONTRACT.md",
+              package / "docs" / "UPSTREAM_COMPATIBILITY_CONTRACT.md")
 
     for name in (
         "README.md", "INSTALL.md", "CONFIGURATION.md", "DEPENDENCIES.md", "USAGE.md",
