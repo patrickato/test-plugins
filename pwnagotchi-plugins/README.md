@@ -61,7 +61,7 @@ tested off-Pi.
 | P50 `pet_quips` | none | none | none | ✅ |
 | P51 `display_setup_helper` | none | none | none | ✅ |
 | P52 `why_no_handshakes` | none | `iw`/`ip` (usually present) | none | ✅ |
-| P53 `captive_portal` | none | none | none | |
+| P53 `captive_portal` | none | none | none | ✅ |
 | P54 `stat_source_bridge` | none | Korrie71 Theme Manager installed | none | |
 
 Each plugin also states its requirements in its module docstring and in a `Requires:` line

@@ -1,0 +1,17 @@
+# Example config for the "captive_portal" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library; uses urllib).
+
+main.plugins.captive_portal.enabled = true
+
+# A "generate_204" style endpoint: returns HTTP 204 with an empty body when truly online.
+main.plugins.captive_portal.check_url = "http://connectivitycheck.gstatic.com/generate_204"
+
+# Expected status for a clean online result.
+main.plugins.captive_portal.expected_status = 204
+
+# Minimum seconds between probes.
+main.plugins.captive_portal.interval_secs = 60
+
+# UI position "x,y" for the "net:" on/cap/off readout.
+main.plugins.captive_portal.position = "0,0"
