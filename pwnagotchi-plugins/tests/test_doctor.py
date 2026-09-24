@@ -173,11 +173,13 @@ def _make(load_plugin, tmp_path, **opts):
     options = {"config_path": str(tmp_path / "config.toml"),
                "log_path": str(tmp_path / "pwn.log"),
                "handshakes": str(tmp_path / "hs"),
-               "incident_path": str(tmp_path / "incidents.json"), "scan_every": 0}
+               "incident_path": str(tmp_path / "incidents.json"),
+               "checkpoint_path": str(tmp_path / "known_good.json"),
+               "breaker_path": str(tmp_path / "breaker.json"), "scan_every": 0}
     options.update(opts)
     (tmp_path / "config.toml").write_text('main.plugins.x.enabled = true\n')
     (tmp_path / "pwn.log").write_text("ok\n")
-    (tmp_path / "hs").mkdir()
+    (tmp_path / "hs").mkdir(exist_ok=True)
     p = load_plugin("doctor.py", options=options)
     p.on_loaded()
     return p
@@ -314,3 +316,219 @@ def test_diff_none_without_checkpoint(load_plugin, tmp_path):
     p = _make(load_plugin, tmp_path)
     p._checkpoint_path = str(tmp_path / "nope.json")
     assert p.diff_since_checkpoint(runner=lambda c: "") is None
+
+
+# ========================================================================================
+# v0.5 — "won't-work" ailment pack + safety hardening
+# ========================================================================================
+
+# ---- new pure parsers ------------------------------------------------------------------
+def test_parse_default_iface():
+    text = ("Iface\tDestination\tGateway\n"
+            "wlan0\t00000000\t0102A8C0\n"
+            "eth0\t0002A8C0\t00000000\n")
+    assert doc.parse_default_iface(text) == "wlan0"
+    assert doc.parse_default_iface("Iface\tDestination\neth0\t0002A8C0\n") is None
+
+
+def test_parse_journal_usage():
+    assert doc.parse_journal_usage("Archived and active journals take up 152.0M in the file system.") \
+        == int(152.0 * 1024 ** 2)
+    assert doc.parse_journal_usage("... take up 1.5G ...") == int(1.5 * 1024 ** 3)
+    assert doc.parse_journal_usage("... take up 800.0K ...") == int(800.0 * 1024)
+    assert doc.parse_journal_usage("nonsense") is None
+
+
+def test_parse_main_iface():
+    assert doc.parse_main_iface('main.iface = "wlan0mon"\n') == "wlan0mon"
+    assert doc.parse_main_iface('[main]\niface = "wlan1"\n') == "wlan1"
+    assert doc.parse_main_iface('nothing = 1\n') is None
+
+
+def test_config_debug_level():
+    assert doc.config_debug_level('main.log.level = "debug"\n') is True
+    assert doc.config_debug_level('[main.log]\ndebug = true\n') is True
+    assert doc.config_debug_level('main.log.level = "info"\n') is False
+    assert doc.config_debug_level('a = 1\n') is False
+
+
+def test_iface_mismatch_helper():
+    assert doc.iface_mismatch("wlan1", ["wlan0"]) is True
+    assert doc.iface_mismatch("wlan0", ["wlan0"]) is False
+    assert doc.iface_mismatch("wlan0mon", ["wlan0"]) is False   # base present -> fine
+    assert doc.iface_mismatch("wlan0", None) is False           # unknown -> not flagged
+    assert doc.iface_mismatch(None, ["wlan0"]) is False
+
+
+# ---- new condition detection -----------------------------------------------------------
+def test_wpa_supplicant_hijack_detect():
+    s = _clean()
+    s["wpa_supplicant"] = {"running": True}
+    s["monitor_present"] = False
+    ids = {f["id"] for f in doc.diagnose(s)}
+    assert "wpa_supplicant_hijack" in ids
+    # unknown monitor state -> not flagged (unknown means unknown)
+    s["monitor_present"] = None
+    assert "wpa_supplicant_hijack" not in {f["id"] for f in doc.diagnose(s)}
+
+
+def test_iface_mismatch_condition():
+    s = _clean()
+    s["iface"] = {"configured": "wlan1", "present": ["wlan0"]}
+    assert "iface_mismatch" in {f["id"] for f in doc.diagnose(s)}
+
+
+def test_reboot_loop_detect_and_boot_grace():
+    s = _clean()
+    s["service_restarts"] = {"pwnagotchi": 8}
+    assert "reboot_loop" in {f["id"] for f in doc.diagnose(s)}
+    # during boot grace it must not fire
+    s["uptime_sec"] = 5
+    assert "reboot_loop" not in {f["id"] for f in doc.diagnose(s)}
+
+
+def test_journald_bloat_and_debug_level_detect():
+    s = _clean()
+    s["journal_bytes"] = 300 * 1024 * 1024
+    s["config"] = {"valid": True, "debug": True}
+    ids = {f["id"] for f in doc.diagnose(s)}
+    assert "journald_bloat" in ids and "debug_log_level" in ids
+
+
+# ---- safety guards ---------------------------------------------------------------------
+def test_guard_wpa_not_uplink():
+    assert doc.guard_wpa_not_uplink({"net": {"default_iface": "eth0"}}, {}) is True
+    assert doc.guard_wpa_not_uplink({"net": {"default_iface": None}}, {}) is True
+    assert doc.guard_wpa_not_uplink({"net": {"default_iface": "wlan0"}}, {}) is False
+
+
+def test_guard_media_ok():
+    assert doc.guard_media_ok({"dmesg": {"sd_error": 0}}, {}) is True
+    assert doc.guard_media_ok({"dmesg": {}}, {}) is True
+    assert doc.guard_media_ok({"dmesg": {"sd_error": 3}}, {}) is False
+
+
+def test_guard_blocks_wpa_stop_when_uplink():
+    fix = {"action": "stop_wpa_supplicant", "tier": "safe", "guard": "wpa_not_uplink"}
+    findings = [{"id": "wpa_supplicant_hijack", "severity": "high", "confidence": "high",
+                 "fix": fix, "_detect": lambda s: False, "outcome": "detected", "howto": []}]
+    calls = []
+    # uplink is over wlan -> blocked, action never runs
+    out = doc.apply_fixes(findings, {"net": {"default_iface": "wlan0"}}, "conservative",
+                          lambda c: calls.append(c), doc.CircuitBreaker(), {},
+                          recollect=lambda: {})
+    assert out[0]["outcome"] == "blocked_guard" and calls == []
+
+
+def test_guard_allows_wpa_stop_when_safe():
+    fix = {"action": "stop_wpa_supplicant", "tier": "safe", "guard": "wpa_not_uplink"}
+    findings = [{"id": "wpa_supplicant_hijack", "severity": "high", "confidence": "high",
+                 "fix": fix, "_detect": lambda s: s.get("monitor_present") is False,
+                 "outcome": "detected", "howto": []}]
+    calls = []
+    out = doc.apply_fixes(findings, {"net": {"default_iface": "eth0"}, "monitor_present": False},
+                          "conservative", lambda c: calls.append(c), doc.CircuitBreaker(), {},
+                          recollect=lambda: {"monitor_present": True})
+    assert out[0]["outcome"] == "fixed"
+    assert calls == [["systemctl", "stop", "wpa_supplicant"]]
+
+
+# ---- autonomy dial / dry-run / opt-out -------------------------------------------------
+def _safe_finding(detect_after_fix_clear=True):
+    return [{"id": "rfkill_blocked", "severity": "high", "confidence": "high",
+             "fix": {"action": "rfkill_unblock", "tier": "safe"},
+             "_detect": (lambda s: not detect_after_fix_clear),
+             "outcome": "detected", "howto": []}]
+
+
+def test_dry_run_would_fix():
+    calls = []
+    out = doc.apply_fixes(_safe_finding(), {}, "conservative", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: {}, dry_run=True)
+    assert out[0]["outcome"] == "would_fix" and calls == []
+
+
+def test_disable_autofix_optout():
+    calls = []
+    out = doc.apply_fixes(_safe_finding(), {}, "conservative", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: {},
+                          disabled={"rfkill_blocked"})
+    assert out[0]["outcome"] == "needs_user" and calls == []
+
+
+def test_levels_and_policy():
+    assert doc.normalize_level("safe") == "conservative"
+    assert doc.normalize_level("all") == "assertive"
+    assert doc.normalize_level("garbage") == "conservative"
+    assert doc.normalize_level("observe") == "observe"
+    assert doc.policy_allows("safe", "conservative") is True
+    assert doc.policy_allows("risky", "conservative") is False
+    assert doc.policy_allows("risky", "assertive") is True
+    assert doc.policy_allows("safe", "observe") is False
+
+
+# ---- verification truth ----------------------------------------------------------------
+def test_verification_unknown_when_no_recollect():
+    out = doc.apply_fixes(_safe_finding(), {}, "conservative", lambda c: None,
+                          doc.CircuitBreaker(), {}, recollect=None)
+    assert out[0]["outcome"] == "executed_verification_unknown"
+
+
+def test_verification_unknown_when_recollect_raises():
+    def boom():
+        raise RuntimeError("cannot re-read")
+    out = doc.apply_fixes(_safe_finding(), {}, "conservative", lambda c: None,
+                          doc.CircuitBreaker(), {}, recollect=boom)
+    assert out[0]["outcome"] == "executed_verification_unknown"
+
+
+# ---- action registry integrity ---------------------------------------------------------
+def test_actions_and_meta_in_sync():
+    assert set(doc.ACTIONS) == set(doc.ACTION_META)
+    for meta in doc.ACTION_META.values():
+        assert meta["tier"] in ("safe", "risky")
+
+
+def test_vacuum_journal_action():
+    calls = []
+    assert doc.act_vacuum_journal({}, lambda c: calls.append(c), {}, {"journal_keep_mb": 50})
+    assert calls == [["journalctl", "--vacuum-size=50M"]]
+
+
+# ---- overall status accounts for new outcomes ------------------------------------------
+def test_status_counts_new_outcomes():
+    assert doc.overall_status([{"severity": "high", "outcome": "blocked_guard"}]) == "ACTION_REQUIRED"
+    assert doc.overall_status([{"severity": "warn", "outcome": "would_fix"}]) == "DEGRADED"
+    assert doc.overall_status([{"severity": "high",
+                               "outcome": "executed_verification_unknown"}]) == "ACTION_REQUIRED"
+
+
+# ---- persistent circuit breaker --------------------------------------------------------
+def test_breaker_snapshot_restore():
+    b = doc.CircuitBreaker(max_attempts=2, window=1000)
+    b.record("x", 10)
+    snap = b.snapshot()
+    b2 = doc.CircuitBreaker(max_attempts=2, window=1000).restore(snap)
+    assert b2.allow("x", 11) is True
+    b2.record("x", 11)
+    assert b2.allow("x", 12) is False          # budget exhausted, restored across "reboot"
+
+
+def test_breaker_persists_across_reload(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path)
+    p._breaker.record("bettercap_down", 100)
+    p._breaker.record("bettercap_down", 101)
+    p._breaker.record("bettercap_down", 102)
+    p._save_breaker()
+    # a fresh instance (simulating a reboot) loads the exhausted budget
+    q = _make(load_plugin, tmp_path)
+    assert q._breaker.allow("bettercap_down", 103) is False
+
+
+def test_on_config_changed_reloads_autonomy(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path, autofix="off")
+    assert p._autofix == "off"
+    p.options["autofix"] = "assertive"
+    p.options["dry_run"] = True
+    p.on_config_changed({})
+    assert p._autofix == "assertive" and p._dry_run is True

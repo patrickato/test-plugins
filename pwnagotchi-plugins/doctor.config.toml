@@ -1,21 +1,34 @@
-# Example config for the "doctor" plugin (v0.3).
+# Example config for the "doctor" plugin (v0.5).
 # Copy into /etc/pwnagotchi/config.toml and edit.
-# Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl when
-#           present, all guarded). Auto-fix actions need root (Pwnagotchi already runs as root).
+# Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl/
+#           journalctl when present, all guarded). Auto-fix actions need root (Pwnagotchi
+#           already runs as root).
 
 main.plugins.doctor.enabled = true
 
-# Auto-fix posture:
-#   "off"  = diagnose + explain only, never change anything
-#   "safe" = auto-apply low-risk, reversible fixes; riskier ones give instructions
-#   "all"  = also auto-apply riskier fixes (remount ro /, quarantine plugin, restore config)
-# Note: low-confidence (log-inferred) findings are NEVER auto-fixed, only explained.
-main.plugins.doctor.autofix = "safe"
+# --- Autonomy dial (Standing Orders) — you control this and can change it at any time. ------
+#   "off"          = do nothing (fully disabled acting; still loads)
+#   "observe"      = diagnose + explain only, never change anything
+#   "notify"       = same as observe (notification wiring comes later)
+#   "conservative" = auto-apply safe, reversible fixes; riskier ones give instructions  (DEFAULT)
+#   "assertive"    = also auto-apply riskier fixes (remount ro /, quarantine plugin, restore cfg)
+# Legacy values still work: "safe" -> conservative, "all" -> assertive.
+# Note: low-confidence (log-inferred) findings are NEVER auto-fixed, only explained. Risky
+# actions are additionally guarded (e.g. won't stop wpa_supplicant if it carries your uplink,
+# won't remount rw when the SD looks like it's failing).
+main.plugins.doctor.autofix = "conservative"
+
+# Dry run: log what the Doctor *would* fix, but change nothing. Great for a first run.
+main.plugins.doctor.dry_run = false
+
+# Per-condition opt-out: list condition ids the Doctor must never auto-fix (still explained).
+# e.g. ["wpa_supplicant_hijack", "prune_logs"]
+main.plugins.doctor.disable_autofix = []
 
 # Run a full scan every N epochs (0 = only on startup and when you open the web page).
 main.plugins.doctor.scan_every = 30
 
-# Don't flag "service down" before this many seconds of uptime (avoids boot false-alarms).
+# Don't flag "service down" / "crash loop" before this many seconds of uptime (boot grace).
 main.plugins.doctor.boot_grace_s = 25
 
 # Paths.
@@ -25,12 +38,17 @@ main.plugins.doctor.handshakes = "/root/handshakes"
 main.plugins.doctor.incident_path = "/etc/pwnagotchi/doctor_incidents.json"
 # Known-good checkpoint (for "what changed since it worked?"). Save it from the web page.
 main.plugins.doctor.checkpoint_path = "/etc/pwnagotchi/doctor_known_good.json"
+# Circuit-breaker history persists here so attempt budgets survive a restart/reboot.
+main.plugins.doctor.breaker_path = "/etc/pwnagotchi/doctor_breaker.json"
 
 # Thresholds.
 main.plugins.doctor.min_free_mb = 200
 main.plugins.doctor.max_temp_c = 80
+main.plugins.doctor.journal_max_mb = 200          # flag journald bloat above this
+main.plugins.doctor.journal_keep_mb = 100         # vacuum target when trimming the journal
+main.plugins.doctor.restart_loop_threshold = 5    # NRestarts >= this (after boot) = crash loop
 
-# Services to check are active.
+# Services to check are active (and to count restarts on).
 main.plugins.doctor.services = ["pwnagotchi", "bettercap", "pwngrid-peer"]
 
 # UI position "x,y" for the "dr:" status (OK / healed / attn / DEGR / ACT!).

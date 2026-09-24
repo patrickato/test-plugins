@@ -2,9 +2,10 @@
 
 Toggle it on (or hit its web page) and the Doctor scans everything it can reach, matches it
 against a knowledge base of known Pwnagotchi ailments, auto-fixes the safe/reversible ones and
-gives you step-by-step instructions for the rest.
+gives you step-by-step instructions for the rest. It is the Pwnagotchi's "immune system":
+sensing is broad, acting is narrow and gated.
 
-v0.3 borrows discipline from the Beastagotchi "Doctor/Explain" + Black Box design:
+Discipline borrowed from the Beastagotchi "Doctor/Explain" + Black Box design:
   * Truth rules: unknown means unknown (a missing sensor is never treated as a negative);
     a low-confidence (log-inferred) finding is never auto-fixed, only explained.
   * Evidence confidence per finding (high / medium / low) gates auto-fix.
@@ -14,25 +15,47 @@ v0.3 borrows discipline from the Beastagotchi "Doctor/Explain" + Black Box desig
   * Causal chains ("rfkill-blocked -> no monitor -> no captures") instead of disconnected warns.
   * Field status vocabulary: OK / ATTENTION / DEGRADED / ACTION.
 
+v0.5 hardening (from the Claude<->OpenAI collaboration):
+  * Verification truth: an action that runs but can't be re-verified reports
+    "executed_verification_unknown", never "fixed". Unknown stays unknown.
+  * Persistent circuit breaker: attempt budgets survive a restart/reboot, so the Doctor can't
+    get trapped in restart -> forget -> restart.
+  * Safety guards on risky actions: it won't stop wpa_supplicant if that adapter is carrying
+    your uplink, and won't remount / read-write when the SD looks like it's failing.
+  * Autonomy dial (Standing Orders) the end user controls and can change at any time:
+    off / observe / notify / conservative (default) / assertive, plus dry_run and a
+    per-condition opt-out list. on_config_changed re-reads it live.
+  * "Won't-work" ailment pack: reboot/crash-loop, wpa_supplicant hijack (+ uplink-safe stop),
+    interface-name mismatch, journald bloat (+ vacuum), debug-log-level-in-production.
+
 Everything is guarded so it works regardless of Pi model, screen, or setup. Auto-fix is tiered
-and configurable, every action is allow-listed and verified, a circuit breaker stops loops.
+and configurable, every action is allow-listed, guarded and verified, a circuit breaker stops
+loops.
 
 Options (main.plugins.doctor.*):
-    enabled       = true
-    autofix       = "safe"     # "off" | "safe" (auto low-risk) | "all"
-    scan_every    = 30         # full scan every N epochs (0 = only on start / web)
-    boot_grace_s  = 25         # don't flag service-down before this many seconds of uptime
-    log_path      = "/etc/pwnagotchi/log/pwnagotchi.log"
-    config_path   = "/etc/pwnagotchi/config.toml"
-    handshakes    = "/root/handshakes"
-    incident_path = "/etc/pwnagotchi/doctor_incidents.json"
-    min_free_mb   = 200
-    max_temp_c    = 80
-    services      = ["pwnagotchi", "bettercap", "pwngrid-peer"]
-    position      = "0,0"
+    enabled          = true
+    autofix          = "conservative"  # off | observe | notify | conservative | assertive
+                                       #   (legacy: "safe"->conservative, "all"->assertive)
+    dry_run          = false           # log what it *would* do, change nothing
+    disable_autofix  = []              # condition ids to never auto-fix (still explained)
+    scan_every       = 30              # full scan every N epochs (0 = only on start / web)
+    boot_grace_s     = 25              # don't flag service-down before this many seconds uptime
+    log_path         = "/etc/pwnagotchi/log/pwnagotchi.log"
+    config_path      = "/etc/pwnagotchi/config.toml"
+    handshakes       = "/root/handshakes"
+    incident_path    = "/etc/pwnagotchi/doctor_incidents.json"
+    checkpoint_path  = "/etc/pwnagotchi/doctor_known_good.json"
+    breaker_path     = "/etc/pwnagotchi/doctor_breaker.json"
+    min_free_mb      = 200
+    max_temp_c       = 80
+    journal_max_mb   = 200             # flag journald bloat above this
+    journal_keep_mb  = 100             # vacuum target when trimming the journal
+    restart_loop_threshold = 5         # NRestarts >= this (after boot) = crash loop
+    services         = ["pwnagotchi", "bettercap", "pwngrid-peer"]
+    position         = "0,0"
 
-Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl when
-present, all guarded). Auto-fix actions need root, which Pwnagotchi already runs as.
+Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl/
+journalctl when present, all guarded). Auto-fix actions need root, which Pwnagotchi runs as.
 """
 import hashlib
 import json
@@ -165,6 +188,72 @@ def parse_log_signals(text):
     }
 
 
+def parse_default_iface(text):
+    """Interface name that owns the default route (00000000), or None."""
+    for line in (text or "").splitlines()[1:]:
+        f = line.split()
+        if len(f) >= 2 and f[1] == "00000000":
+            return f[0]
+    return None
+
+
+def parse_journal_usage(text):
+    """Bytes used by journald from `journalctl --disk-usage` output, or None."""
+    import re
+    m = re.search(r"take up\s+([\d.]+)\s*([KMGT]?)B?", text or "", re.IGNORECASE)
+    if not m:
+        return None
+    try:
+        num = float(m.group(1))
+    except ValueError:
+        return None
+    mult = {"": 1, "K": 1024, "M": 1024 ** 2, "G": 1024 ** 3, "T": 1024 ** 4}
+    return int(num * mult.get(m.group(2).upper(), 1))
+
+
+def parse_main_iface(config_text):
+    """The configured main.iface value from config.toml, or None."""
+    try:
+        import tomllib
+        data = tomllib.loads(config_text or "")
+        val = (data.get("main", {}) or {}).get("iface")
+        return val if isinstance(val, str) and val else None
+    except Exception:
+        import re
+        m = re.search(r'^\s*main\.iface\s*=\s*"([^"]+)"', config_text or "", re.MULTILINE)
+        return m.group(1) if m else None
+
+
+def config_debug_level(config_text):
+    """True if config.toml turns on debug/verbose logging (fills the SD in normal use)."""
+    text = config_text or ""
+    try:
+        import tomllib
+        data = tomllib.loads(text)
+        main = data.get("main", {}) or {}
+        log = main.get("log", {}) or {}
+        if str(log.get("level", "")).lower() == "debug":
+            return True
+        if log.get("debug") is True or main.get("debug") is True or data.get("debug") is True:
+            return True
+        return False
+    except Exception:
+        import re
+        if re.search(r'log\.level\s*=\s*"debug"', text, re.IGNORECASE):
+            return True
+        if re.search(r'(^|\.)debug\s*=\s*true', text, re.IGNORECASE | re.MULTILINE):
+            return True
+        return False
+
+
+def iface_mismatch(configured, present):
+    """True if the configured Wi-Fi interface (its base, ignoring a 'mon' suffix) is absent."""
+    if not configured or present is None:
+        return False
+    base = configured[:-3] if configured.endswith("mon") else configured
+    return base not in present and configured not in present
+
+
 # ======================================================================================
 # "Known-good checkpoint" fingerprint + diff (answers "what changed since it worked?")
 # ======================================================================================
@@ -237,7 +326,7 @@ CONDITIONS = [
      "detect": lambda s: s.get("disk", {}).get("root_ro") is True,
      "symptom": "the root filesystem is mounted read-only",
      "cause": "the SD card hit an error and Linux remounted / read-only (writes silently fail)",
-     "fix": {"action": "remount_rw", "tier": "risky"},
+     "fix": {"action": "remount_rw", "tier": "risky", "guard": "media_ok"},
      "howto": ["Back up now — a read-only remount usually means the SD is failing.",
                "Try: sudo mount -o remount,rw /",
                "Reflash to a fresh, good-quality SD card soon."]},
@@ -292,6 +381,59 @@ CONDITIONS = [
      "howto": ["Confirm your Wi-Fi adapter supports monitor mode.",
                "Check bettercap's interface (main.iface).",
                "iw dev  should list an interface of 'type monitor'."]},
+
+    {"id": "wpa_supplicant_hijack", "severity": "high", "confidence": "high",
+     "detect": lambda s: (s.get("wpa_supplicant", {}).get("running") is True
+                          and s.get("monitor_present") is False),
+     "symptom": "wpa_supplicant is holding the Wi-Fi adapter",
+     "cause": "wpa_supplicant grabbed the interface, so monitor mode / capture can't start "
+              "(the #1 'monitor mode won't work' cause)",
+     "fix": {"action": "stop_wpa_supplicant", "tier": "safe", "guard": "wpa_not_uplink"},
+     "howto": ["sudo systemctl stop wpa_supplicant   (frees the adapter)",
+               "If that adapter is your own uplink, only stop it on the capture adapter.",
+               "Confirm: iw dev shows an interface of 'type monitor'."]},
+
+    {"id": "iface_mismatch", "severity": "high", "confidence": "high",
+     "detect": lambda s: iface_mismatch(s.get("iface", {}).get("configured"),
+                                        s.get("iface", {}).get("present")),
+     "symptom": "the configured Wi-Fi interface isn't present",
+     "cause": "main.iface points at an adapter that doesn't exist (wrong name, e.g. wlan1 vs "
+              "wlan0, or the adapter didn't enumerate)",
+     "fix": None,
+     "howto": ["Run: iw dev   and   ls /sys/class/net   to see the real names.",
+               "Set main.iface in /etc/pwnagotchi/config.toml to the adapter you use.",
+               "If the adapter is missing entirely, check power/cable/USB."]},
+
+    {"id": "reboot_loop", "severity": "high", "confidence": "medium",
+     "detect": lambda s: (_booted(s)
+                          and (s.get("service_restarts", {}).get("pwnagotchi") or 0)
+                          >= s.get("_cfg", {}).get("restart_loop_threshold", 5)),
+     "symptom": "the pwnagotchi service is restarting repeatedly (crash loop)",
+     "cause": "pwnagotchi keeps crashing and systemd keeps restarting it — usually a bad plugin "
+              "or a recent config/edit",
+     "fix": None,
+     "howto": ["journalctl -u pwnagotchi -n 100   to see the crash.",
+               "Suspect a recently enabled plugin or config edit — the 'what changed since "
+               "known-good' view below helps.",
+               "Disable the offending plugin, or restore config.toml."]},
+
+    {"id": "journald_bloat", "severity": "warn", "confidence": "high",
+     "detect": lambda s: (s.get("journal_bytes") is not None
+                          and s["journal_bytes"] > s.get("_cfg", {}).get(
+                              "journal_max_bytes", 200 * 1024 * 1024)),
+     "symptom": "the systemd journal is using a lot of space",
+     "cause": "journald logs have grown large (disk pressure + SD wear)",
+     "fix": {"action": "vacuum_journal", "tier": "safe"},
+     "howto": ["sudo journalctl --vacuum-size=100M",
+               "On an SD-based Pi, consider Storage=volatile for journald."]},
+
+    {"id": "debug_log_level", "severity": "info", "confidence": "high",
+     "detect": lambda s: s.get("config", {}).get("debug") is True,
+     "symptom": "debug logging is enabled",
+     "cause": "verbose debug logs fill the disk and wear the SD in normal operation",
+     "fix": None,
+     "howto": ["Turn logging back to info/warning in /etc/pwnagotchi/config.toml.",
+               "Debug is great while troubleshooting, but not for daily wardriving."]},
 
     {"id": "clock_wrong", "severity": "high", "confidence": "high",
      "detect": lambda s: s.get("time", {}).get("year_ok") is False,
@@ -423,6 +565,14 @@ CONDITIONS = [
 CHAINS = [
     {"when": {"rfkill_blocked", "no_monitor"},
      "text": "Wi-Fi is rfkill-blocked → no monitor interface → no captures."},
+    {"when": {"wpa_supplicant_hijack", "no_monitor"},
+     "text": "wpa_supplicant holds the adapter → no monitor interface → no captures."},
+    {"when": {"iface_mismatch", "no_monitor"},
+     "text": "the configured Wi-Fi interface isn't present → no monitor interface → no captures."},
+    {"when": {"reboot_loop", "config_invalid"},
+     "text": "invalid config.toml → pwnagotchi keeps crashing (reboot loop)."},
+    {"when": {"journald_bloat", "disk_full"},
+     "text": "journal bloat → the disk fills up."},
     {"when": {"undervoltage", "usb_resets"},
      "text": "under-voltage → USB resets → the Wi-Fi adapter keeps dropping."},
     {"when": {"sd_errors", "sd_readonly"},
@@ -461,8 +611,13 @@ def diagnose(signals):
     return findings
 
 
+# Outcomes that mean "still a live problem the owner should see."
+_REMAINING = ("needs_user", "fix_failed", "gave_up", "blocked_guard", "would_fix",
+              "executed_verification_unknown")
+
+
 def overall_status(findings):
-    remaining = [f for f in findings if f["outcome"] in ("needs_user", "fix_failed", "gave_up")]
+    remaining = [f for f in findings if f["outcome"] in _REMAINING]
     if any(f["severity"] == "high" for f in remaining):
         return "ACTION_REQUIRED"
     if any(f["severity"] == "warn" for f in remaining):
@@ -527,6 +682,17 @@ def act_restore_config(args, runner, signals, ctx):
     return False
 
 
+def act_stop_wpa_supplicant(args, runner, signals, ctx):
+    runner(["systemctl", "stop", "wpa_supplicant"])
+    return True
+
+
+def act_vacuum_journal(args, runner, signals, ctx):
+    mb = int(ctx.get("journal_keep_mb", 100))
+    runner(["journalctl", "--vacuum-size=%dM" % mb])
+    return True
+
+
 def act_quarantine_plugin(args, runner, signals, ctx):
     failed = signals.get("log", {}).get("plugins_failed", [])
     name = failed[0] if failed else None
@@ -560,8 +726,63 @@ ACTIONS = {
     "remount_rw": act_remount_rw,
     "make_handshakes_dir": act_make_handshakes_dir,
     "prune_logs": act_prune_logs,
+    "stop_wpa_supplicant": act_stop_wpa_supplicant,
+    "vacuum_journal": act_vacuum_journal,
     "restore_config": act_restore_config,
     "quarantine_plugin": act_quarantine_plugin,
+}
+
+# Richer-than-safe|risky action metadata (data only for now; report + future policy in v0.6).
+# tier stays the policy handle; the attributes describe *why* an action is (or isn't) benign.
+ACTION_META = {
+    "restart_service":    {"tier": "safe",  "reversible": True,  "destructive": False,
+                           "interrupts_service": True,  "affects_connectivity": False,
+                           "needs_reboot": False},
+    "rfkill_unblock":     {"tier": "safe",  "reversible": True,  "destructive": False,
+                           "interrupts_service": False, "affects_connectivity": False,
+                           "needs_reboot": False},
+    "set_time":           {"tier": "safe",  "reversible": True,  "destructive": False,
+                           "interrupts_service": False, "affects_connectivity": False,
+                           "needs_reboot": False},
+    "make_handshakes_dir":{"tier": "safe",  "reversible": True,  "destructive": False,
+                           "interrupts_service": False, "affects_connectivity": False,
+                           "needs_reboot": False},
+    "prune_logs":         {"tier": "safe",  "reversible": False, "destructive": True,
+                           "interrupts_service": False, "affects_connectivity": False,
+                           "needs_reboot": False},
+    "vacuum_journal":     {"tier": "safe",  "reversible": False, "destructive": True,
+                           "interrupts_service": False, "affects_connectivity": False,
+                           "needs_reboot": False},
+    "stop_wpa_supplicant":{"tier": "safe",  "reversible": True,  "destructive": False,
+                           "interrupts_service": True,  "affects_connectivity": True,
+                           "needs_reboot": False},
+    "remount_rw":         {"tier": "risky", "reversible": True,  "destructive": False,
+                           "interrupts_service": False, "affects_connectivity": False,
+                           "needs_reboot": False},
+    "restore_config":     {"tier": "risky", "reversible": True,  "destructive": False,
+                           "interrupts_service": True,  "affects_connectivity": False,
+                           "needs_reboot": True},
+    "quarantine_plugin":  {"tier": "risky", "reversible": True,  "destructive": False,
+                           "interrupts_service": True,  "affects_connectivity": False,
+                           "needs_reboot": True},
+}
+
+
+# Safety guards: a fix may name a guard; it only runs when the guard confirms it's safe *now*.
+def guard_wpa_not_uplink(signals, ctx):
+    """Safe to stop wpa_supplicant unless it appears to carry the owner's uplink."""
+    up = (signals.get("net", {}) or {}).get("default_iface")
+    return not (isinstance(up, str) and up.startswith("wlan"))
+
+
+def guard_media_ok(signals, ctx):
+    """Safe to remount rw only when the kernel isn't reporting SD I/O errors."""
+    return (signals.get("dmesg", {}) or {}).get("sd_error", 0) < 1
+
+
+GUARDS = {
+    "wpa_not_uplink": guard_wpa_not_uplink,
+    "media_ok": guard_media_ok,
 }
 
 
@@ -579,21 +800,51 @@ class CircuitBreaker:
     def record(self, key, now):
         self._events.setdefault(key, []).append(now)
 
+    def snapshot(self):
+        """JSON-able copy of the attempt history (for persistence across reboots)."""
+        return {k: list(v) for k, v in self._events.items() if v}
 
-def policy_allows(tier, autofix):
-    if autofix == "all":
+    def restore(self, data):
+        if isinstance(data, dict):
+            self._events = {k: [float(t) for t in v]
+                            for k, v in data.items() if isinstance(v, list)}
+        return self
+
+
+# Autonomy levels (Standing Orders). off/observe/notify never act; conservative acts on safe
+# fixes only; assertive also acts on risky ones. Legacy "safe"/"all" map in.
+_LEVEL_ALIASES = {"safe": "conservative", "all": "assertive", "on": "conservative",
+                  "true": "conservative", "1": "conservative"}
+_LEVELS = ("off", "observe", "notify", "conservative", "assertive")
+
+
+def normalize_level(value):
+    v = str(value).strip().lower()
+    v = _LEVEL_ALIASES.get(v, v)
+    return v if v in _LEVELS else "conservative"
+
+
+def policy_allows(tier, level):
+    level = normalize_level(level)
+    if level == "assertive":
         return True
-    if autofix == "safe":
+    if level == "conservative":
         return tier == "safe"
     return False
 
 
-def apply_fixes(findings, signals, autofix, runner, breaker, ctx, recollect=None, now=None):
-    """Attempt allowed fixes; verify; set each finding's outcome. Returns findings.
+def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
+                recollect=None, now=None, dry_run=False, disabled=None):
+    """Attempt allowed fixes; guard; verify; set each finding's outcome. Returns findings.
 
-    Truth rule: a low-confidence (log-inferred) finding is NEVER auto-fixed, only explained.
+    Truth rules:
+      * a low-confidence (log-inferred) finding is NEVER auto-fixed, only explained;
+      * a guard that says "not safe right now" blocks the action (outcome blocked_guard);
+      * an action that runs but can't be re-verified is executed_verification_unknown, not fixed.
     """
     now = now if now is not None else time.time()
+    disabled = set(disabled or ())
+    level = normalize_level(autofix)
     for f in findings:
         fix = f.get("fix")
         if not fix:
@@ -602,11 +853,27 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx, recollect=None
         if f.get("confidence") == "low":            # weak evidence -> explain, never auto-act
             f["outcome"] = "needs_user"
             continue
-        if not policy_allows(fix.get("tier", "risky"), autofix):
+        if f["id"] in disabled:                     # owner opted this condition out of auto-fix
             f["outcome"] = "needs_user"
             continue
+        if not policy_allows(fix.get("tier", "risky"), level):
+            f["outcome"] = "needs_user"
+            continue
+        guard = fix.get("guard")
+        if guard:
+            fn = GUARDS.get(guard)
+            try:
+                safe = bool(fn and fn(signals, ctx))
+            except Exception:
+                safe = False
+            if not safe:                            # unsafe right now -> explain, don't act
+                f["outcome"] = "blocked_guard"
+                continue
         if not breaker.allow(f["id"], now):
             f["outcome"] = "gave_up"
+            continue
+        if dry_run:                                 # would act, but the owner asked us not to
+            f["outcome"] = "would_fix"
             continue
         breaker.record(f["id"], now)
         action = ACTIONS.get(fix["action"])
@@ -618,14 +885,15 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx, recollect=None
         if not ok:
             f["outcome"] = "fix_failed"
             continue
-        if recollect is not None:
-            try:
-                fresh = recollect()
-                f["outcome"] = "fix_failed" if f["_detect"](fresh) else "fixed"
-            except Exception:
-                f["outcome"] = "fixed"
-        else:
-            f["outcome"] = "fixed"
+        if recollect is None:                       # can't verify -> unknown stays unknown
+            f["outcome"] = "executed_verification_unknown"
+            continue
+        try:
+            fresh = recollect()
+        except Exception:
+            f["outcome"] = "executed_verification_unknown"
+            continue
+        f["outcome"] = "fix_failed" if f["_detect"](fresh) else "fixed"
     return findings
 
 
@@ -633,16 +901,17 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx, recollect=None
 # Plugin
 # ======================================================================================
 _SNAPSHOT_KEYS = ("temp_c", "mem_pct", "swap_used_pct", "disk", "throttled", "services",
-                  "monitor_present", "rfkill_blocked", "bettercap_reachable", "uptime_sec")
+                  "monitor_present", "rfkill_blocked", "bettercap_reachable", "uptime_sec",
+                  "wpa_supplicant", "iface", "journal_bytes", "service_restarts", "net")
 _UI_STATUS = {"OK": "OK", "HEALED": "healed", "ATTENTION": "attn",
               "DEGRADED": "DEGR", "ACTION_REQUIRED": "ACT!"}
 
 
 class Doctor(plugins.Plugin):
     __author__ = "patrickato"
-    __version__ = "0.4.0"
+    __version__ = "0.5.0"
     __license__ = "GPL3"
-    __description__ = "Autonomous health scan, diagnosis, causal explanation, self-healing and known-good drift."
+    __description__ = "Autonomous health scan, diagnosis, causal explanation, guarded self-healing and known-good drift."
 
     def __init__(self):
         self.options = dict()
@@ -652,9 +921,13 @@ class Doctor(plugins.Plugin):
         self._breaker = CircuitBreaker()
         self._open = {}          # id -> {opened_at, severity, summary, snapshot}
         self._history = []
+        self._breaker_path = None
 
-    def on_loaded(self):
-        self._autofix = str(self.options.get("autofix", "safe"))
+    def _read_options(self):
+        """Parse options into attrs. Called on load AND on_config_changed (live-editable)."""
+        self._autofix = normalize_level(self.options.get("autofix", "conservative"))
+        self._dry_run = bool(self.options.get("dry_run", False))
+        self._disabled = set(self.options.get("disable_autofix", []) or [])
         self._scan_every = int(self.options.get("scan_every", 30))
         self._boot_grace = float(self.options.get("boot_grace_s", 25))
         self._log_path = self.options.get("log_path", "/etc/pwnagotchi/log/pwnagotchi.log")
@@ -664,16 +937,50 @@ class Doctor(plugins.Plugin):
                                                "/etc/pwnagotchi/doctor_incidents.json")
         self._checkpoint_path = self.options.get("checkpoint_path",
                                                  "/etc/pwnagotchi/doctor_known_good.json")
+        self._breaker_path = self.options.get("breaker_path",
+                                              "/etc/pwnagotchi/doctor_breaker.json")
         self._min_free_mb = int(self.options.get("min_free_mb", 200))
         self._max_temp_c = float(self.options.get("max_temp_c", 80))
+        self._journal_max_mb = int(self.options.get("journal_max_mb", 200))
+        self._journal_keep_mb = int(self.options.get("journal_keep_mb", 100))
+        self._restart_loop_threshold = int(self.options.get("restart_loop_threshold", 5))
         self._services = list(self.options.get("services",
                               ["pwnagotchi", "bettercap", "pwngrid-peer"]))
-        logging.info("[doctor] loaded v%s (autofix=%s)", self.__version__, self._autofix)
+
+    def on_loaded(self):
+        self._read_options()
+        self._load_breaker()
+        logging.info("[doctor] loaded v%s (autonomy=%s, dry_run=%s)",
+                     self.__version__, self._autofix, self._dry_run)
+
+    def on_config_changed(self, config):
+        # Standing Orders (autonomy dial, opt-outs, thresholds) are editable at any time.
+        self._read_options()
+        logging.info("[doctor] config reloaded (autonomy=%s, dry_run=%s)",
+                     self._autofix, self._dry_run)
 
     def _ctx(self):
         return {"log_path": self._log_path, "config_path": self._config_path,
-                "handshakes": self._handshakes,
+                "handshakes": self._handshakes, "journal_keep_mb": self._journal_keep_mb,
                 "log_max_bytes": 5 * 1024 * 1024, "log_keep_lines": 1000}
+
+    # -- persistent circuit breaker (survives restart/reboot) ---------------------------
+    def _load_breaker(self):
+        try:
+            if self._breaker_path and os.path.exists(self._breaker_path):
+                with open(self._breaker_path) as fp:
+                    self._breaker.restore(json.load(fp))
+        except Exception as e:
+            logging.debug("[doctor] breaker load failed: %s", e)
+
+    def _save_breaker(self):
+        try:
+            if self._breaker_path:
+                os.makedirs(os.path.dirname(self._breaker_path), exist_ok=True)
+                with open(self._breaker_path, "w") as fp:
+                    json.dump(self._breaker.snapshot(), fp)
+        except Exception as e:
+            logging.debug("[doctor] breaker save failed: %s", e)
 
     # -- collectors (guarded) ----------------------------------------------------------
     @staticmethod
@@ -683,7 +990,9 @@ class Doctor(plugins.Plugin):
     def collect(self, runner=None):
         runner = runner or self._run
         s = {"_cfg": {"min_free_mb": self._min_free_mb, "max_temp_c": self._max_temp_c,
-                      "boot_grace_s": self._boot_grace, "log_max_bytes": 5 * 1024 * 1024}}
+                      "boot_grace_s": self._boot_grace, "log_max_bytes": 5 * 1024 * 1024,
+                      "journal_max_bytes": self._journal_max_mb * 1024 * 1024,
+                      "restart_loop_threshold": self._restart_loop_threshold}}
 
         try:
             with open("/proc/uptime") as fp:
@@ -700,6 +1009,23 @@ class Doctor(plugins.Plugin):
             except Exception:
                 pass
         s["services"] = services
+
+        restarts = {}
+        for name in self._services:
+            try:
+                out = runner(["systemctl", "show", name, "-p", "NRestarts", "--value"]).strip()
+                restarts[name] = int(out or 0)
+            except Exception:
+                pass
+        s["service_restarts"] = restarts
+
+        try:
+            active = runner(["systemctl", "is-active", "wpa_supplicant"]).strip() == "active"
+            s["wpa_supplicant"] = {"running": active}
+        except subprocess.CalledProcessError as e:
+            s["wpa_supplicant"] = {"running": (e.output or "").strip() == "active"}
+        except Exception:
+            s["wpa_supplicant"] = {}
 
         try:
             s["throttled"] = parse_throttled(runner(["vcgencmd", "get_throttled"]))
@@ -729,11 +1055,28 @@ class Doctor(plugins.Plugin):
         except Exception:
             s["swap_used_pct"] = None
 
+        cfg_text = None
         try:
             with open(self._config_path, "rt", errors="ignore") as fp:
-                s["config"] = config_valid(fp.read())
+                cfg_text = fp.read()
+            s["config"] = config_valid(cfg_text)
+            s["config"]["debug"] = config_debug_level(cfg_text)
         except Exception:
-            s["config"] = {"valid": True, "error": None}
+            s["config"] = {"valid": True, "error": None, "debug": False}
+
+        # Wi-Fi interface: what config asks for vs. what's actually present.
+        iface = {"configured": parse_main_iface(cfg_text)}
+        try:
+            iface["present"] = sorted(n for n in os.listdir("/sys/class/net")
+                                      if n.startswith("wlan"))
+        except Exception:
+            iface["present"] = None
+        s["iface"] = iface
+
+        try:
+            s["journal_bytes"] = parse_journal_usage(runner(["journalctl", "--disk-usage"]))
+        except Exception:
+            s["journal_bytes"] = None
 
         try:
             import urllib.request
@@ -761,9 +1104,12 @@ class Doctor(plugins.Plugin):
         net = {}
         try:
             with open("/proc/net/route") as fp:
-                net["default_route"] = parse_default_route(fp.read())
+                route_text = fp.read()
+            net["default_route"] = parse_default_route(route_text)
+            net["default_iface"] = parse_default_iface(route_text)
         except Exception:
             net["default_route"] = None
+            net["default_iface"] = None
         if net.get("default_route"):
             try:
                 socket.setdefaulttimeout(2)
@@ -805,10 +1151,12 @@ class Doctor(plugins.Plugin):
         now = now if now is not None else time.time()
         signals = self.collect(runner)
         findings = diagnose(signals)
+        acting = self._autofix not in ("off", "observe", "notify") and not self._dry_run
         apply_fixes(findings, signals, self._autofix, runner or self._run,
                     self._breaker, self._ctx(),
-                    recollect=(lambda: self.collect(runner)) if self._autofix != "off" else None,
-                    now=now)
+                    recollect=(lambda: self.collect(runner)) if acting else None,
+                    now=now, dry_run=self._dry_run, disabled=self._disabled)
+        self._save_breaker()
         self._findings = findings
         self._status = overall_status(findings)
         self._causal = build_causal(f["id"] for f in findings)
@@ -966,8 +1314,11 @@ class Doctor(plugins.Plugin):
         need = [f for f in self._findings if f["outcome"] in ("needs_user", "fix_failed", "gave_up")]
         causal = ("<h3>Likely cause chain</h3><ul>%s</ul>"
                   % "".join("<li>%s</li>" % c for c in self._causal)) if self._causal else ""
+        mode = ("<p><small>autonomy: <b>%s</b>%s</small></p>"
+                % (self._autofix, " · dry-run" if self._dry_run else ""))
         if not self._findings:
-            body = "<p><b>OK</b> — no issues detected. 🎉</p>"
+            body = mode + "<p><b>OK</b> — no issues detected. 🎉</p>"
+            return "<html><body><h1>Doctor</h1>{}{}</body></html>".format(body, drift)
         else:
             def block(f):
                 steps = "".join("<li>%s</li>" % h for h in f.get("howto", []))
@@ -975,7 +1326,7 @@ class Doctor(plugins.Plugin):
                         "<td>{outcome}</td><td><ol>{steps}</ol></td></tr>").format(
                             sev=f["severity"], conf=f["confidence"], sym=f["symptom"],
                             cause=f["cause"], outcome=f["outcome"], steps=steps)
-            body = ("<p>Status: <b>{st}</b> — auto-fixed {nf}, needs you {nn}</p>{causal}"
+            body = (mode + "<p>Status: <b>{st}</b> — auto-fixed {nf}, needs you {nn}</p>{causal}"
                     "<table border=1><tr><th>sev</th><th>confidence</th><th>symptom</th>"
                     "<th>cause</th><th>outcome</th><th>what to do</th></tr>{rows}</table>").format(
                         st=self._status, nf=len(fixed), nn=len(need), causal=causal,

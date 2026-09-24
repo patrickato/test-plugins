@@ -1,13 +1,35 @@
 # Doctor Plugin — Design Notes & Roadmap
 
-**Plugin:** `doctor` (P06) · **Current version:** v0.4.0 · **Last updated:** 2026-09-24
+**Plugin:** `doctor` (P06) · **Current version:** v0.5.0 · **Last updated:** 2026-09-24
 **Scope:** stock Pwnagotchi only (this is *not* the Beastagotchi Doctor; see §9 for the link).
 **Status caveat:** everything below is source/CI reasoning + off-Pi tests. **Physical Pi
 validation of the auto-fix effectors is still pending.**
+**Collaboration:** this is now a Claude + OpenAI (ChatGPT) joint effort toward a public
+Pwnagotchi release. Cross-notes live at repo root: ChatGPT's `OPENAI_TO_CLAUDE_*` and
+`OPENAI_CROSSPOLLINATION_*` (currently on `main`), and Claude's reply `CLAUDE_TO_OPENAI_*` (on
+the working branch, co-locating on merge). The shared interop contract is
+`CONDITION_PACK_SCHEMA.md` (this folder).
 
 This document is the single pick-up point for the Doctor. It captures what it is now, the
 design principles, and every idea/recommendation for where it goes next, so any contributor
 (or AI) can resume without re-deriving the plan.
+
+## 0. North star (end goal for the *Pwnagotchi* Doctor)
+
+A single, trusted, **offline-first immune system** for stock Jayofelony Pwnagotchi. A small
+**Kernel** (probe → diagnose → gated-treat → verify → remember) sits over a persistent
+**Patient Chart** (what this device is + its incident/remedy history + learned quirks),
+governed by owner **Standing Orders** (an autonomy dial the end user sets and can change at any
+time), using a **Toolbox** of locally-available tools and a bundled **Medical Library** of
+condition packs. It auto-heals the common beginner-breaking failures, gives clear step-by-step
+guidance for the rest, and **never makes the device worse** (verify-or-rollback, persistent
+circuit breakers, media-failure-aware, unknown-stays-unknown). It emits a one-click sanitized
+support bundle and shares a neutral condition-pack schema with Beastagotchi — while staying
+fully useful on its own, with **zero network required**.
+
+> Doctor should permanently remember the patient, not permanently carry every medical textbook.
+> Patient Chart says what is true · Standing Orders say what is permitted · Toolbox says what is
+> available · Medical Library says what is known. *(shared framing with ChatGPT)*
 
 ---
 
@@ -33,7 +55,26 @@ Growth happens on four axes plus one structural idea:
 
 ---
 
-## 2. Current state (v0.4.0)
+## 2. Current state (v0.5.0)
+
+**New in v0.5 (won't-work ailment pack + safety hardening):**
+- Conditions added: `wpa_supplicant_hijack` (+ uplink-safe stop), `iface_mismatch`,
+  `reboot_loop` (systemd `NRestarts`, boot-gated), `journald_bloat` (+ `vacuum_journal`),
+  `debug_log_level`.
+- **Verification truth:** an action that runs but can't be re-verified reports
+  `executed_verification_unknown`, never `fixed`.
+- **Persistent circuit breaker:** attempt budgets survive restart/reboot (`breaker_path`).
+- **Safety guards:** `wpa_not_uplink` (won't stop wpa_supplicant if it carries your uplink),
+  `media_ok` (won't remount rw when the SD is throwing I/O errors) → outcome `blocked_guard`.
+- **Autonomy dial (Standing Orders):** `off / observe / notify / conservative (default) /
+  assertive`, plus `dry_run` and a per-condition `disable_autofix` list; `on_config_changed`
+  re-reads it live (end user can change settings at any time). Legacy `safe`→conservative,
+  `all`→assertive.
+- **`ACTION_META`** registry (reversible / destructive / interrupts_service /
+  affects_connectivity / needs_reboot) — data seam for richer v0.6 policy.
+- Tests: **50** off-Pi unit tests (full repo suite green).
+
+### Baseline carried from v0.4.0
 
 **Collectors (guarded, work on any Pi/screen):** services (`systemctl`), power/throttle
 (`vcgencmd get_throttled` bits), disk free + **read-only-root**, `dmesg` signatures
@@ -66,15 +107,23 @@ package versions, kernel, OS) as "known good"; later diff current-vs-known-good 
 
 ## 3. Design principles (keep these)
 
-1. **Read broad, act narrow.** Never widen write access as casually as read access.
-2. **KB as data.** Conditions are declarative; adding an ailment should not require touching the
-   engine (goal: externalized condition-packs, §7).
-3. **Verify or roll back.** Every action re-checks that the condition actually cleared; if not,
-   revert / escalate. A push that leaves the device worse is worse than no action.
-4. **Honesty.** `unknown` is a first-class value; confidence is explicit; a recommendation is not
+1. **Sense broadly but boundedly; act narrowly and gated.** Cheap local probes can run often;
+   expensive / network-active / hardware-intrusive probes are scheduled or on-demand. Never
+   widen write access as casually as read access.
+2. **Offline-first, network-optional.** A Pwnagotchi is often headless and offline by design.
+   Everything critical must work with **zero network**; packs ship bundled + locally cached;
+   fetching is a later, opt-in enhancement that never gates diagnosis or safe healing.
+3. **KB as data.** Conditions are declarative; adding an ailment should not require touching the
+   engine (goal: externalized condition-packs, §7 / `CONDITION_PACK_SCHEMA.md`).
+4. **Verify, or report unknown.** Every action re-checks that the condition actually cleared; if
+   it can't re-check, it says `executed_verification_unknown` — it never claims `fixed`. A push
+   that leaves the device worse is worse than no action.
+5. **Honesty.** `unknown` is a first-class value; confidence is explicit; a recommendation is not
    an executed action. Low-confidence (log-inferred) findings are explained, never auto-fixed.
-5. **Do no harm.** Circuit breaker, snapshots, maintenance windows, and a confirm-required tier
-   keep autonomy from becoming a footgun.
+6. **Do no harm.** Circuit breaker (persistent), snapshots, per-action guards, maintenance
+   windows, dry-run, and a confirm-required tier keep autonomy from becoming a footgun.
+7. **The owner is in charge.** Standing Orders (the autonomy dial + opt-outs) are the end user's,
+   editable at any time; the Doctor's default posture is conservative.
 
 ---
 
@@ -151,17 +200,36 @@ Doctor subscribes to). The Doctor also publishes a canonical `doctor.state` othe
 
 ---
 
-## 6. Proposed version sequence
+## 6. Version sequence (merged Claude + ChatGPT plan)
 
-- **v0.5 — "no-monitor / no-handshakes" pack (recommended next):** reboot-loop,
-  `wpa_supplicant` hijack (+ safe fix), interface mismatch, journald bloat (+ vacuum),
-  debug-log-level. Attacks the two biggest forum-post generators. Low risk.
-- **v0.6 — Remember & learn:** remedy efficacy + flap/recurrence escalation.
-- **v0.7 — Beginner polish:** support bundle + health score + plain-language narrative.
-- **v0.8 — Externalized condition-packs (§7):** community-extensible KB.
-- **v0.9 — Hub integration (§5):** consume the sibling plugins.
-- **v1.0 — hardening + physical validation** on a real Pi across models/screens.
-- **Later (gated):** confirm-required tier, blast-radius preview, optional local-AI triage.
+Reordered from the original so **hardening lands with v0.5** and the **pack loader + Patient
+Chart move up to v0.6** (don't accumulate more hard-coded conditions before the seam exists).
+
+- **v0.5 — "Won't-work" pack + safety hardening (DONE):** reboot/crash-loop, wpa_supplicant
+  hijack (+ uplink-safe stop), interface mismatch, journald bloat (+ vacuum), debug-log-level;
+  verification truth; persistent circuit breaker; media/uplink guards; autonomy dial + dry-run
+  + per-condition opt-out + live reload.
+- **v0.6 — Data-driven brain + memory:** condition-pack schema v1 + loader (refactor the
+  built-in conditions into packs; `CONDITION_PACK_SCHEMA.md`); richer **action metadata**
+  drives policy (extend the `ACTION_META` seam); **Patient Chart v1** (bounded persistent
+  device identity + incident/remedy history + coverage).
+- **v0.7 — Learn + explain:** recurrence/flap escalation; remedy-efficacy ranking (ranking
+  only — never expands authority); **one-click sanitized support bundle**; plain-language
+  narrative. (Confirm-required tier lands here too.)
+- **v0.8 — Specialists on demand (offline-first, opt-in fetch):** cached condition/runbook
+  registry; plugin-contributed health providers. Knowledge may be fetched; **remedies/actions
+  gain zero authority merely by being downloaded.**
+- **v0.9 — One Doctor, many specialists (hub, §5):** consume sibling-plugin snapshots via
+  `/run/pwnagotchi/health.d/` (tmpfs, no SD wear).
+- **v1.0 — RC + physical validation + release:** full off-Pi suite; physical Pi validation
+  (broken-config, monitor/radio, service-restart, connectivity, storage-warning cases);
+  install/rollback/recovery docs; tag RC → release.
+- **Later (gated):** blast-radius preview, optional local-AI triage (advisory only, never acts
+  outside the allow-list).
+
+> Note on the health score: dropped as a headline number (false precision). Keep primary states
+> + explicit confidence; if a number is ever added, make it a transparent index with visible
+> components. *(ChatGPT §3E — agreed.)*
 
 ---
 
@@ -232,8 +300,13 @@ schema is the real interop opportunity between the two projects.
 ---
 
 ## 10. Resume checklist (pick up here)
-- [ ] Build v0.5 pack (§6): reboot-loop, wpa_supplicant hijack + fix, iface mismatch, journald
-      bloat + vacuum, debug-log-level. Add tests; push per the one-commit-per-change cadence.
-- [ ] Decide auto-fix default for the new `service.stop wpa_supplicant` (recommend `safe`).
-- [ ] Then v0.6 learn-and-remember, or jump to v0.8 externalized packs if community-sharing is
-      the priority.
+- [x] **v0.5 pack shipped** — reboot-loop, wpa_supplicant hijack (+ uplink-safe stop), iface
+      mismatch, journald bloat (+ vacuum), debug-log-level; verification truth; persistent
+      breaker; guards; autonomy dial + dry-run + opt-out + live reload. 50 tests.
+- [ ] **v0.6 next:** author `CONDITION_PACK_SCHEMA.md` v1 loader and refactor the built-in
+      conditions into packs; extend `ACTION_META` to drive policy; build **Patient Chart v1**
+      (bounded).
+- [ ] Coordinate with ChatGPT via the root cross-notes + `CONDITION_PACK_SCHEMA.md`; ChatGPT
+      reviews / may contribute code (trusted collaborator, still reviewed like a teammate's PR).
+- [ ] Toward RC: wire the confirm-required tier (v0.7), support bundle, then physical Pi
+      validation (only the owner can do this — a scripted checklist ships with v1.0 RC).
