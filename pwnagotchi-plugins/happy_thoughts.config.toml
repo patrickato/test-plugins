@@ -1,0 +1,17 @@
+# Example config for the "happy_thoughts" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library). Purely cosmetic, offline.
+
+main.plugins.happy_thoughts.enabled = true
+
+# Seconds between quips.
+main.plugins.happy_thoughts.interval_secs = 40
+
+# Random order (false = sequential).
+main.plugins.happy_thoughts.random = true
+
+# Optional: path to your own pack (one quip per line; blank lines and # comments ignored).
+main.plugins.happy_thoughts.quips_file = ""
+
+# UI position "x,y" (text wraps at ~40 chars).
+main.plugins.happy_thoughts.position = "0,0"

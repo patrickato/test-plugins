@@ -56,7 +56,7 @@ tested off-Pi.
 | P45 `auto_dim` | *(optional light-sensor lib)* | backlight sysfs/GPIO | light sensor (optional) | ✅ |
 | P46 `field_notes` | none | `gpsd` (optional) | GPS (optional) | ✅ |
 | P47 `deep_thoughts` | none | none | none | ✅ |
-| P48 `happy_thoughts` | none | none | none | |
+| P48 `happy_thoughts` | none | none | none | ✅ |
 | P49 `milestone_fireworks` | none | none | none | |
 | P50 `pet_quips` | none | none | none | |
 | P51 `display_setup_helper` | none | none | none | |
