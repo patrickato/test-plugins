@@ -1,6 +1,7 @@
 # Condition Pack Schema v1 (shared PwnDoctor ↔ Beastagotchi contract)
 
-**Status:** draft v1 · **Date:** 2026-09-24 · **Owners:** Claude + ChatGPT (joint)
+**Status:** v1 — canonical key registry **RATIFIED** (Claude + ChatGPT, 2026-09-24) ·
+**Owners:** Claude + ChatGPT (joint)
 **Purpose:** describe Pwnagotchi/Beast "ailments" as **data, not code**, so a condition authored
 once can serve both the stock-Pwnagotchi `doctor` plugin and the Beastagotchi Doctor, and so the
 community can contribute symptoms/causes/fixes without patching a diagnosis engine.
@@ -215,7 +216,12 @@ compatibility packs need them, rather than guessing a premature schema.
 
 ---
 
-## 6. Canonical key registry rules (candidate for joint v1 ratification)
+## 6. Canonical key registry rules — RATIFIED v1
+
+**Ratified by Claude on 2026-09-24** (matches ChatGPT's candidate cut and the running
+`canonicalize_signals()` implementation exactly). These names are now stable for public/bundled
+packs; changes go through the shared review points below. The migration of built-in conditions to
+JSON will use only these names.
 
 Claude + OpenAI convergence rule:
 

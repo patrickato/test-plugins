@@ -33,7 +33,7 @@ tested off-Pi.
 | P03 `crack_reconciler` | none | none | none | ✅ |
 | P04 `capture_retention` | none | none | none | ✅ |
 | P05 `own_network_allowlist` | none | none | none | ✅ |
-| P06 `doctor` | none | systemctl/iw/rfkill/vcgencmd/journalctl/dpkg (guarded) | none | ✅ v0.6-pre1 |
+| P06 `doctor` | none | systemctl/iw/rfkill/vcgencmd/journalctl/dpkg (guarded) | none | ✅ v0.6-pre2 |
 | P07 `sd_wear` | none | none | none | ✅ |
 | P12 `battery_historian` | none *(optional `smbus2`)* | none | UPS/PiSugar (optional) | ✅ |
 | P13 `fan_curve` | `RPi.GPIO` or `gpiozero` | PWM enabled | PWM-capable fan | ✅ |

@@ -1,4 +1,4 @@
-# Example config for the "doctor" plugin (v0.6-pre1 collaboration branch).
+# Example config for the "doctor" plugin (v0.6-pre2 collaboration branch).
 # Copy into /etc/pwnagotchi/config.toml and edit.
 # Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl/
 #           journalctl when present, all guarded). Auto-fix actions need root (Pwnagotchi
@@ -24,6 +24,11 @@ main.plugins.doctor.dry_run = false
 # Per-condition opt-out: list condition ids the Doctor must never auto-fix (still explained).
 # e.g. ["wpa_supplicant_hijack", "prune_logs"]
 main.plugins.doctor.disable_autofix = []
+
+# Confirm-required: condition ids that should NOT auto-fix but instead queue for your one-tap
+# approval (outcome "awaiting_confirm"). Approve from the Doctor web page ("Confirm & apply").
+# The middle ground between fully automatic and fully manual. e.g. ["bettercap_down"]
+main.plugins.doctor.confirm_required = []
 
 # Run a full scan every N epochs (0 = only on startup and when you open the web page).
 main.plugins.doctor.scan_every = 30

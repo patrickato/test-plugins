@@ -1,6 +1,6 @@
 # Doctor Plugin — Design Notes & Roadmap
 
-**Plugin:** `doctor` (P06) · **Current version:** v0.6.0-pre1 · **Last updated:** 2026-09-24
+**Plugin:** `doctor` (P06) · **Current version:** v0.6.0-pre2 · **Last updated:** 2026-09-24
 **Scope:** stock Pwnagotchi only (this is *not* the Beastagotchi Doctor; see §9 for the link).
 **Status caveat:** everything below is source/CI reasoning + off-Pi tests. **Physical Pi
 validation of the auto-fix effectors is still pending.**
@@ -65,7 +65,21 @@ Growth happens on four axes plus one structural idea:
 
 ---
 
-## 2. Current state (v0.6.0-pre1)
+## 2. Current state (v0.6.0-pre2)
+
+**New in v0.6-pre2:**
+- **Tri-state condition truth + explicit pack verification** (ChatGPT): the evaluator is
+  True/False/None; detection fires only on proven True; a pack's `fix.verify` maps
+  True→fixed, False→fix_failed, missing→`executed_verification_unknown` (unknown stays unknown).
+- **Patient Chart recurrence/chronic memory** (ChatGPT): compact per-condition episode counters
+  (transitions, not scans); `recurring: N` on the web page. Incident file stays the lifecycle
+  source of truth.
+- **Canonical key registry ratified** (`CONDITION_PACK_SCHEMA.md` §6) — stable v1 names.
+- **Confirm-required tier** (Claude): a `confirm_required` list of condition ids queues a fix for
+  one-tap owner approval (outcome `awaiting_confirm`) instead of auto-fixing; approve from the web
+  page's "Confirm & apply" link. Held actions don't spend circuit-breaker budget. The middle
+  ground between fully-auto and fully-manual.
+- Tests: **74** off-Pi doctor tests (full repo suite 336 green).
 
 **New in v0.6-pre1 (OpenAI/ChatGPT contribution, reviewed + integrated by Claude):**
 - **Condition Pack v1 runtime** (`canonicalize_signals`, `eval_condition_expr`,
@@ -237,13 +251,21 @@ Chart move up to v0.6** (don't accumulate more hard-coded conditions before the 
   hijack (+ uplink-safe stop), interface mismatch, journald bloat (+ vacuum), debug-log-level;
   verification truth; persistent circuit breaker; media/uplink guards; autonomy dial + dry-run
   + per-condition opt-out + live reload.
-- **v0.6 — Data-driven brain + memory** *(pre1 landed)*: condition-pack schema v1 + loader
-  ✅ (ChatGPT); **Patient Chart v1** ✅ (ChatGPT); **remaining for v0.6 final:** refactor the
-  built-in conditions into JSON packs (Claude), richer **action metadata drives policy** (extend
-  the `ACTION_META` seam → Claude), chronic/recurrence counters in the Chart (ChatGPT).
-- **v0.7 — Learn + explain:** recurrence/flap escalation; remedy-efficacy ranking (ranking
-  only — never expands authority); **one-click sanitized support bundle**; plain-language
-  narrative. (Confirm-required tier lands here too.)
+- **v0.6 — Data-driven brain + memory** *(pre2 landed)*: condition-pack schema v1 + loader
+  ✅ (ChatGPT); **Patient Chart v1** ✅ (ChatGPT); tri-state verify + chronic/recurrence
+  counters ✅ (ChatGPT); **canonical key registry ratified** ✅; **confirm-required tier** ✅
+  (Claude, pulled forward from v0.7). **Remaining for v0.6 final:** migrate built-in conditions
+  → JSON packs (Claude) — *blocked on two shared-review seams below* — and promote `ACTION_META`
+  to drive policy (Claude).
+  - *Migration prerequisites (shared review — treatment-authority + schema):* (1) a **trusted
+    bundled-pack** class shipped with the plugin that may carry remedies (first-party = as
+    trusted as the plugin's own code), distinct from user/external packs which stay explain-only;
+    (2) **threshold parameterization** so config-tunable conditions (disk_full, overheat, …) can
+    live as packs. Conditions needing boot-gating or computed helpers (iface_mismatch) may stay
+    as code.
+- **v0.7 — Learn + explain:** remedy-efficacy ranking (ranking only — never expands authority);
+  **one-click sanitized support bundle**; plain-language narrative. (Confirm-required tier already
+  landed in v0.6-pre2.)
 - **v0.8 — Specialists on demand (offline-first, opt-in fetch):** cached condition/runbook
   registry; plugin-contributed health providers. Knowledge may be fetched; **remedies/actions
   gain zero authority merely by being downloaded.**
@@ -333,8 +355,12 @@ schema is the real interop opportunity between the two projects.
       breaker; guards; autonomy dial + dry-run + opt-out + live reload. 50 tests.
 - [x] **v0.6-pre1 landed:** Condition Pack v1 runtime + Patient Chart v1 (ChatGPT), reviewed +
       integrated by Claude; built-in-wins guard, example pack, broadened CI (Claude). 61 tests.
-- [ ] **v0.6 final:** do the joint canonical-key naming pass, then Claude migrates the built-in
-      conditions into JSON packs and promotes `ACTION_META` to drive policy; ChatGPT adds
-      chronic/recurrence counters to the Patient Chart.
-- [ ] Toward RC: wire the confirm-required tier (v0.7), support bundle, then physical Pi
-      validation (only the owner can do this — a scripted checklist ships with v1.0 RC).
+- [x] **v0.6-pre2 landed:** tri-state verify + chronic/recurrence memory (ChatGPT); canonical key
+      registry ratified; confirm-required tier (Claude). 74 tests / 336 repo.
+- [ ] **Shared review (unblocks migration):** ratify the *trusted bundled-pack* remedy class and
+      *threshold parameterization* in `CONDITION_PACK_SCHEMA.md` (treatment-authority + schema
+      change → ChatGPT + Claude).
+- [ ] **v0.6 final (Claude):** once the two seams are agreed, migrate built-in conditions → JSON
+      packs and promote `ACTION_META` to drive policy.
+- [ ] Toward RC: support bundle + plain-language narrative (v0.7), then physical Pi validation
+      (only the owner can do this — a scripted checklist ships with v1.0 RC).

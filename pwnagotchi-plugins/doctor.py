@@ -38,6 +38,9 @@ Options (main.plugins.doctor.*):
                                        #   (legacy: "safe"->conservative, "all"->assertive)
     dry_run          = false           # log what it *would* do, change nothing
     disable_autofix  = []              # condition ids to never auto-fix (still explained)
+    confirm_required = []              # condition ids that queue for one-tap approval instead
+                                       #   of auto-fixing (outcome "awaiting_confirm"; approve
+                                       #   from the web page)
     scan_every       = 30              # full scan every N epochs (0 = only on start / web)
     boot_grace_s     = 25              # don't flag service-down before this many seconds uptime
     log_path         = "/etc/pwnagotchi/log/pwnagotchi.log"
@@ -895,7 +898,7 @@ def diagnose(signals, extra_conditions=None):
 
 # Outcomes that mean "still a live problem the owner should see."
 _REMAINING = ("needs_user", "fix_failed", "gave_up", "blocked_guard", "would_fix",
-              "executed_verification_unknown")
+              "executed_verification_unknown", "awaiting_confirm")
 
 
 def overall_status(findings):
@@ -1116,7 +1119,7 @@ def policy_allows(tier, level):
 
 
 def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
-                recollect=None, now=None, dry_run=False, disabled=None):
+                recollect=None, now=None, dry_run=False, disabled=None, confirm=None):
     """Attempt allowed fixes; guard; verify; set each finding's outcome. Returns findings.
 
     Truth rules:
@@ -1126,6 +1129,7 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
     """
     now = now if now is not None else time.time()
     disabled = set(disabled or ())
+    confirm = set(confirm or ())
     level = normalize_level(autofix)
     for f in findings:
         fix = f.get("fix")
@@ -1151,6 +1155,9 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
             if not safe:                            # unsafe right now -> explain, don't act
                 f["outcome"] = "blocked_guard"
                 continue
+        if f["id"] in confirm and not dry_run:      # owner wants to approve this one first
+            f["outcome"] = "awaiting_confirm"
+            continue
         if not breaker.allow(f["id"], now):
             f["outcome"] = "gave_up"
             continue
@@ -1409,7 +1416,7 @@ _UI_STATUS = {"OK": "OK", "HEALED": "healed", "ATTENTION": "attn",
 
 class Doctor(plugins.Plugin):
     __author__ = "patrickato"
-    __version__ = "0.6.0-pre1"
+    __version__ = "0.6.0-pre2"
     __license__ = "GPL3"
     __description__ = "Autonomous health scan, diagnosis, causal explanation, guarded self-healing and known-good drift."
 
@@ -1431,6 +1438,7 @@ class Doctor(plugins.Plugin):
         self._autofix = normalize_level(self.options.get("autofix", "conservative"))
         self._dry_run = bool(self.options.get("dry_run", False))
         self._disabled = set(self.options.get("disable_autofix", []) or [])
+        self._confirm_required = set(self.options.get("confirm_required", []) or [])
         self._scan_every = int(self.options.get("scan_every", 30))
         self._boot_grace = float(self.options.get("boot_grace_s", 25))
         self._log_path = self.options.get("log_path", "/etc/pwnagotchi/log/pwnagotchi.log")
@@ -1670,15 +1678,18 @@ class Doctor(plugins.Plugin):
         return s
 
     # -- the autonomous loop -----------------------------------------------------------
-    def scan(self, runner=None, now=None):
+    def scan(self, runner=None, now=None, force_ids=None):
         now = now if now is not None else time.time()
         signals = self.collect(runner)
         findings = diagnose(signals, extra_conditions=self._pack_conditions)
         acting = self._autofix not in ("off", "observe", "notify") and not self._dry_run
+        # confirm-required conditions wait for owner approval; force_ids (from the web
+        # "Confirm & apply" link) approve a specific one for this pass only.
+        confirm = self._confirm_required - set(force_ids or ())
         apply_fixes(findings, signals, self._autofix, runner or self._run,
                     self._breaker, self._ctx(),
                     recollect=(lambda: self.collect(runner)) if acting else None,
-                    now=now, dry_run=self._dry_run, disabled=self._disabled)
+                    now=now, dry_run=self._dry_run, disabled=self._disabled, confirm=confirm)
         self._save_breaker()
         self._findings = findings
         self._status = overall_status(findings)
@@ -1835,9 +1846,18 @@ class Doctor(plugins.Plugin):
 
     def on_webhook(self, path, request):
         drift = self._drift_html(request)
-        self.scan()
+        force_ids = None
+        try:
+            if request is not None:
+                cid = request.args.get("confirm")
+                if cid:
+                    force_ids = {cid}
+        except Exception:
+            force_ids = None
+        self.scan(force_ids=force_ids)
         fixed = [f for f in self._findings if f["outcome"] == "fixed"]
-        need = [f for f in self._findings if f["outcome"] in ("needs_user", "fix_failed", "gave_up")]
+        need = [f for f in self._findings
+                if f["outcome"] in ("needs_user", "fix_failed", "gave_up", "awaiting_confirm")]
         causal = ("<h3>Likely cause chain</h3><ul>%s</ul>"
                   % "".join("<li>%s</li>" % c for c in self._causal)) if self._causal else ""
         patient = self._patient.summary() if self._patient is not None else {}
@@ -1854,10 +1874,13 @@ class Doctor(plugins.Plugin):
         else:
             def block(f):
                 steps = "".join("<li>%s</li>" % h for h in f.get("howto", []))
+                outcome = f["outcome"]
+                if outcome == "awaiting_confirm":
+                    outcome += (" — <a href='?confirm=%s'>Confirm &amp; apply</a>" % f["id"])
                 return ("<tr><td>{sev}</td><td>{conf}</td><td>{sym}</td><td>{cause}</td>"
                         "<td>{outcome}</td><td><ol>{steps}</ol></td></tr>").format(
                             sev=f["severity"], conf=f["confidence"], sym=f["symptom"],
-                            cause=f["cause"], outcome=f["outcome"], steps=steps)
+                            cause=f["cause"], outcome=outcome, steps=steps)
             body = (mode + "<p>Status: <b>{st}</b> — auto-fixed {nf}, needs you {nn}</p>{causal}"
                     "<table border=1><tr><th>sev</th><th>confidence</th><th>symptom</th>"
                     "<th>cause</th><th>outcome</th><th>what to do</th></tr>{rows}</table>").format(

@@ -859,3 +859,76 @@ def test_patient_chart_persists_chronic_memory_across_reload(tmp_path):
     assert row["episodes"] == 2
     assert row["active"] is True
     assert restored.summary()["recurring_condition_count"] == 1
+
+
+# ---- confirm-required tier (Claude, v0.6-pre2) ------------------------------------------
+def _confirm_finding():
+    return [{"id": "bettercap_down", "severity": "high", "confidence": "medium",
+             "fix": {"action": "restart_service", "args": {"service": "bettercap"}, "tier": "safe"},
+             "_detect": lambda s: False, "outcome": "detected", "howto": []}]
+
+
+def test_confirm_required_holds_action_for_approval():
+    calls = []
+    out = doc.apply_fixes(_confirm_finding(), {}, "conservative", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: {},
+                          confirm={"bettercap_down"})
+    assert out[0]["outcome"] == "awaiting_confirm" and calls == []
+
+
+def test_confirm_required_does_not_consume_breaker():
+    b = doc.CircuitBreaker(max_attempts=1, window=1000)
+    doc.apply_fixes(_confirm_finding(), {}, "conservative", lambda c: None, b, {},
+                    recollect=lambda: {}, confirm={"bettercap_down"})
+    # a held (unconfirmed) action must not spend the attempt budget
+    assert b.allow("bettercap_down", 1) is True
+
+
+def test_confirm_approval_lets_action_run():
+    calls = []
+    # not in the confirm set for this pass -> executes and verifies
+    out = doc.apply_fixes(_confirm_finding(), {}, "conservative", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: {}, confirm=set())
+    assert out[0]["outcome"] == "fixed"
+    assert calls == [["systemctl", "restart", "bettercap"]]
+
+
+def test_awaiting_confirm_counts_as_remaining():
+    assert doc.overall_status([{"severity": "high",
+                               "outcome": "awaiting_confirm"}]) == "ACTION_REQUIRED"
+
+
+def test_plugin_scan_queues_confirm_then_force_applies(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path, autofix="conservative",
+              confirm_required=["pwngrid_down"])
+    calls = []
+    state = {"restarted": False}
+
+    def runner(cmd):
+        if cmd[:2] == ["systemctl", "is-active"]:
+            if cmd[2] == "pwngrid-peer":
+                return "active\n" if state["restarted"] else "failed\n"
+            return "active\n"
+        if cmd[:2] == ["systemctl", "restart"]:
+            calls.append(cmd)
+            if cmd[2] == "pwngrid-peer":
+                state["restarted"] = True
+            return ""
+        if cmd[0] == "iw":
+            return "Interface wlan0mon\n\t\ttype monitor\n"
+        if cmd[0] == "rfkill":
+            return "Soft blocked: no\n"
+        if cmd[0] == "timedatectl":
+            return "yes\n"
+        return ""
+
+    # first pass: pwngrid_down is held for approval, not restarted
+    res = p.scan(runner=runner, now=0)
+    pg = [f for f in res["findings"] if f["id"] == "pwngrid_down"][0]
+    assert pg["outcome"] == "awaiting_confirm"
+    assert ["systemctl", "restart", "pwngrid-peer"] not in calls
+    # approving that id forces it to run this pass
+    res2 = p.scan(runner=runner, now=1, force_ids={"pwngrid_down"})
+    assert ["systemctl", "restart", "pwngrid-peer"] in calls
+    pg2 = [f for f in res2["findings"] if f["id"] == "pwngrid_down"][0]
+    assert pg2["outcome"] == "fixed"
