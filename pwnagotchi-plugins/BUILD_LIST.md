@@ -16,6 +16,22 @@ Legend — **Lift:** S (small) · M (medium) · L (large)
 
 ---
 
+## Progress — built, tested off-Pi, pushed
+Off-Pi unit tests only (fake `pwnagotchi` harness). **Physical Pi validation is still
+pending for every plugin below.**
+
+- ✅ P05 `own_network_allowlist` — 7 tests
+- ✅ P30 `boot_post` — 6 tests
+- ✅ P39 `streaks` — 7 tests
+- ✅ P33 `circadian_faces` — 6 tests
+- ✅ P41 `auto_timezone` — 8 tests
+- ✅ P46 `field_notes` — 8 tests
+- ✅ P01 `handshake_janitor` — 9 tests
+
+Next: P02 capture grader → P03 crack reconciler → P04 retention (rest of Phase 2).
+
+---
+
 ## Batch A — Capture lifecycle (the biggest hole in the ecosystem)
 
 Everything captures; almost nothing manages captures afterward. This batch is the

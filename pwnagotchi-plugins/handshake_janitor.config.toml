@@ -1,0 +1,22 @@
+# Example config for the "handshake_janitor" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.handshake_janitor.enabled = true
+
+# Directory holding capture files.
+main.plugins.handshake_janitor.handshakes = "/root/handshakes"
+
+# What to do with duplicates: "archive" (move to a duplicates/ folder) or "delete".
+main.plugins.handshake_janitor.action = "archive"
+
+# Where archived duplicates go (defaults to <handshakes>/duplicates).
+# main.plugins.handshake_janitor.archive_dir = "/root/handshakes/duplicates"
+
+# true = report what it would do without moving/deleting anything.
+main.plugins.handshake_janitor.dry_run = false
+
+# Minimum hours between automatic sweeps.
+main.plugins.handshake_janitor.interval_hours = 6
+
+# UI position "x,y" for the "dedup:" reclaimed counter.
+main.plugins.handshake_janitor.position = "0,0"
