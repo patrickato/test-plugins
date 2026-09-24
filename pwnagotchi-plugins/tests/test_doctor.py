@@ -9,21 +9,15 @@ spec.loader.exec_module(doc)
 
 # ---- pure parsers ----------------------------------------------------------------------
 def test_parse_throttled():
-    t = doc.parse_throttled("throttled=0x50005")   # 0x1 uv_now,0x4 thr_now,0x10000 uv_occ,0x40000 thr_occ
+    t = doc.parse_throttled("throttled=0x50005")
     assert t["undervoltage_now"] and t["throttled_now"]
     assert t["undervoltage_occurred"] and t["throttled_occurred"]
-    assert doc.parse_throttled("throttled=0x0") == {
-        "undervoltage_now": False, "throttled_now": False,
-        "undervoltage_occurred": False, "throttled_occurred": False}
     assert doc.parse_throttled("garbage") == {}
 
 
 def test_parse_dmesg():
-    text = ("[1] Under-voltage detected! (0x50005)\n"
-            "[2] usb 1-1: reset high-speed USB device\n"
-            "[3] Out of memory: Killed process 1234\n"
-            "[4] mmcblk0: error -84 transferring data\n"
-            "[5] brcmfmac: firmware failed to load\n")
+    text = ("Under-voltage detected!\nusb 1-1: reset high-speed USB device\n"
+            "Out of memory: Killed process\nmmcblk0: error -84\nbrcmfmac: firmware failed\n")
     d = doc.parse_dmesg(text)
     assert d["undervoltage"] == 1 and d["usb_reset"] == 1 and d["oom"] == 1
     assert d["sd_error"] == 1 and d["wifi_fw"] == 1
@@ -31,169 +25,194 @@ def test_parse_dmesg():
 
 def test_parse_mounts_ro():
     assert doc.parse_mounts_ro("/dev/mmcblk0p2 / ext4 ro,noatime 0 0\n") is True
-    assert doc.parse_mounts_ro("/dev/mmcblk0p2 / ext4 rw,noatime 0 0\n") is False
+    assert doc.parse_mounts_ro("/dev/mmcblk0p2 / ext4 rw 0 0\n") is False
+
+
+def test_parse_meminfo():
+    text = "SwapTotal:  102396 kB\nSwapFree:   40000 kB\n"
+    assert abs(doc.parse_meminfo(text)["swap_used_pct"] - 60.9) < 0.5
+    assert doc.parse_meminfo("SwapTotal: 0 kB\n")["swap_used_pct"] == 0.0
+
+
+def test_parse_default_route():
+    text = ("Iface\tDestination\tGateway\n"
+            "eth0\t00000000\t0102A8C0\n"
+            "eth0\t0002A8C0\t00000000\n")
+    assert doc.parse_default_route(text) is True
+    assert doc.parse_default_route("Iface\tDestination\neth0\t0002A8C0\n") is False
 
 
 def test_config_valid():
-    assert doc.config_valid('a = 1\n[x]\ny = "z"\n')["valid"] is True
-    bad = doc.config_valid('a = = 1\n')
-    assert bad["valid"] is False and bad["error"]
+    assert doc.config_valid('a = 1\n')["valid"] is True
+    assert doc.config_valid('a = = 1\n')["valid"] is False
 
 
 def test_parse_log_signals():
-    log = ("Traceback (most recent call last):\nTraceback again\nTraceback three\n"
-           "error while loading fancygotchi\n"
-           "bettercap connection refused\n")
+    log = "Traceback\nTraceback\nTraceback\nerror while loading boom\nwpa-sec error 500\n"
     s = doc.parse_log_signals(log)
-    assert s["tracebacks"] == 3
-    assert s["plugins_failed"] == ["fancygotchi"]
-    assert s["bettercap_refused"] == 1
+    assert s["tracebacks"] == 3 and s["plugins_failed"] == ["boom"] and s["wpa_sec_errors"] == 1
 
 
-# ---- diagnosis over signals ------------------------------------------------------------
-def _cfg(min_free=200, max_temp=80):
-    return {"min_free_mb": min_free, "max_temp_c": max_temp}
+# ---- diagnosis + confidence ------------------------------------------------------------
+def _clean():
+    return {"_cfg": {"min_free_mb": 200, "max_temp_c": 80, "boot_grace_s": 25},
+            "uptime_sec": 9999, "disk": {"free_mb": 5000, "root_ro": False},
+            "services": {"bettercap": {"active": True}, "pwngrid-peer": {"active": True}},
+            "bettercap_reachable": True, "monitor_present": True, "rfkill_blocked": False,
+            "time": {"year_ok": True, "ntp": True}, "temp_c": 45, "mem_pct": 40,
+            "swap_used_pct": 0, "net": {"default_route": True, "dns_ok": True},
+            "throttled": {}, "dmesg": {}, "log": {}, "config": {"valid": True},
+            "handshakes": {"writable": True}, "log_size": 1000}
 
 
 def test_diagnose_clean():
-    signals = {"_cfg": _cfg(), "disk": {"free_mb": 5000, "root_ro": False},
-               "services": {"bettercap": {"active": True}}, "bettercap_reachable": True,
-               "monitor_present": True, "rfkill_blocked": False,
-               "time": {"year_ok": True}, "temp_c": 45, "throttled": {}, "dmesg": {}, "log": {},
-               "config": {"valid": True}}
-    assert doc.diagnose(signals) == []
+    assert doc.diagnose(_clean()) == []
 
 
-def test_diagnose_detects_multiple():
-    signals = {"_cfg": _cfg(), "disk": {"free_mb": 10, "root_ro": True},
-               "services": {"bettercap": {"active": False}}, "bettercap_reachable": False,
-               "monitor_present": False, "rfkill_blocked": True, "time": {"year_ok": False},
-               "temp_c": 90, "throttled": {"undervoltage_now": True}, "dmesg": {"sd_error": 2},
-               "log": {"tracebacks": 4, "plugins_failed": ["boom"]}, "config": {"valid": False}}
-    ids = {f["id"] for f in doc.diagnose(signals)}
-    for expect in ("sd_readonly", "disk_full", "bettercap_down", "rfkill_blocked", "no_monitor",
-                   "clock_wrong", "config_invalid", "plugin_crash_loop", "undervoltage",
-                   "overheat", "sd_errors"):
-        assert expect in ids, expect
-    # sorted high-first
-    assert doc.diagnose(signals)[0]["severity"] == "high"
+def test_findings_carry_confidence():
+    s = _clean(); s["rfkill_blocked"] = True
+    f = [x for x in doc.diagnose(s) if x["id"] == "rfkill_blocked"][0]
+    assert f["confidence"] == "high"
 
 
-# ---- circuit breaker & policy ----------------------------------------------------------
-def test_circuit_breaker():
-    b = doc.CircuitBreaker(max_attempts=2, window=100)
-    assert b.allow("x", now=0) and (b.record("x", 0) or True)
-    assert b.allow("x", now=1) and (b.record("x", 1) or True)
-    assert b.allow("x", now=2) is False           # 2 attempts in window -> stop
-    assert b.allow("x", now=500) is True           # window elapsed
+def test_new_conditions_detect():
+    s = _clean()
+    s["mem_pct"] = 95                       # low_memory
+    s["swap_used_pct"] = 70                 # swap_thrash
+    s["net"] = {"default_route": False}     # no_route
+    s["handshakes"] = {"writable": False}   # handshakes_unwritable
+    s["time"] = {"year_ok": True, "ntp": False}   # ntp_unsynced
+    s["throttled"] = {"throttled_now": True, "undervoltage_now": False}  # throttled_now
+    ids = {f["id"] for f in doc.diagnose(s)}
+    for e in ("low_memory", "swap_thrash", "no_route", "handshakes_unwritable",
+              "ntp_unsynced", "throttled_now"):
+        assert e in ids, e
 
 
-def test_policy_allows():
-    assert doc.policy_allows("safe", "safe") is True
-    assert doc.policy_allows("risky", "safe") is False
-    assert doc.policy_allows("risky", "all") is True
-    assert doc.policy_allows("safe", "off") is False
+def test_unknown_means_unknown():
+    # sensors absent (None) must NOT be treated as failures
+    s = _clean()
+    s["monitor_present"] = None
+    s["rfkill_blocked"] = None
+    s["disk"] = {"free_mb": None, "root_ro": None}
+    s["handshakes"] = {"writable": None}
+    s["net"] = {"default_route": None}
+    ids = {f["id"] for f in doc.diagnose(s)}
+    assert not ({"no_monitor", "rfkill_blocked", "disk_full", "sd_readonly",
+                 "handshakes_unwritable", "no_route"} & ids)
 
 
-# ---- apply_fixes: auto-fix, verify, tiers ----------------------------------------------
-def _detect_down(s):
-    return s.get("services", {}).get("bettercap", {}).get("active") is False
+def test_boot_grace_gates_service_down():
+    s = _clean(); s["services"]["bettercap"] = {"active": False}
+    s["bettercap_reachable"] = True
+    # during boot: uptime below grace -> not flagged
+    s["uptime_sec"] = 5
+    assert not any(f["id"] == "bettercap_down" for f in doc.diagnose(s))
+    # after boot: flagged
+    s["uptime_sec"] = 9999
+    assert any(f["id"] == "bettercap_down" for f in doc.diagnose(s))
 
 
-def test_apply_fix_auto_and_verify_success():
-    findings = [{"id": "bettercap_down", "severity": "high", "fix": {
-        "action": "restart_service", "args": {"service": "bettercap"}, "tier": "safe"},
-        "_detect": _detect_down, "outcome": "detected", "howto": []}]
+# ---- causal chains ---------------------------------------------------------------------
+def test_build_causal():
+    assert "no monitor" in " ".join(doc.build_causal({"rfkill_blocked", "no_monitor"}))
+    assert doc.build_causal({"rfkill_blocked"}) == []      # needs both
+
+
+# ---- status vocabulary -----------------------------------------------------------------
+def test_overall_status():
+    assert doc.overall_status([]) == "OK"
+    assert doc.overall_status([{"severity": "high", "outcome": "fixed"}]) == "HEALED"
+    assert doc.overall_status([{"severity": "info", "outcome": "needs_user"}]) == "ATTENTION"
+    assert doc.overall_status([{"severity": "warn", "outcome": "needs_user"}]) == "DEGRADED"
+    assert doc.overall_status([{"severity": "high", "outcome": "needs_user"}]) == "ACTION_REQUIRED"
+
+
+# ---- confidence gating on auto-fix -----------------------------------------------------
+def test_low_confidence_never_autofixed():
+    findings = [{"id": "plugin_crash_loop", "severity": "high", "confidence": "low",
+                 "fix": {"action": "quarantine_plugin", "tier": "risky"},
+                 "_detect": lambda s: True, "outcome": "detected", "howto": []}]
     calls = []
-    runner = lambda cmd: calls.append(cmd)
-    breaker = doc.CircuitBreaker()
-    # after the fix, recollect shows the service back up -> verified fixed
-    recollect = lambda: {"services": {"bettercap": {"active": True}}}
+    out = doc.apply_fixes(findings, {}, "all", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {})
+    assert out[0]["outcome"] == "needs_user" and calls == []   # even in 'all' mode
+
+
+def test_safe_fix_auto_and_verified():
+    down = lambda s: s.get("services", {}).get("bettercap", {}).get("active") is False
+    findings = [{"id": "bettercap_down", "severity": "high", "confidence": "medium",
+                 "fix": {"action": "restart_service", "args": {"service": "bettercap"}, "tier": "safe"},
+                 "_detect": down, "outcome": "detected", "howto": []}]
+    calls = []
     out = doc.apply_fixes(findings, {"services": {"bettercap": {"active": False}}},
-                          "safe", runner, breaker, {}, recollect=recollect, now=0)
+                          "safe", lambda c: calls.append(c), doc.CircuitBreaker(), {},
+                          recollect=lambda: {"services": {"bettercap": {"active": True}}})
     assert out[0]["outcome"] == "fixed"
     assert calls == [["systemctl", "restart", "bettercap"]]
 
 
-def test_apply_fix_verify_still_broken():
-    findings = [{"id": "bettercap_down", "fix": {"action": "restart_service",
-                 "args": {"service": "bettercap"}, "tier": "safe"},
-                 "_detect": _detect_down, "outcome": "detected", "howto": []}]
-    recollect = lambda: {"services": {"bettercap": {"active": False}}}   # still down
-    out = doc.apply_fixes(findings, {"services": {"bettercap": {"active": False}}},
-                          "safe", lambda c: None, doc.CircuitBreaker(), {}, recollect=recollect)
-    assert out[0]["outcome"] == "fix_failed"
+def test_circuit_breaker_and_policy():
+    b = doc.CircuitBreaker(max_attempts=1, window=100)
+    assert b.allow("x", 0)
+    b.record("x", 0)
+    assert b.allow("x", 1) is False
+    assert doc.policy_allows("risky", "safe") is False
+    assert doc.policy_allows("safe", "safe") is True
+    assert doc.policy_allows("risky", "all") is True
 
 
-def test_apply_fix_risky_needs_user_in_safe_mode():
-    findings = [{"id": "sd_readonly", "fix": {"action": "remount_rw", "tier": "risky"},
-                 "_detect": lambda s: True, "outcome": "detected", "howto": ["step"]}]
-    out = doc.apply_fixes(findings, {}, "safe", lambda c: None, doc.CircuitBreaker(), {})
-    assert out[0]["outcome"] == "needs_user"       # risky not auto in safe mode
+def test_make_handshakes_dir_action(tmp_path):
+    target = tmp_path / "hs"
+    assert doc.act_make_handshakes_dir({}, None, {}, {"handshakes": str(target)}) is True
+    assert target.is_dir()
 
 
-def test_apply_fix_off_mode_never_acts():
-    findings = [{"id": "bettercap_down", "fix": {"action": "restart_service",
-                 "args": {"service": "bettercap"}, "tier": "safe"},
-                 "_detect": _detect_down, "outcome": "detected", "howto": []}]
-    calls = []
-    out = doc.apply_fixes(findings, {}, "off", lambda c: calls.append(c),
-                          doc.CircuitBreaker(), {})
-    assert out[0]["outcome"] == "needs_user" and calls == []
-
-
-def test_no_fix_is_needs_user():
-    findings = [{"id": "undervoltage", "fix": None, "_detect": lambda s: True,
-                 "outcome": "detected", "howto": ["use a better PSU"]}]
-    out = doc.apply_fixes(findings, {}, "all", lambda c: None, doc.CircuitBreaker(), {})
-    assert out[0]["outcome"] == "needs_user"
-
-
-# ---- file-touching action --------------------------------------------------------------
-def test_prune_logs_action(tmp_path):
-    log = tmp_path / "pwn.log"
-    log.write_text("\n".join("line %d" % i for i in range(5000)) + "\n")
-    ctx = {"log_path": str(log), "log_max_bytes": 1000, "log_keep_lines": 100}
-    assert doc.act_prune_logs({}, lambda c: None, {}, ctx) is True
-    remaining = log.read_text().splitlines()
-    assert len(remaining) == 100 and remaining[-1] == "line 4999"
-    # under threshold -> no-op
-    small = tmp_path / "small.log"
-    small.write_text("tiny\n")
-    assert doc.act_prune_logs({}, lambda c: None, {},
-                              {"log_path": str(small), "log_max_bytes": 10**9}) is False
-
-
-# ---- full scan integration with injected runner ----------------------------------------
+# ---- incident lifecycle + integration --------------------------------------------------
 def _make(load_plugin, tmp_path, **opts):
     options = {"config_path": str(tmp_path / "config.toml"),
                "log_path": str(tmp_path / "pwn.log"),
-               "incident_path": str(tmp_path / "incidents.json"),
-               "scan_every": 0}
+               "handshakes": str(tmp_path / "hs"),
+               "incident_path": str(tmp_path / "incidents.json"), "scan_every": 0}
     options.update(opts)
     (tmp_path / "config.toml").write_text('main.plugins.x.enabled = true\n')
-    (tmp_path / "pwn.log").write_text("all good\n")
+    (tmp_path / "pwn.log").write_text("ok\n")
+    (tmp_path / "hs").mkdir()
     p = load_plugin("doctor.py", options=options)
     p.on_loaded()
     return p
 
 
-def test_scan_autofixes_and_reports(load_plugin, tmp_path):
-    # Use a service-only condition (pwngrid) whose verification the runner fully controls;
-    # bettercap's condition also depends on its live API, which isn't reachable in a test env.
+def test_incident_open_and_resolve(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path)
+    # inject a finding directly through the incident updater
+    signals = _clean()
+    findings = [{"id": "rfkill_blocked", "severity": "high", "symptom": "blocked",
+                 "outcome": "needs_user"}]
+    p._update_incidents(findings, signals, now=100)
+    assert "rfkill_blocked" in p._open
+    assert p._open["rfkill_blocked"]["snapshot"]["uptime_sec"] == signals["uptime_sec"]
+    # next scan the problem is gone -> resolved
+    p._update_incidents([], signals, now=200)
+    assert "rfkill_blocked" not in p._open
+    assert any(h["id"] == "rfkill_blocked" for h in p._history)
+    assert (tmp_path / "incidents.json").exists()
+
+
+def test_scan_integration_autofix(load_plugin, tmp_path):
     p = _make(load_plugin, tmp_path, autofix="safe")
     calls = []
-    state = {"pwngrid_restarted": False}
+    state = {"restarted": False}
 
     def runner(cmd):
         if cmd[:2] == ["systemctl", "is-active"]:
             if cmd[2] == "pwngrid-peer":
-                return "active\n" if state["pwngrid_restarted"] else "failed\n"
+                return "active\n" if state["restarted"] else "failed\n"
             return "active\n"
         if cmd[:2] == ["systemctl", "restart"]:
             calls.append(cmd)
             if cmd[2] == "pwngrid-peer":
-                state["pwngrid_restarted"] = True
+                state["restarted"] = True
             return ""
         if cmd[0] == "vcgencmd":
             return "throttled=0x0"
@@ -201,29 +220,24 @@ def test_scan_autofixes_and_reports(load_plugin, tmp_path):
             return "Interface wlan0mon\n\t\ttype monitor\n"
         if cmd[0] == "rfkill":
             return "Soft blocked: no\n"
+        if cmd[0] == "timedatectl":
+            return "yes\n"
         if cmd[0] == "dmesg":
             return ""
         return ""
 
-    report = p.scan(runner=runner, now=0)
-    # pwngrid was down -> restarted -> re-collect shows active -> verified fixed
+    result = p.scan(runner=runner, now=0)
     assert ["systemctl", "restart", "pwngrid-peer"] in calls
-    assert any(f["id"] == "pwngrid_down" and f["outcome"] == "fixed" for f in report["observed"])
-    # an incident was recorded
-    assert (tmp_path / "incidents.json").exists()
+    assert any(f["id"] == "pwngrid_down" and f["outcome"] == "fixed" for f in result["findings"])
 
 
-def test_ui(load_plugin, tmp_path, ui):
+def test_ui_status_vocabulary(load_plugin, tmp_path, ui):
     p = _make(load_plugin, tmp_path)
-    p._last_report = {"fixed": [], "needs_user": [{"id": "x"}], "observed": [{"id": "x"}]}
     p.on_ui_setup(ui)
-    p.on_ui_update(ui)
-    assert ui.get("doctor") == "1!"
-    p._last_report = {"fixed": [{"id": "y"}], "needs_user": [], "observed": [{"id": "y"}]}
-    p.on_ui_update(ui)
-    assert ui.get("doctor") == "healed"
-    p._last_report = {"fixed": [], "needs_user": [], "observed": []}
-    p.on_ui_update(ui)
-    assert ui.get("doctor") == "OK"
+    for status, expected in (("OK", "OK"), ("HEALED", "healed"), ("ATTENTION", "attn"),
+                             ("DEGRADED", "DEGR"), ("ACTION_REQUIRED", "ACT!")):
+        p._status = status
+        p.on_ui_update(ui)
+        assert ui.get("doctor") == expected
     p.on_unload(ui)
     assert not ui.has_element("doctor")

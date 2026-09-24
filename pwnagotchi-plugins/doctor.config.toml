@@ -1,4 +1,4 @@
-# Example config for the "doctor" plugin.
+# Example config for the "doctor" plugin (v0.3).
 # Copy into /etc/pwnagotchi/config.toml and edit.
 # Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl when
 #           present, all guarded). Auto-fix actions need root (Pwnagotchi already runs as root).
@@ -6,19 +6,22 @@
 main.plugins.doctor.enabled = true
 
 # Auto-fix posture:
-#   "off"  = diagnose only, never change anything
-#   "safe" = automatically apply low-risk, reversible fixes (restart a wedged service, unblock
-#            rfkill, fix the clock, reclaim disk from log bloat); riskier ones give instructions
-#   "all"  = also auto-apply riskier fixes (remount read-only /, quarantine a crashing plugin,
-#            restore a backed-up config). Use with care.
+#   "off"  = diagnose + explain only, never change anything
+#   "safe" = auto-apply low-risk, reversible fixes; riskier ones give instructions
+#   "all"  = also auto-apply riskier fixes (remount ro /, quarantine plugin, restore config)
+# Note: low-confidence (log-inferred) findings are NEVER auto-fixed, only explained.
 main.plugins.doctor.autofix = "safe"
 
 # Run a full scan every N epochs (0 = only on startup and when you open the web page).
 main.plugins.doctor.scan_every = 30
 
+# Don't flag "service down" before this many seconds of uptime (avoids boot false-alarms).
+main.plugins.doctor.boot_grace_s = 25
+
 # Paths.
 main.plugins.doctor.log_path = "/etc/pwnagotchi/log/pwnagotchi.log"
 main.plugins.doctor.config_path = "/etc/pwnagotchi/config.toml"
+main.plugins.doctor.handshakes = "/root/handshakes"
 main.plugins.doctor.incident_path = "/etc/pwnagotchi/doctor_incidents.json"
 
 # Thresholds.
@@ -28,5 +31,5 @@ main.plugins.doctor.max_temp_c = 80
 # Services to check are active.
 main.plugins.doctor.services = ["pwnagotchi", "bettercap", "pwngrid-peer"]
 
-# UI position "x,y" for the "dr:" status (OK / healed / N!).
+# UI position "x,y" for the "dr:" status (OK / healed / attn / DEGR / ACT!).
 main.plugins.doctor.position = "0,0"
