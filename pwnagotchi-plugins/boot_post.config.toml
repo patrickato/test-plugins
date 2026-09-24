@@ -1,0 +1,16 @@
+# Example config for the "boot_post" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+
+main.plugins.boot_post.enabled = true
+
+# Capture directory checked for existence + writability.
+main.plugins.boot_post.handshakes = "/root/handshakes"
+
+# Free space on / below this many MB fails the disk check.
+main.plugins.boot_post.min_free_mb = 200
+
+# CPU temperature at/above this (Celsius) warns.
+main.plugins.boot_post.max_temp_c = 80
+
+# UI position "x,y" for the "POST: n/m" summary.
+main.plugins.boot_post.position = "0,0"
