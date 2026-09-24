@@ -1,0 +1,17 @@
+# Example config for the "thermal_predictor" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: none (Python standard library; reads CPU temperature). Read-only/warn only.
+
+main.plugins.thermal_predictor.enabled = true
+
+# Throttle threshold to predict against (Celsius; Pi soft-throttles around 80).
+main.plugins.thermal_predictor.threshold_c = 80
+
+# Warn when the predicted time-to-threshold drops below this many seconds.
+main.plugins.thermal_predictor.lead_seconds = 120
+
+# Sliding window (seconds) used to fit the temperature slope.
+main.plugins.thermal_predictor.window_secs = 180
+
+# UI position "x,y" for the "th:" trend/WARN readout.
+main.plugins.thermal_predictor.position = "0,0"
