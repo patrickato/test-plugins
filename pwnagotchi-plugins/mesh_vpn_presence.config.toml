@@ -1,0 +1,18 @@
+# Example config for the "mesh_vpn_presence" plugin.
+# Copy into /etc/pwnagotchi/config.toml and edit.
+# Requires: the 'tailscale' CLI OR 'wireguard-tools' (wg/wg-quick), installed & configured
+#           (keys/auth are a one-time manual setup this plugin does not perform).
+
+main.plugins.mesh_vpn_presence.enabled = true
+
+# "auto" prefers tailscale, then wireguard; or force "tailscale"/"wireguard".
+main.plugins.mesh_vpn_presence.backend = "auto"
+
+# WireGuard interface name (used when backend resolves to wireguard).
+main.plugins.mesh_vpn_presence.wg_interface = "wg0"
+
+# Bring the interface up on start.
+main.plugins.mesh_vpn_presence.auto_up = true
+
+# UI position "x,y" for the "vpn:" on/off readout.
+main.plugins.mesh_vpn_presence.position = "0,0"
