@@ -1,4 +1,4 @@
-# Example config for the "doctor" plugin (v0.6-pre3 collaboration branch).
+# Example config for the "doctor" plugin (v0.6-pre4 collaboration branch).
 # Copy into /etc/pwnagotchi/config.toml and edit.
 # Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl/
 #           journalctl when present, all guarded). Auto-fix actions need root (Pwnagotchi

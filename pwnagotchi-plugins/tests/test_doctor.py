@@ -81,8 +81,8 @@ def test_diagnose_clean():
 
 
 def test_findings_carry_confidence():
-    s = _clean(); s["rfkill_blocked"] = True
-    f = [x for x in doc.diagnose(s) if x["id"] == "rfkill_blocked"][0]
+    s = _clean(); s["rfkill_blocked"] = True   # rfkill_blocked is now a bundled pack
+    f = [x for x in _diag(s) if x["id"] == "rfkill_blocked"][0]
     assert f["confidence"] == "high"
 
 
@@ -373,14 +373,14 @@ def test_iface_mismatch_helper():
 
 # ---- new condition detection -----------------------------------------------------------
 def test_wpa_supplicant_hijack_detect():
-    s = _clean()
+    s = _clean()                                # wpa_supplicant_hijack is now a bundled pack
     s["wpa_supplicant"] = {"running": True}
     s["monitor_present"] = False
-    ids = {f["id"] for f in doc.diagnose(s)}
+    ids = {f["id"] for f in _diag(s)}
     assert "wpa_supplicant_hijack" in ids
     # unknown monitor state -> not flagged (unknown means unknown)
     s["monitor_present"] = None
-    assert "wpa_supplicant_hijack" not in {f["id"] for f in doc.diagnose(s)}
+    assert "wpa_supplicant_hijack" not in {f["id"] for f in _diag(s)}
 
 
 def test_iface_mismatch_condition():
@@ -709,12 +709,13 @@ def test_plugin_loads_local_pack_and_patient_chart(load_plugin, tmp_path):
 
 # ---- pack integration hardening (Claude, on top of OpenAI v0.6-pre1) --------------------
 def test_builtin_condition_wins_over_pack_with_same_id():
-    # a pack tries to redefine a core id; the built-in must take precedence
+    # a pack tries to redefine a core (still-Python) id; the built-in must take precedence.
+    # overheat stays in Python (config-tunable threshold), so it's a valid built-in to shadow.
     shadow = doc.condition_from_pack(_condition_pack(
-        id="rfkill_blocked", severity="info", confidence="low",
+        id="overheat", severity="info", confidence="low",
         symptom="shadow attempt", detect={"key": "system.memory.used_pct", "ge": 0}))
-    s = _clean(); s["rfkill_blocked"] = True
-    hits = [f for f in doc.diagnose(s, extra_conditions=[shadow]) if f["id"] == "rfkill_blocked"]
+    s = _clean(); s["temp_c"] = 99             # trips the Python overheat condition
+    hits = [f for f in doc.diagnose(s, extra_conditions=[shadow]) if f["id"] == "overheat"]
     assert len(hits) == 1                      # not duplicated
     assert hits[0]["symptom"] != "shadow attempt"   # the built-in, not the pack
 
@@ -1044,7 +1045,13 @@ def test_action_meta_needs_reboot_flags():
 
 # ---- built-in -> bundled Condition Pack migration (Claude, v0.6-pre3) --------------------
 _MIGRATED_IDS = {"no_monitor", "no_route", "dns_broken", "sd_errors",
-                 "low_memory", "swap_thrash", "debug_log_level"}
+                 "low_memory", "swap_thrash", "debug_log_level",
+                 # remedy-carrying (v0.6-final):
+                 "rfkill_blocked", "sd_readonly", "wpa_supplicant_hijack",
+                 "config_invalid", "handshakes_unwritable"}
+# The subset that ships a remedy (bundled = trusted, so remedies are retained).
+_MIGRATED_REMEDY_IDS = {"rfkill_blocked", "sd_readonly", "wpa_supplicant_hijack",
+                        "config_invalid", "handshakes_unwritable"}
 
 
 def test_migrated_conditions_left_python_conditions():
@@ -1069,6 +1076,12 @@ def test_migrated_conditions_still_detect_via_bundled():
         ("low_memory", {"mem_pct": 95}),
         ("swap_thrash", {"swap_used_pct": 70}),
         ("debug_log_level", {"config": {"valid": True, "debug": True}}),
+        ("rfkill_blocked", {"rfkill_blocked": True}),
+        ("sd_readonly", {"disk": {"free_mb": 5000, "root_ro": True}}),
+        ("wpa_supplicant_hijack", {"wpa_supplicant": {"running": True},
+                                   "monitor_present": False}),
+        ("config_invalid", {"config": {"valid": False}}),
+        ("handshakes_unwritable", {"handshakes": {"writable": False}}),
     ]
     for cid, patch in checks:
         s = _clean()
@@ -1129,3 +1142,74 @@ def test_patient_chart_identity_includes_compatibility_fields(monkeypatch, tmp_p
     assert ident["python_version"] == "3.13.0"
     assert ident["os_id"] == "debian"
     assert ident["os_build_id"] == "image-x"
+
+
+# ---- bundled remedy path end-to-end (Claude, v0.6-final) ---------------------------------
+def _bundled_by_id(cid, *, allow_remedies=True):
+    conds, _ = doc.load_condition_packs(str(ROOT / "doctor_packs"), allow_remedies=allow_remedies,
+                                        source_class="bundled")
+    for c in conds:
+        if c["id"] == cid:
+            return c
+    raise AssertionError("bundled pack %s not found" % cid)
+
+
+def test_bundled_remedy_packs_retain_fix_when_trusted():
+    for cid in _MIGRATED_REMEDY_IDS:
+        c = _bundled_by_id(cid, allow_remedies=True)
+        assert isinstance(c.get("fix"), dict) and c["fix"].get("action"), cid
+
+
+def test_bundled_remedy_packs_explain_only_when_external():
+    # the exact same JSON, loaded as an external/user pack, must NOT carry an executable remedy
+    for cid in _MIGRATED_REMEDY_IDS:
+        c = _bundled_by_id(cid, allow_remedies=False)
+        assert c.get("fix") is None, cid
+
+
+def test_bundled_rfkill_pack_runs_and_verifies():
+    cond = _bundled_by_id("rfkill_blocked")
+    s = _clean(); s["rfkill_blocked"] = True
+    findings = doc.diagnose(s, extra_conditions=[cond])
+    calls = []
+    # recollect clears the block -> fix.verify (wifi.rfkill.blocked is false) -> fixed
+    fresh = _clean(); fresh["rfkill_blocked"] = False
+    out = doc.apply_fixes(findings, s, "conservative", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: fresh)
+    f = [x for x in out if x["id"] == "rfkill_blocked"][0]
+    assert f["outcome"] == "fixed"
+    assert ["rfkill", "unblock", "wifi"] in calls
+
+
+def test_bundled_wpa_pack_guarded_and_verified():
+    cond = _bundled_by_id("wpa_supplicant_hijack")
+    s = _clean(); s["wpa_supplicant"] = {"running": True}; s["monitor_present"] = False
+
+    # uplink is over wlan -> guard (not_uplink) blocks, action never runs
+    blocked = doc.diagnose({**s, "net": {"default_iface": "wlan0"}}, extra_conditions=[cond])
+    calls = []
+    out = doc.apply_fixes(blocked, {**s, "net": {"default_iface": "wlan0"}}, "conservative",
+                          lambda c: calls.append(c), doc.CircuitBreaker(), {}, recollect=lambda: {})
+    assert out[0]["outcome"] == "blocked_guard" and calls == []
+
+    # uplink over eth -> guard passes, stop runs, verify (monitor present) -> fixed
+    safe_sig = {**s, "net": {"default_iface": "eth0"}}
+    findings = doc.diagnose(safe_sig, extra_conditions=[cond])
+    calls2 = []
+    fresh = _clean()  # monitor_present True in _clean -> verify passes
+    out2 = doc.apply_fixes(findings, safe_sig, "conservative", lambda c: calls2.append(c),
+                           doc.CircuitBreaker(), {}, recollect=lambda: fresh)
+    f = [x for x in out2 if x["id"] == "wpa_supplicant_hijack"][0]
+    assert f["outcome"] == "fixed"
+    assert ["systemctl", "stop", "wpa_supplicant"] in calls2
+
+
+def test_bundled_sd_readonly_media_guard_blocks_on_failing_card():
+    cond = _bundled_by_id("sd_readonly")
+    # root is read-only AND the kernel reports SD I/O errors -> media_ok guard blocks remount
+    s = _clean(); s["disk"] = {"free_mb": 5000, "root_ro": True}; s["dmesg"] = {"sd_error": 3}
+    findings = doc.diagnose(s, extra_conditions=[cond])
+    calls = []
+    out = doc.apply_fixes(findings, s, "assertive", lambda c: calls.append(c),
+                          doc.CircuitBreaker(), {}, recollect=lambda: s)
+    assert out[0]["outcome"] == "blocked_guard" and calls == []

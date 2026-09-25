@@ -649,14 +649,7 @@ def _booted(s):
 
 
 CONDITIONS = [
-    {"id": "sd_readonly", "severity": "high", "confidence": "high",
-     "detect": lambda s: s.get("disk", {}).get("root_ro") is True,
-     "symptom": "the root filesystem is mounted read-only",
-     "cause": "the SD card hit an error and Linux remounted / read-only (writes silently fail)",
-     "fix": {"action": "remount_rw", "tier": "risky", "guard": "media_ok"},
-     "howto": ["Back up now — a read-only remount usually means the SD is failing.",
-               "Try: sudo mount -o remount,rw /",
-               "Reflash to a fresh, good-quality SD card soon."]},
+    # NOTE: sd_readonly migrated to a bundled Condition Pack (doctor_packs/sd_readonly.json).
 
     {"id": "disk_full", "severity": "high", "confidence": "high",
      "detect": lambda s: (s.get("disk", {}).get("free_mb") is not None
@@ -693,25 +686,8 @@ CONDITIONS = [
      "fix": {"action": "restart_service", "args": {"service": "pwngrid-peer"}, "tier": "safe"},
      "howto": ["sudo systemctl restart pwngrid-peer"]},
 
-    {"id": "rfkill_blocked", "severity": "high", "confidence": "high",
-     "detect": lambda s: s.get("rfkill_blocked") is True,
-     "symptom": "Wi-Fi is soft-blocked (rfkill)",
-     "cause": "the wireless radio is blocked, so nothing can be captured",
-     "fix": {"action": "rfkill_unblock", "tier": "safe"},
-     "howto": ["sudo rfkill unblock wifi"]},
-
-    # NOTE: no_monitor migrated to a first-party bundled Condition Pack (doctor_packs/no_monitor.json).
-
-    {"id": "wpa_supplicant_hijack", "severity": "high", "confidence": "high",
-     "detect": lambda s: (s.get("wpa_supplicant", {}).get("running") is True
-                          and s.get("monitor_present") is False),
-     "symptom": "wpa_supplicant is holding the Wi-Fi adapter",
-     "cause": "wpa_supplicant grabbed the interface, so monitor mode / capture can't start "
-              "(the #1 'monitor mode won't work' cause)",
-     "fix": {"action": "stop_wpa_supplicant", "tier": "safe", "guard": "wpa_not_uplink"},
-     "howto": ["sudo systemctl stop wpa_supplicant   (frees the adapter)",
-               "If that adapter is your own uplink, only stop it on the capture adapter.",
-               "Confirm: iw dev shows an interface of 'type monitor'."]},
+    # NOTE: rfkill_blocked, no_monitor, wpa_supplicant_hijack migrated to bundled Condition Packs
+    # (doctor_packs/*.json). wpa_supplicant_hijack keeps its guard (not_uplink) + fix.verify there.
 
     {"id": "iface_mismatch", "severity": "high", "confidence": "high",
      "detect": lambda s: iface_mismatch(s.get("iface", {}).get("configured"),
@@ -765,13 +741,7 @@ CONDITIONS = [
      "fix": {"action": "set_time", "tier": "safe"},
      "howto": ["sudo timedatectl set-ntp true"]},
 
-    {"id": "config_invalid", "severity": "high", "confidence": "high",
-     "detect": lambda s: s.get("config", {}).get("valid") is False,
-     "symptom": "config.toml does not parse",
-     "cause": "a syntax error (a hand-edit or a plugin rewrite) — Pwnagotchi may not start",
-     "fix": {"action": "restore_config", "tier": "risky"},
-     "howto": ["Fix the TOML syntax in /etc/pwnagotchi/config.toml.",
-               "Restore: cp /etc/pwnagotchi/config.toml.doctor.bak /etc/pwnagotchi/config.toml"]},
+    # NOTE: config_invalid migrated to a bundled Condition Pack (doctor_packs/config_invalid.json).
 
     {"id": "plugin_crash_loop", "severity": "high", "confidence": "low",
      "detect": lambda s: (s.get("log", {}).get("tracebacks", 0) >= 3
@@ -782,13 +752,8 @@ CONDITIONS = [
      "howto": ["Find the plugin in the log ('error while loading' / traceback).",
                "Disable it: main.plugins.<name>.enabled = false, then restart pwnagotchi."]},
 
-    {"id": "handshakes_unwritable", "severity": "warn", "confidence": "high",
-     "detect": lambda s: s.get("handshakes", {}).get("writable") is False,
-     "symptom": "the handshakes directory is missing or not writable",
-     "cause": "captures can't be saved",
-     "fix": {"action": "make_handshakes_dir", "tier": "safe"},
-     "howto": ["Create it: sudo mkdir -p /root/handshakes",
-               "Check bettercap.handshakes points at it."]},
+    # NOTE: handshakes_unwritable migrated to a bundled Condition Pack
+    # (doctor_packs/handshakes_unwritable.json).
 
     {"id": "undervoltage", "severity": "high", "confidence": "high",
      "detect": lambda s: (s.get("throttled", {}).get("undervoltage_now")
@@ -1444,7 +1409,7 @@ _UI_STATUS = {"OK": "OK", "HEALED": "healed", "ATTENTION": "attn",
 
 class Doctor(plugins.Plugin):
     __author__ = "patrickato"
-    __version__ = "0.6.0-pre3"
+    __version__ = "0.6.0-pre4"
     __license__ = "GPL3"
     __description__ = "Autonomous health scan, diagnosis, causal explanation, guarded self-healing and known-good drift."
 

@@ -1,6 +1,6 @@
 # Doctor Plugin — Design Notes & Roadmap
 
-**Plugin:** `doctor` (P06) · **Current version:** v0.6.0-pre3 · **Last updated:** 2026-09-24
+**Plugin:** `doctor` (P06) · **Current version:** v0.6.0-pre4 · **Last updated:** 2026-09-24
 **Scope:** stock Pwnagotchi only (this is *not* the Beastagotchi Doctor; see §9 for the link).
 **Status caveat:** everything below is source/CI reasoning + off-Pi tests. **Physical Pi
 validation of the auto-fix effectors is still pending.**
@@ -65,7 +65,24 @@ Growth happens on four axes plus one structural idea:
 
 ---
 
-## 2. Current state (v0.6.0-pre3)
+## 2. Current state (v0.6.0-pre4)
+
+**New in v0.6-pre4:**
+- **Compatibility fingerprint** (ChatGPT): privacy-light environment fingerprint in the Patient
+  Chart (`parse_os_release`, `compatibility_fingerprint`: pwnagotchi/python/arch/kernel/os id/
+  version/build — no hostnames/MACs/SSIDs/IPs/GPS/owner) + `DOCTOR_COMPATIBILITY_CONTRACT.md`.
+- **Reproducible release build** (ChatGPT): `release/pwndoctor/build_release.py` assembles the
+  standalone package from canonical sources with a generated `RELEASE_MANIFEST.json` +
+  `SHA256SUMS`; conservative `install.sh` (never edits `config.toml`); a `release-package` CI job.
+- **Remedy-carrying built-in → JSON migration COMPLETE** (Claude): `rfkill_blocked`, `sd_readonly`
+  (guard `media_ok`), `wpa_supplicant_hijack` (guard `not_uplink` + `fix.verify`),
+  `config_invalid`, `handshakes_unwritable` now ship as **trusted bundled** packs with remedies +
+  explicit `fix.verify`. Verified end-to-end: bundled = runs under all gates, external load of the
+  same JSON = explain-only (remedy stripped), guards block correctly, tri-state verify resolves
+  fixed/fix_failed/unknown. 12 conditions total now live as bundled packs; only threshold/
+  boot-gated/computed conditions remain in Python (per the ruling).
+- Tests: **95** off-Pi doctor tests (full repo suite 357 green); standalone package assembles as
+  `pwndoctor-0.6.0-pre4` with all 12 packs checksummed.
 
 **New in v0.6-pre3:**
 - **Trusted bundled-pack loader + provenance** (ChatGPT): `doctor_packs/` beside `doctor.py`
@@ -272,15 +289,15 @@ Chart move up to v0.6** (don't accumulate more hard-coded conditions before the 
   hijack (+ uplink-safe stop), interface mismatch, journald bloat (+ vacuum), debug-log-level;
   verification truth; persistent circuit breaker; media/uplink guards; autonomy dial + dry-run
   + per-condition opt-out + live reload.
-- **v0.6 — Data-driven brain + memory** *(pre3 landed)*: condition-pack schema v1 + loader
-  ✅; Patient Chart v1 + tri-state verify + chronic/recurrence ✅ (ChatGPT); canonical key
-  registry ratified ✅; confirm-required tier ✅; **trusted bundled-pack loader + provenance** ✅
-  (ChatGPT); **ACTION_META→policy** (deny_actions + reboot gate) ✅ (Claude); **first built-in→JSON
-  migration** ✅ (Claude — fix-less pure-boolean diagnostics). **Remaining for v0.6 final:**
-  migrate the *remedy-carrying* pure-boolean built-ins (`rfkill_blocked`, `sd_readonly`,
-  `wpa_supplicant_hijack`, `config_invalid`, `handshakes_unwritable`) into bundled packs and
-  verify the bundled-remedy path end-to-end (Claude). Threshold/boot-gated/computed conditions
-  stay in Python per the ruling (no threshold parameterization in v0.6).
+- **v0.6 — Data-driven brain + memory** *(pre4 — essentially complete)*: condition-pack schema
+  v1 + loader ✅; Patient Chart v1 + tri-state verify + chronic/recurrence + compatibility
+  fingerprint ✅ (ChatGPT); canonical key registry ratified ✅; confirm-required tier ✅; trusted
+  bundled-pack loader + provenance ✅ (ChatGPT); ACTION_META→policy (deny_actions + reboot gate)
+  ✅ (Claude); **built-in→JSON migration COMPLETE** ✅ (Claude — all 12 faithfully-representable
+  conditions, fix-less and remedy-carrying, verified end-to-end); reproducible release
+  assembler + installer + CI ✅ (ChatGPT). Threshold/boot-gated/computed conditions stay in
+  Python per the ruling (no threshold parameterization in v0.6). v0.6 is release-doc complete;
+  what remains before RC is v0.7 polish + physical validation.
 - **v0.7 — Learn + explain:** remedy-efficacy ranking (ranking only — never expands authority);
   **one-click sanitized support bundle**; plain-language narrative. (Confirm-required tier already
   landed in v0.6-pre2.)
@@ -380,8 +397,11 @@ schema is the real interop opportunity between the two projects.
 - [x] **v0.6-pre3 landed:** ACTION_META→policy (deny_actions + reboot gate) and the first
       built-in→JSON migration (fix-less diagnostics) (Claude); release/ docs staged (ChatGPT),
       reviewed by Claude. 87 tests / 349 repo.
-- [ ] **v0.6 final (Claude):** migrate the remedy-carrying pure-boolean built-ins
-      (`rfkill_blocked`, `sd_readonly`, `wpa_supplicant_hijack`, `config_invalid`,
-      `handshakes_unwritable`) into bundled packs; verify the bundled-remedy path end-to-end.
-- [ ] Toward RC: support bundle + plain-language narrative (v0.7), then physical Pi validation
+- [x] **v0.6-pre4 landed:** compatibility fingerprint + reproducible release assembler/installer/
+      CI (ChatGPT); **remedy-carrying built-in→JSON migration COMPLETE + verified end-to-end**
+      (Claude — all 12 conditions now bundled packs; external load stays explain-only). 95 tests /
+      357 repo; standalone package assembles with all 12 packs checksummed.
+- [ ] **v0.7 (Claude):** one-click sanitized support bundle + plain-language narrative; then
+      remedy-efficacy ranking (uses the Patient Chart counters ChatGPT built).
+- [ ] Toward RC: after v0.7, physical Pi validation
       (only the owner can do this — a scripted checklist ships with v1.0 RC).

@@ -1,0 +1,19 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "handshakes_unwritable",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "warn",
+  "confidence": "high",
+  "signals": ["pwnagotchi.handshakes.writable"],
+  "detect": {"key": "pwnagotchi.handshakes.writable", "is": false},
+  "symptom": "the handshakes directory is missing or not writable",
+  "cause": "captures can't be saved",
+  "fix": {"action": "make_handshakes_dir", "tier": "safe",
+          "verify": {"key": "pwnagotchi.handshakes.writable", "is": true}},
+  "howto": [
+    "Create it: sudo mkdir -p /root/handshakes",
+    "Check bettercap.handshakes points at it."
+  ],
+  "causal_chain": []
+}
