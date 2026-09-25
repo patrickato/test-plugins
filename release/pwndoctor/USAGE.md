@@ -86,3 +86,18 @@ Treat `executed_verification_unknown` as unresolved evidence, not success. Check
 ## Recommended everyday mode
 
 After first-run review and physical validation, `conservative` is the intended normal default: safe eligible remedies may run automatically, while riskier/blocked/confirm-required work remains under owner control.
+
+
+## Machine-readable local status
+
+`Doctor.status_contract()` returns the stable `pwndoctor/status/v1` read-only contract for
+local sibling plugins, dashboards and Beastagotchi integration. It intentionally exposes Doctor
+status, bounded finding summaries, decision traces, Patient Chart summary, pack counts,
+known-good generation metadata and compatibility identity — not raw logs, SSIDs, IP addresses,
+GPS coordinates or captured network data.
+
+## Known-good generations
+
+Doctor retains a bounded history of known-good fingerprints. The existing
+`load_checkpoint()`/diff behavior still targets the newest checkpoint by default; older
+generations can be selected for comparison without changing the current checkpoint.
