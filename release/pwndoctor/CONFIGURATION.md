@@ -1,6 +1,9 @@
-# PwnDoctor configuration guide
+# PwnDoctor v1 configuration guide
 
-Canonical settings live under `main.plugins.doctor.*` in `/etc/pwnagotchi/config.toml`.
+Canonical settings live under `main.plugins.doctor.*` in
+`/etc/pwnagotchi/config.toml`.
+
+The package includes `examples/doctor.config.toml`, which is the complete reference.
 
 ## Recommended first-run profile
 
@@ -8,66 +11,102 @@ Canonical settings live under `main.plugins.doctor.*` in `/etc/pwnagotchi/config
 main.plugins.doctor.enabled = true
 main.plugins.doctor.autofix = "observe"
 main.plugins.doctor.dry_run = true
-main.plugins.doctor.disable_autofix = []
-main.plugins.doctor.confirm_required = []
 ```
 
-Run this way first, inspect findings, then choose your Standing Orders.
+## Standing Orders
 
-## Autonomy
+- `autofix = "off" | "observe" | "notify" | "conservative" | "assertive"`
+- `dry_run`
+- `disable_autofix = []`
+- `confirm_required = []`
+- `deny_actions = []`
+- `allow_reboot_actions = false`
 
-- `off` — no acting;
-- `observe` — diagnose/explain only;
-- `notify` — currently observation semantics, reserved for notification integration;
-- `conservative` — allow safe fixes under all other gates;
-- `assertive` — permit riskier allow-listed fixes too;
-- legacy `safe` maps to `conservative`; legacy `all` maps to `assertive`.
+Low-confidence findings are never auto-treated. Recovery posture and poor verified remedy
+history may require confirmation even when the autonomy level would otherwise allow an action.
 
-`dry_run = true` prevents mutation while showing what Doctor would do.
+## Learned remedy safeguards
 
-`disable_autofix = ["condition.id"]` blocks automatic treatment for named conditions while retaining diagnosis.
+```toml
+main.plugins.doctor.efficacy_min_verified = 4
+main.plugins.doctor.efficacy_hold_below = 0.25
+```
 
-`confirm_required = ["condition.id"]` holds an otherwise-eligible action until the owner approves it from the Doctor WebUI. Held actions do not consume circuit-breaker budget.
+After enough verified outcomes exist for this patient, a remedy whose verified success rate is
+below the configured threshold is held for confirmation. History never grants additional
+authority.
 
-`deny_actions = ["action_name"]` is an owner veto on specific actions. Doctor will still diagnose and explain, but never run denied actions.
+## Scanning and thresholds
 
-`allow_reboot_actions = false` (default) holds reboot-class actions for confirmation even at `assertive`.
+```toml
+main.plugins.doctor.scan_every = 30
+main.plugins.doctor.boot_grace_s = 25
+main.plugins.doctor.min_free_mb = 200
+main.plugins.doctor.max_temp_c = 80
+main.plugins.doctor.journal_max_mb = 200
+main.plugins.doctor.journal_keep_mb = 100
+main.plugins.doctor.restart_loop_threshold = 5
+main.plugins.doctor.services = ["pwnagotchi", "bettercap", "pwngrid-peer"]
+```
+
+## Runtime paths
+
+```toml
+main.plugins.doctor.log_path = "/etc/pwnagotchi/log/pwnagotchi.log"
+main.plugins.doctor.config_path = "/etc/pwnagotchi/config.toml"
+main.plugins.doctor.handshakes = "/root/handshakes"
+main.plugins.doctor.incident_path = "/etc/pwnagotchi/doctor_incidents.json"
+main.plugins.doctor.breaker_path = "/etc/pwnagotchi/doctor_breaker.json"
+main.plugins.doctor.patient_path = "/var/lib/pwnagotchi/doctor/patient.json"
+main.plugins.doctor.checkpoint_path = "/etc/pwnagotchi/doctor_known_good.json"
+main.plugins.doctor.checkpoint_generations = 5
+```
+
+Patient Chart v2 writes only on meaningful change. Known-good history is bounded to 1–20
+generations.
 
 ## Condition Packs
 
-`condition_dir` defaults to `/etc/pwnagotchi/doctor.d` for user/community data-only packs.
+```toml
+main.plugins.doctor.condition_dir = "/etc/pwnagotchi/doctor.d"
+main.plugins.doctor.allow_pack_remedies = false
+```
 
-`allow_pack_remedies = false` is the recommended default. External packs remain diagnostic/explanatory even if they name a known remedy.
+External/local packs are explain-only by default. Even with explicit opt-in they may reference
+only actions Doctor already compiles and allows.
 
-First-party release packs live beside `doctor.py` in `doctor_packs/` and are treated as part of the reviewed release artifact. They still cannot create arbitrary new actions.
+## Cached catalog
+
+```toml
+main.plugins.doctor.catalog_dir = "/var/lib/pwnagotchi/doctor/catalog.d"
+main.plugins.doctor.enable_cached_catalog = false
+```
+
+Cached catalog packs are **always explain-only**. Use the packaged `catalog_fetch.py` only when
+you intentionally want to stage a SHA-pinned HTTPS pack.
+
+## Specialist provider hub
+
+```toml
+main.plugins.doctor.provider_dir = "/run/pwnagotchi/health.d"
+main.plugins.doctor.provider_max_age_s = 300
+```
+
+Provider snapshots use `pwndoctor/provider/v1`. They may contribute fresh canonical evidence
+and explain-only findings; they cannot define remedies. Stale/future-dated snapshots are rejected.
 
 ## Support bundle
 
-v0.7 adds a sanitized support-bundle path for sharing useful diagnostic evidence without intentionally exporting sensitive device/network identity.
+```toml
+main.plugins.doctor.support_dir = "/var/lib/pwnagotchi/doctor"
+main.plugins.doctor.support_log_lines = 400
+```
 
-- `support_dir` — directory where generated support ZIP files are written.
-- `support_log_lines` — bounded number of recent log lines included before redaction.
+The bundle redacts common MAC/IP/email patterns and configured secret/location/identity values.
+Inspect any archive before sharing publicly.
 
-The bundle redacts configured secret/location/identity values and common MAC, IPv4 and email patterns. Inspect any bundle before sharing it publicly.
+## UI
 
-## Runtime state
-
-- Patient Chart: `/var/lib/pwnagotchi/doctor/patient.json`
-- incidents: configured by `incident_path`
-- known-good checkpoint/history: configured by `checkpoint_path`
-- `checkpoint_generations` — bounded number of known-good fingerprints retained (default 5,
-  minimum 1, hard maximum 20); `load_checkpoint()` remains backward compatible and returns
-  the current generation by default.
-- persistent circuit breaker: configured by `breaker_path`
-
-Runtime state is intentionally separate from first-party plugin files so upgrades do not erase the patient's history.
-
-## Thresholds
-
-v0.7 keeps config-tunable/computed thresholds in Python rather than turning Condition Pack v1 into a general programming language.
-
-Current configurable examples include free-space, temperature, journald size and restart-loop thresholds.
-
-## Service list
-
-`services` controls which systemd units Doctor checks. The default targets Pwnagotchi, Bettercap and pwngrid-peer.
+```toml
+main.plugins.doctor.position = "0,0"
+```
