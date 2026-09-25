@@ -658,6 +658,59 @@ def test_pack_loader_is_bounded_and_reports_bad_files(tmp_path):
     assert {e["file"] for e in errors} == {"bad.json", "huge.json"}
 
 
+def test_patient_chart_v1_migrates_losslessly_to_v2(tmp_path):
+    path = tmp_path / "patient.json"
+    original = {
+        "schema": 1,
+        "identity": {"architecture": "aarch64"},
+        "known_good": {"saved_at": 10},
+        "coverage": {"radio": True},
+        "status": "DEGRADED",
+        "chronic": {"x": {"episodes": 3, "active": True}},
+        "remedies": [{"at": 9, "condition": "x", "outcome": "fixed",
+                      "action": "restart_service"}],
+        "updated_at": 10,
+        "future_same_schema_extension": {"preserve": True},
+    }
+    path.write_text(json.dumps(original))
+
+    chart = doc.PatientChart(str(path))
+
+    assert chart.data["schema"] == 2
+    assert chart.data["identity"] == original["identity"]
+    assert chart.data["chronic"] == original["chronic"]
+    assert chart.data["remedies"] == original["remedies"]
+    assert chart.data["future_same_schema_extension"] == {"preserve": True}
+    assert chart.data["migrations"][-1] == {"from": 1, "to": 2}
+    assert chart.summary()["migration_count"] == 1
+    persisted = json.loads(path.read_text())
+    assert persisted["schema"] == 2
+    assert persisted["chronic"]["x"]["episodes"] == 3
+
+
+def test_patient_chart_migration_is_idempotent():
+    obj = doc.PatientChart._blank()
+    migrated, changed = doc.PatientChart.migrate(obj)
+    assert changed is False
+    assert migrated["schema"] == 2
+    assert migrated["migrations"] == []
+
+
+def test_older_doctor_never_overwrites_future_patient_chart(tmp_path):
+    path = tmp_path / "patient.json"
+    raw = {"schema": 99, "identity": {"future": True}, "opaque": {"keep": "me"}}
+    path.write_text(json.dumps(raw))
+    before = path.read_text()
+
+    chart = doc.PatientChart(str(path))
+
+    assert chart.load_error
+    assert chart._write_enabled is False
+    assert chart._write() is False
+    chart.observe({"services": {"pwnagotchi": {"active": True}}}, [], "OK", now=1)
+    assert path.read_text() == before
+
+
 def test_patient_chart_only_writes_on_meaningful_change(tmp_path):
     chart = doc.PatientChart(str(tmp_path / "patient.json"))
     writes = []
