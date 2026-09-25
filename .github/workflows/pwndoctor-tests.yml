@@ -50,7 +50,7 @@ jobs:
           PKG="$(find /tmp/pwndoctor-dist -mindepth 1 -maxdepth 1 -type d -name 'pwndoctor-*' | head -n1)"
           test -n "$PKG"
           tar -C "$(dirname "$PKG")" -czf /tmp/pwndoctor-release.tar.gz "$(basename "$PKG")"
-          sha256sum /tmp/pwndoctor-release.tar.gz > /tmp/pwndoctor-release.tar.gz.sha256
+          (cd /tmp && sha256sum pwndoctor-release.tar.gz > pwndoctor-release.tar.gz.sha256)
       - name: Upload tested standalone package
         uses: actions/upload-artifact@v4
         with:
