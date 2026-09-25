@@ -24,6 +24,26 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def module_literal(path: Path, name: str):
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == name:
+                    return ast.literal_eval(node.value)
+    raise RuntimeError(f"{name} not found in {path}")
+
+
+def public_contracts(path: Path) -> dict:
+    value = module_literal(path, "PUBLIC_CONTRACTS")
+    if not isinstance(value, dict):
+        raise RuntimeError("PUBLIC_CONTRACTS must be a dictionary")
+    required = {"condition_pack", "patient_chart", "doctor_status", "physical_validation"}
+    if set(value) != required:
+        raise RuntimeError(f"PUBLIC_CONTRACTS keys mismatch: {sorted(value)}")
+    return value
+
+
 def doctor_version() -> str:
     tree = ast.parse((PLUGINS / "doctor.py").read_text(encoding="utf-8"))
     for node in tree.body:
@@ -111,6 +131,7 @@ def assemble(output_root: Path) -> Path:
         "condition_packs": pack_inventory,
         "condition_pack_count": len(pack_inventory),
         "compatibility_matrix": "COMPATIBILITY_MATRIX.json",
+        "contracts": public_contracts(package / "doctor.py"),
     }
     manifest_path = package / "RELEASE_MANIFEST.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n",
@@ -154,6 +175,15 @@ def verify(package: Path) -> None:
         if pack.get("id") in seen_ids:
             raise RuntimeError(f"duplicate condition pack id: {pack.get('id')}")
         seen_ids.add(pack.get("id"))
+
+    packaged_contracts = public_contracts(package / "doctor.py")
+    if data.get("contracts") != packaged_contracts:
+        raise RuntimeError("release manifest public contracts do not match packaged doctor.py")
+    validation_schema = module_literal(package / "physical_validation.py", "SCHEMA")
+    if validation_schema != packaged_contracts.get("physical_validation"):
+        raise RuntimeError(
+            "physical validation schema does not match PUBLIC_CONTRACTS"
+        )
 
     matrix_path = package / str(data.get("compatibility_matrix") or "")
     if not matrix_path.is_file():
