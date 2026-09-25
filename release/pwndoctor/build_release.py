@@ -38,7 +38,7 @@ def public_contracts(path: Path) -> dict:
     value = module_literal(path, "PUBLIC_CONTRACTS")
     if not isinstance(value, dict):
         raise RuntimeError("PUBLIC_CONTRACTS must be a dictionary")
-    required = {"condition_pack", "patient_chart", "doctor_status", "physical_validation"}
+    required = {"condition_pack", "patient_chart", "doctor_status", "physical_validation", "health_provider"}
     if set(value) != required:
         raise RuntimeError(f"PUBLIC_CONTRACTS keys mismatch: {sorted(value)}")
     return value
