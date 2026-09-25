@@ -325,6 +325,78 @@ def test_build_and_diff_checkpoint(load_plugin, tmp_path):
     assert "bettercap" in d["packages_changed"]
 
 
+def test_known_good_generations_preserve_legacy_format_and_bound_history(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path, checkpoint_generations=3)
+    p._checkpoint_path = str(tmp_path / "known_good.json")
+
+    legacy = {
+        "config_hash": "legacy",
+        "plugins": ["doctor"],
+        "packages": {"bettercap": "2.32"},
+        "kernel": "6.1",
+        "os": "legacy-os",
+        "saved_at": 1,
+    }
+    (tmp_path / "known_good.json").write_text(json.dumps(legacy))
+    assert p.load_checkpoint()["config_hash"] == "legacy"
+
+    counter = {"n": 0}
+    def fake_fp(runner=None):
+        counter["n"] += 1
+        return {
+            "config_hash": "h%d" % counter["n"],
+            "plugins": ["doctor"],
+            "packages": {"bettercap": "2.%d" % counter["n"]},
+            "kernel": "6.1",
+            "os": "test",
+            "saved_at": 10 + counter["n"],
+        }
+    p.build_fingerprint = fake_fp
+
+    p.save_checkpoint()
+    p.save_checkpoint()
+    p.save_checkpoint()
+    assert p.load_checkpoint()["config_hash"] == "h3"
+    assert p.load_checkpoint(generation=1)["config_hash"] == "h2"
+    assert p.load_checkpoint(generation=2)["config_hash"] == "h1"
+    assert p.load_checkpoint(generation=3) is None
+
+    store = json.loads((tmp_path / "known_good.json").read_text())
+    assert store["schema"] == 2
+    assert len(store["generations"]) == 3
+    assert [row["config_hash"] for row in store["generations"]] == ["h1", "h2", "h3"]
+    history = p.checkpoint_history()
+    assert [row["config_hash"] for row in history] == ["h3", "h2", "h1"]
+
+
+def test_status_contract_is_stable_and_privacy_light(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path)
+    p._status = "DEGRADED"
+    p._narrative = "Needs attention."
+    p._causal = ["a -> b"]
+    p._findings = [{
+        "id": "x",
+        "severity": "warn",
+        "confidence": "high",
+        "symptom": "test symptom",
+        "outcome": "needs_user",
+        "decision": {"reason": "no_remedy", "gates": []},
+        "provenance": {"source_class": "bundled", "sha256": "abc"},
+        # These must not leak through the contract:
+        "raw_ssid": "PrivateWifi",
+        "ip": "10.1.2.3",
+    }]
+    contract = p.status_contract()
+    assert contract["schema"] == "pwndoctor/status/v1"
+    assert contract["status"] == "DEGRADED"
+    assert contract["findings"][0]["decision"]["reason"] == "no_remedy"
+    assert "raw_ssid" not in contract["findings"][0]
+    assert "ip" not in contract["findings"][0]
+    assert "PrivateWifi" not in json.dumps(contract)
+    assert "10.1.2.3" not in json.dumps(contract)
+    assert set(contract["autonomy"]) == {"level", "dry_run"}
+
+
 def test_diff_none_without_checkpoint(load_plugin, tmp_path):
     p = _make(load_plugin, tmp_path)
     p._checkpoint_path = str(tmp_path / "nope.json")
