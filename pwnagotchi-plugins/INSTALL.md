@@ -1,50 +1,50 @@
-# Installing these plugins
+# Installing test-plugins
 
-These are standard Jayofelony/Pwnagotchi **custom plugins**. Each is a single `.py` file plus
-an example `config.toml` block.
+Most files here are standard Jayofelony/Pwnagotchi custom plugins.
 
-## 1. Put the plugin file in your custom-plugins directory
-Find (or set) your custom plugins path in `/etc/pwnagotchi/config.toml`:
+## Custom plugin directory
+
+Current Jayofelony defaults normally use:
 
 ```toml
 main.custom_plugins = "/etc/pwnagotchi/custom-plugins/"
 ```
 
-Copy the plugin you want there, e.g.:
+## Ordinary single-file plugins
+
+Copy the plugin `.py`, copy/review its `.config.toml` settings, then restart Pwnagotchi.
+
+## PwnDoctor
+
+PwnDoctor v1 is a multi-file release and should be installed from the assembled package rather
+than by copying only `doctor.py`.
+
+Build the standalone package from repository root:
 
 ```bash
-sudo mkdir -p /etc/pwnagotchi/custom-plugins/
-sudo cp boot_post.py /etc/pwnagotchi/custom-plugins/
+python3 release/pwndoctor/build_release.py --output /tmp/pwndoctor-dist
 ```
 
-## 2. Add its config block
-Open the plugin's `<name>.config.toml`, copy the block, and paste it into
-`/etc/pwnagotchi/config.toml`. At minimum:
+Then from the generated `pwndoctor-<version>/` directory:
+
+```bash
+sudo ./install.sh
+```
+
+Review `examples/doctor.config.toml` and start with:
 
 ```toml
-main.plugins.boot_post.enabled = true
+main.plugins.doctor.enabled = true
+main.plugins.doctor.autofix = "observe"
+main.plugins.doctor.dry_run = true
 ```
 
-Check the plugin's `Requires:` line first and install any pip/system/hardware deps it needs
-(see the dependency table in `README.md`). Plugins with `Requires: none` run as-is.
+Restart:
 
-## 3. Restart Pwnagotchi
 ```bash
 sudo systemctl restart pwnagotchi
 ```
 
-Watch the log to confirm it loaded:
-
-```bash
-sudo tail -f /etc/pwnagotchi/log/pwnagotchi.log | grep '\[<name>\]'
-```
-
-Web-facing plugins expose a page at `http://<pi>:8080/plugins/<name>/`.
-
-## Notes
-- Only enable a UI plugin's display element at a `position` that isn't already taken — run the
-  `conflict_referee` plugin to catch position/GPIO collisions.
-- Everything here is **source/CI-validated only**. Confirm display legibility, touch, and any
-  real hardware on your own device before relying on a plugin in the field.
-- Start with a no-hardware one (`boot_post`, `own_network_allowlist`, `streaks`) to get a feel
-  for the install flow.
+The standalone package's `docs/INSTALL.md`, `docs/CONFIGURATION.md`,
+`docs/USAGE.md` and `docs/PHYSICAL_VALIDATION.md` are the authoritative PwnDoctor
+installation/release instructions.
