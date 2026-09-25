@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "plugin": "PwnDoctor",
-  "target_version": "0.7.0-pre1",
+  "target_version": "1.0.0-rc1",
   "policy": "Evidence labels are descriptive. Unknown is not compatible-by-default.",
   "evidence_labels": {
-    "physical_validated": "Executed on named real hardware/image against the RC physical checklist.",
+    "physical_validated": "Executed on named real hardware/image against the v1 physical checklist.",
     "ci_validated": "Automated/off-Pi behavior validated; no physical compatibility claim.",
     "community_reported": "Reported by users but not reproduced by maintainers.",
     "unknown": "Not yet evaluated.",
@@ -12,7 +12,7 @@
   },
   "rows": [
     {
-      "id": "ci-python313-harness",
+      "id": "ci-python313-harness-v1",
       "evidence": "ci_validated",
       "pwnagotchi_version": null,
       "image": "test harness / source-level API compatibility",
@@ -20,7 +20,7 @@
       "architecture": "x86_64 runner",
       "python": "3.13",
       "kernel": null,
-      "notes": "Validates Doctor engine, pack loader, policy, Patient Chart, Condition Packs, narrative/support-bundle helpers, release assembly and guarded actions through the fake Pwnagotchi harness. Does not establish physical radio/display/service compatibility."
+      "notes": "Validates PwnDoctor v1 engine, policy, Patient Chart v2 migrations, Condition Packs, provider hub, cached catalog trust boundary, treatment decision trace, learned remedy safeguards, recovery posture, support bundle, validation recorder and release assembly through the fake Pwnagotchi harness. This does not establish physical radio/display/service compatibility."
     }
   ],
   "physical_validation_pending": true
