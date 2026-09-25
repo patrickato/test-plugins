@@ -22,28 +22,19 @@ Restart Pwnagotchi, open Doctor in the WebUI, and review what it sees.
 
 ## What a finding shows
 
-A finding can include:
-- severity;
-- evidence confidence;
-- symptom;
-- likely cause;
-- outcome;
-- suggested steps;
-- an eligible remedy;
-- causal relationship to another condition;
-- Condition Pack provenance.
+A finding can include severity, evidence confidence, symptom, likely cause, outcome, suggested steps, an eligible remedy, causal relationships and Condition Pack provenance.
 
 ## Outcomes
 
 Common outcomes include:
-- `needs_user` — Doctor will explain but not act under current policy;
-- `would_fix` — dry-run shows an eligible action;
-- `awaiting_confirm` — owner confirmation is required;
-- `fixed` — action ran and verification succeeded;
-- `fix_failed` — action ran but verification proved the condition remains/fix failed;
-- `executed_verification_unknown` — action ran but Doctor cannot prove success or failure;
-- `blocked_guard` — a safety guard says acting is unsafe in the current context;
-- `gave_up` — circuit-breaker budget was exhausted.
+- `needs_user`;
+- `would_fix`;
+- `awaiting_confirm`;
+- `fixed`;
+- `fix_failed`;
+- `executed_verification_unknown`;
+- `blocked_guard`;
+- `gave_up`.
 
 ## Standing Orders
 
@@ -68,7 +59,17 @@ A condition that remains active across many scans counts as one episode. It beco
 
 ## Known-good checkpoint
 
-Use the WebUI checkpoint function after the device is healthy and configured the way you want. Doctor can later compare config hash, enabled plugins, package versions, kernel and OS to answer 'what changed since it worked?'
+Use the WebUI checkpoint function after the device is healthy and configured the way you want. Doctor can later compare config hash, enabled plugins, package versions, kernel and OS to answer “what changed since it worked?”
+
+## Narrative summary
+
+v0.7 adds a plain-language summary that combines current status, auto-fixes, unresolved work, likely causal chain and known-good drift into one readable paragraph.
+
+## Sanitized support bundle
+
+Use the Doctor support-bundle action when you need a forum/shareable diagnostic package. It includes a report, redacted configuration, redacted bounded log tail, incidents, Patient Chart summary and environment/drift information.
+
+Redaction targets MAC addresses, IPv4 addresses, email addresses, secrets/tokens, SSID/BSSID/GPS and other configured identity/location values. Treat the ZIP as diagnostic data and inspect it before sharing publicly.
 
 ## Condition Packs
 
@@ -80,7 +81,7 @@ Use `CONDITION_PACK_SCHEMA.md` when authoring packs.
 
 ## When Doctor cannot verify
 
-Treat `executed_verification_unknown` as unresolved evidence, not success. Check the associated probe manually or collect a support bundle once that feature lands.
+Treat `executed_verification_unknown` as unresolved evidence, not success. Check the associated probe manually or include the event in a sanitized support bundle.
 
 ## Recommended everyday mode
 
