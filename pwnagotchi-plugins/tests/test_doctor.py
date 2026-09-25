@@ -1509,6 +1509,62 @@ def test_scan_sets_narrative(load_plugin, tmp_path):
     assert isinstance(p.narrative(), str) and p.narrative()
 
 
+def _load_physical_validation_module():
+    import importlib.util
+    path = ROOT.parent / "release" / "pwndoctor" / "physical_validation.py"
+    spec = importlib.util.spec_from_file_location("pwndoctor_physical_validation", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_physical_validation_recorder_requires_all_required_passes(tmp_path):
+    pv = _load_physical_validation_module()
+    record = pv.new_record(
+        "0.7.0-pre1",
+        artifact_sha256="abc123",
+        now=1,
+        compatibility={
+            "hardware": "Pi 4",
+            "architecture": "aarch64",
+            "kernel": "6.6",
+            "python": "3.13",
+            "pwnagotchi_version": "2.9.5.9",
+            "image": "Jayofelony test",
+        },
+    )
+    assert pv.validation_summary(record)["ready_for_physical_validated"] is False
+    import pytest
+    with pytest.raises(ValueError):
+        pv.compatibility_matrix_row(record)
+
+    for row in record["checks"]:
+        if row["required"]:
+            pv.set_result(record, row["id"], "pass", now=2)
+
+    summary = pv.validation_summary(record)
+    assert summary["ready_for_physical_validated"] is True
+    matrix = pv.compatibility_matrix_row(record, row_id="pi4-test")
+    assert matrix["evidence"] == "physical_validated"
+    assert matrix["hardware"] == "Pi 4"
+    assert "abc123" in matrix["notes"]
+
+    path = tmp_path / "validation.json"
+    pv.write_record(path, record)
+    restored = pv.load_record(path)
+    assert restored["schema"] == pv.SCHEMA
+    assert pv.validation_summary(restored)["ready_for_physical_validated"] is True
+
+
+def test_physical_validation_recorder_rejects_skip_as_validated():
+    pv = _load_physical_validation_module()
+    record = pv.new_record("0.7.0-pre1", now=1, compatibility={})
+    for row in record["checks"]:
+        pv.set_result(record, row["id"], "pass", now=2)
+    pv.set_result(record, record["checks"][0]["id"], "skip", now=3)
+    assert pv.validation_summary(record)["ready_for_physical_validated"] is False
+
+
 def test_build_support_bundle_is_sanitized(load_plugin, tmp_path):
     import zipfile
     p = _make(load_plugin, tmp_path)
