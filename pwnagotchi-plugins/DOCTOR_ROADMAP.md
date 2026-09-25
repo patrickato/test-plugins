@@ -401,7 +401,18 @@ schema is the real interop opportunity between the two projects.
       CI (ChatGPT); **remedy-carrying built-in→JSON migration COMPLETE + verified end-to-end**
       (Claude — all 12 conditions now bundled packs; external load stays explain-only). 95 tests /
       357 repo; standalone package assembles with all 12 packs checksummed.
-- [ ] **v0.7 (Claude):** one-click sanitized support bundle + plain-language narrative; then
-      remedy-efficacy ranking (uses the Patient Chart counters ChatGPT built).
-- [ ] Toward RC: after v0.7, physical Pi validation
-      (only the owner can do this — a scripted checklist ships with v1.0 RC).
+- [x] **v0.6 RC declared + FROZEN (ChatGPT):** RC integrity (per-pack inventory: id/version/
+      SHA-256/has_fix, duplicate/mismatch rejection), evidence-based `COMPATIBILITY_MATRIX.json`,
+      `RC_READINESS.md`, hardened CI that archives the tested package. Handed back to Claude as
+      implementation- + release-engineering-complete, **physical-validation-pending**.
+- [x] **RC finalization (Claude):** version/doc consistency sweep (all `0.6.0-pre4`); automated
+      gate re-verified green (357 tests, syntax, build + integrity/inventory verify); added the
+      owner **`PHYSICAL_VALIDATION.md`** runbook and **`CHANGELOG.md`** release notes (both ship in
+      the package); checked off the automated + documentation gates.
+- [ ] **ONLY REMAINING RELEASE GATE — owner:** run `release/pwndoctor/PHYSICAL_VALIDATION.md`
+      against the assembled `pwndoctor-0.6.0-pre4` artifact on a real Jayofelony Pi, then add the
+      `physical_validated` row to `COMPATIBILITY_MATRIX.json`, freeze/tag, and publish the
+      standalone repo (order in `RC_READINESS.md`).
+- [ ] **v0.7 (next dev line, post-RC — frozen out of this RC):** one-click sanitized support
+      bundle + plain-language narrative; then remedy-efficacy ranking (uses the Patient Chart
+      recurrence counters).

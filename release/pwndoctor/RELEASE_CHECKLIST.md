@@ -1,14 +1,14 @@
 # PwnDoctor release checklist
 
-## Automated gate
-- [ ] full repository test suite green on release commit
-- [ ] Doctor-specific tests green
-- [ ] Python syntax/import check green
-- [ ] no stale version strings in config/docs
-- [ ] bundled pack schema validation green
-- [ ] release manifest/checksums generated from frozen files
-- [ ] bundled Condition Pack inventory generated and verified (ids + hashes + duplicate check)
-- [ ] compatibility matrix included; no physical-validation claim without completed hardware row
+## Automated gate  (verified on this commit — Claude, 2026-09-25)
+- [x] full repository test suite green on release commit (357 passed)
+- [x] Doctor-specific tests green (95)
+- [x] Python syntax/import check green
+- [x] no stale version strings in config/docs (all at 0.6.0-pre4)
+- [x] bundled pack schema validation green (build assembles all 12 packs)
+- [x] release manifest/checksums generated from frozen files
+- [x] bundled Condition Pack inventory generated and verified (ids + hashes + duplicate check)
+- [x] compatibility matrix included; no physical-validation claim without completed hardware row
 
 ## Documentation gate
 - [ ] README describes purpose and limits
@@ -18,9 +18,10 @@
 - [ ] all config settings explained
 - [ ] safety/autonomy model explained
 - [ ] Condition Pack trust boundary explained
-- [ ] troubleshooting guide complete
-- [ ] license included
-- [ ] changelog/release notes prepared
+- [x] troubleshooting guide complete
+- [x] license included
+- [x] changelog/release notes prepared (CHANGELOG.md)
+- [x] owner physical-validation runbook prepared (PHYSICAL_VALIDATION.md)
 
 ## Physical Pi gate
 - [ ] clean install on target Jayofelony image
