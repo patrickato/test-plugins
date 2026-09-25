@@ -160,6 +160,12 @@ def verify(package: Path) -> None:
     matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
     if matrix.get("schema") != 1 or not isinstance(matrix.get("rows"), list):
         raise RuntimeError("invalid compatibility matrix")
+    target_version = matrix.get("target_version")
+    if target_version and target_version != data.get("version"):
+        raise RuntimeError(
+            f"compatibility matrix target_version {target_version!r} "
+            f"does not match package version {data.get('version')!r}"
+        )
 
     sums = package / "SHA256SUMS"
     if not sums.is_file():
