@@ -84,6 +84,13 @@ import pwnagotchi.ui.fonts as fonts
 from pwnagotchi.ui.components import LabeledValue
 from pwnagotchi.ui.view import BLACK
 
+PUBLIC_CONTRACTS = {
+    "condition_pack": "condition-pack/v1",
+    "patient_chart": 2,
+    "doctor_status": "pwndoctor/status/v1",
+    "physical_validation": "pwndoctor/physical-validation/v1",
+}
+
 _SEV_RANK = {"high": 0, "warn": 1, "info": 2}
 _CONF_RANK = {"high": 0, "medium": 1, "low": 2}
 
@@ -479,8 +486,8 @@ def validate_condition_pack(pack):
     errors = []
     if not isinstance(pack, dict):
         return ["pack must be a JSON object"]
-    if pack.get("schema") != "condition-pack/v1":
-        errors.append("schema must be condition-pack/v1")
+    if pack.get("schema") != PUBLIC_CONTRACTS["condition_pack"]:
+        errors.append("schema must be %s" % PUBLIC_CONTRACTS["condition_pack"])
     pid = pack.get("id")
     if not isinstance(pid, str) or not _PACK_ID_RE.fullmatch(pid):
         errors.append("id must be a lowercase namespaced identifier")
@@ -1662,7 +1669,7 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
 # Patient Chart v2 — bounded device-specific memory with explicit schema migration
 # ======================================================================================
 class PatientChart:
-    SCHEMA = 2
+    SCHEMA = PUBLIC_CONTRACTS["patient_chart"]
 
     @classmethod
     def _blank(cls):
@@ -2407,7 +2414,7 @@ class Doctor(plugins.Plugin):
             })
         history = self.checkpoint_history()
         return {
-            "schema": "pwndoctor/status/v1",
+            "schema": PUBLIC_CONTRACTS["doctor_status"],
             "doctor_version": self.__version__,
             "status": self._status,
             "narrative": self._narrative,
