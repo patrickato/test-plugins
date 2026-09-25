@@ -1,103 +1,84 @@
-# Using PwnDoctor
+# Using PwnDoctor v1
 
-## First run
+## 1. First boot
 
-For a new installation, start in observation/dry-run mode:
+Install the package, copy/review the example config, and start in observation/dry-run mode.
 
-```toml
-main.plugins.doctor.enabled = true
-main.plugins.doctor.autofix = "observe"
-main.plugins.doctor.dry_run = true
+Open the Doctor WebUI page after restart. Review:
+
+- current status and plain-language summary;
+- findings, confidence and outcome;
+- treatment decision traces;
+- Patient Chart coverage/recurrence;
+- Doctor self-test/capability state;
+- known-good drift when a checkpoint exists.
+
+## 2. Standing Orders
+
+Move from `observe` to `conservative` only after the device behaves as expected.
+
+Use `confirm_required` for conditions you always want to approve manually and
+`deny_actions` for actions Doctor must never execute.
+
+## 3. Recovery posture
+
+When Doctor sees questionable storage integrity (for example SD I/O errors/read-only root) or an
+invalid-config crash loop, recovery posture activates. Automatic mutation is reduced to
+confirmation. Explicit owner confirmation can still permit an otherwise-authorized action.
+
+## 4. Remedy learning
+
+Patient Chart records verified outcomes. Doctor can report per-device efficacy and rank candidate
+remedies. Poor verified history never increases confidence; after the configured minimum history
+it can force confirmation for a repeatedly ineffective remedy.
+
+## 5. Known-good generations
+
+Use the WebUI checkpoint action after the device is healthy. v1 keeps a bounded generation
+history, while ordinary drift comparison still targets the newest checkpoint by default.
+
+## 6. Condition Packs
+
+- bundled `doctor_packs/`: first-party release knowledge;
+- `/etc/pwnagotchi/doctor.d/`: owner/community packs, explain-only by default;
+- cached catalog: always explain-only.
+
+Author/test packs with the schema in `docs/CONDITION_PACK_SCHEMA.md`.
+PwnDoctor's pure linter/simulator can evaluate pack structure and tri-state behavior without
+executing a remedy.
+
+## 7. Optional catalog fetch
+
+Stage a pinned pack:
+
+```bash
+python3 catalog_fetch.py \
+  https://example.invalid/pack.json \
+  --sha256 <expected-64-hex-sha256> \
+  --output-dir /var/lib/pwnagotchi/doctor/catalog.d
 ```
 
-Restart Pwnagotchi, open Doctor in the WebUI, and review what it sees.
+Then set `enable_cached_catalog = true`. The staged pack remains explain-only.
 
-## Status vocabulary
+## 8. Specialist providers
 
-- `OK` — no current actionable finding;
-- `HEALED` — Doctor verified at least one repair and no remaining issue outranks it;
-- `ATTENTION` — informational condition remains;
-- `DEGRADED` — warning-level condition remains;
-- `ACTION_REQUIRED` — high-severity or otherwise unresolved condition requires attention.
+Sibling plugins may publish bounded JSON snapshots into `/run/pwnagotchi/health.d/` using
+`pwndoctor/provider/v1`. Doctor consumes only fresh snapshots. Core evidence wins over provider
+evidence for the same canonical key, and provider findings cannot contain executable fixes.
 
-## What a finding shows
+## 9. Machine-readable local status
 
-A finding can include severity, evidence confidence, symptom, likely cause, outcome, suggested steps, an eligible remedy, causal relationships and Condition Pack provenance.
+`Doctor.status_contract()` returns `pwndoctor/status/v1` for local integrations. It contains
+bounded Doctor state, decision traces, Patient Chart summary, providers/catalog metadata,
+recovery state, compatibility identity and self-test—but not raw logs, SSIDs, IPs or GPS data.
 
-## Outcomes
+## 10. Support bundle
 
-Common outcomes include:
-- `needs_user`;
-- `would_fix`;
-- `awaiting_confirm`;
-- `fixed`;
-- `fix_failed`;
-- `executed_verification_unknown`;
-- `blocked_guard`;
-- `gave_up`.
+Use the WebUI support-bundle action for a sanitized ZIP containing report/config/log-tail/
+incidents/Patient Chart/environment information. Inspect it before posting publicly.
 
-## Standing Orders
+## 11. Physical validation
 
-`autofix` controls the broad autonomy ceiling.
-
-`disable_autofix` blocks named conditions from automatic treatment.
-
-`confirm_required` lets you require one-tap approval for selected conditions even when the action would otherwise be eligible.
-
-These policies are intentionally independent from the Medical Library. A condition knowing a remedy does not mean it may execute it.
-
-## Patient Chart
-
-The Patient Chart remembers this device rather than storing every raw log:
-- hardware/build identity;
-- diagnostic coverage;
-- known-good summary;
-- recurring condition episodes;
-- verified remedy outcomes.
-
-A condition that remains active across many scans counts as one episode. It becomes recurrent only after clearing and returning.
-
-## Known-good checkpoint
-
-Use the WebUI checkpoint function after the device is healthy and configured the way you want. Doctor can later compare config hash, enabled plugins, package versions, kernel and OS to answer “what changed since it worked?”
-
-## Narrative summary
-
-v0.7 adds a plain-language summary that combines current status, auto-fixes, unresolved work, likely causal chain and known-good drift into one readable paragraph.
-
-## Sanitized support bundle
-
-Use the Doctor support-bundle action when you need a forum/shareable diagnostic package. It includes a report, redacted configuration, redacted bounded log tail, incidents, Patient Chart summary and environment/drift information.
-
-Redaction targets MAC addresses, IPv4 addresses, email addresses, secrets/tokens, SSID/BSSID/GPS and other configured identity/location values. Treat the ZIP as diagnostic data and inspect it before sharing publicly.
-
-## Condition Packs
-
-First-party bundled packs ship in `doctor_packs/`.
-
-Your own/community JSON packs live in `/etc/pwnagotchi/doctor.d/` and are explain-only by default.
-
-Use `CONDITION_PACK_SCHEMA.md` when authoring packs.
-
-## When Doctor cannot verify
-
-Treat `executed_verification_unknown` as unresolved evidence, not success. Check the associated probe manually or include the event in a sanitized support bundle.
-
-## Recommended everyday mode
-
-After first-run review and physical validation, `conservative` is the intended normal default: safe eligible remedies may run automatically, while riskier/blocked/confirm-required work remains under owner control.
-
-
-## Machine-readable local status
-
-`Doctor.status_contract()` returns the stable `pwndoctor/status/v1` read-only contract for
-local sibling plugins, dashboards and Beastagotchi integration. It intentionally exposes Doctor
-status, bounded finding summaries, decision traces, Patient Chart summary, pack counts,
-known-good generation metadata and compatibility identity — not raw logs, SSIDs, IP addresses,
-GPS coordinates or captured network data.
-
-## Known-good generations
-
-Doctor retains a bounded history of known-good fingerprints. The existing
-`load_checkpoint()`/diff behavior still targets the newest checkpoint by default; older
-generations can be selected for comparison without changing the current checkpoint.
+Run `docs/PHYSICAL_VALIDATION.md` against the exact CI-tested archive. The included
+`physical_validation.py` recorder saves progress and refuses to generate a
+`physical_validated` matrix row until every required test passes.
