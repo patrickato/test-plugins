@@ -1,6 +1,14 @@
-# PwnDoctor package manifest (staging)
+# PwnDoctor package manifest
 
-This file defines what will move from `test-plugins` into the standalone release after code/content freeze.
+This file defines the standalone PwnDoctor release assembled from the collaboration repository.
+
+## Current target
+
+- release candidate: `0.7.0-pre1`
+- canonical runtime source: `pwnagotchi-plugins/doctor.py`
+- canonical first-party Medical Library: `pwnagotchi-plugins/doctor_packs/`
+- release assembly is reproducible and CI-verified
+- Claude and OpenAI work in separate collaboration lanes; packaging consumes the integrated source without rewriting collaborator history
 
 ## Canonical source → standalone package
 
@@ -9,23 +17,21 @@ This file defines what will move from `test-plugins` into the standalone release
 - `pwnagotchi-plugins/doctor.config.toml` → `examples/doctor.config.toml`
 - `pwnagotchi-plugins/doctor.d/` → `examples/doctor.d/`
 - `pwnagotchi-plugins/CONDITION_PACK_SCHEMA.md` → `docs/CONDITION_PACK_SCHEMA.md`
-- `pwnagotchi-plugins/DOCTOR_ROADMAP.md` → `docs/DEVELOPMENT_ROADMAP.md` (optional for public repo)
+- `pwnagotchi-plugins/DOCTOR_ROADMAP.md` → `docs/DEVELOPMENT_ROADMAP.md`
 - `pwnagotchi-plugins/DOCTOR_COMPATIBILITY_CONTRACT.md` → `docs/UPSTREAM_COMPATIBILITY_CONTRACT.md`
 - `pwnagotchi-plugins/tests/test_doctor.py` + required harness → `tests/`
 - repo `LICENSE` → `LICENSE`
 - `release/pwndoctor/*.md` → top-level/docs as appropriate
+- `release/pwndoctor/COMPATIBILITY_MATRIX.json` → `COMPATIBILITY_MATRIX.json`
 
 ## Do not package
 
 - collaborator handoff notes;
-- unrelated gap plugins;
-- private preservation checkpoints;
+- unrelated plugins;
+- private checkpoints;
 - development-only branch notes;
 - stale screenshots/logs/credentials/device-specific state.
 
-## Final assembly rule
-
-Do not manually maintain duplicate copies of `doctor.py` during development. Assemble the standalone package only from the frozen canonical files after Claude + OpenAI sign-off and physical validation.
 ## Generated integrity files
 
 The release assembler generates:
@@ -33,11 +39,13 @@ The release assembler generates:
 - `SHA256SUMS` — verification hashes for the assembled artifact.
 
 The assembler verifies both before returning success.
-- `release/pwndoctor/COMPATIBILITY_MATRIX.json` → `COMPATIBILITY_MATRIX.json`
 
 ## Condition Pack inventory
 
-The generated `RELEASE_MANIFEST.json` records every bundled Condition Pack with filename, pack id, declared pack version, SHA-256 and whether it carries a remedy. Assembly verification rejects missing files, hash mismatches, id mismatches and duplicate bundled ids.
+`RELEASE_MANIFEST.json` records every bundled Condition Pack with filename, pack id, declared pack version, SHA-256 and whether it carries a remedy. Assembly verification rejects missing files, hash mismatches, id mismatches and duplicate bundled ids.
 
-The manifest also points to `COMPATIBILITY_MATRIX.json`; package verification rejects a missing or malformed matrix.
-- `release/pwndoctor/RC_READINESS.md` → `docs/RC_READINESS.md`
+The manifest points to `COMPATIBILITY_MATRIX.json`; package verification rejects a missing/malformed matrix and rejects a matrix whose `target_version` does not match `Doctor.__version__`.
+
+## Promotion rule
+
+The CI-tested archive is the artifact to physically validate. A stable release/tag is promoted only after the exact artifact passes the physical checklist and the compatibility matrix records the hardware/image evidence.
