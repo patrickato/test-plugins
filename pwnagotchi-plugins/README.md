@@ -1,76 +1,48 @@
 # Pwnagotchi Gap Plugins
 
-Original plugins that fill real gaps in the Pwnagotchi ecosystem — see
-[`BUILD_LIST.md`](BUILD_LIST.md) for the roadmap (P01–P46).
+Original plugins that fill real gaps in the Pwnagotchi ecosystem. See
+[`BUILD_LIST.md`](BUILD_LIST.md) for the broader plugin roadmap.
 
-The `doctor` plugin (P06) has its own deep design doc:
-[`DOCTOR_ROADMAP.md`](DOCTOR_ROADMAP.md) — identity, current v0.4 state, principles, the
-feature menu, the version sequence, and the externalized condition-pack schema.
+## P06 — PwnDoctor
+
+PwnDoctor is now at **v1.0.0-rc1** on the v1 release branch.
+
+Primary files:
+- `doctor.py`
+- `doctor.config.toml` — complete v1 configuration reference
+- `doctor_packs/` — bundled first-party Condition Packs
+- `doctor.d/` — external-pack examples
+- `CONDITION_PACK_SCHEMA.md`
+- `DOCTOR_ROADMAP.md`
+- `DOCTOR_COMPATIBILITY_CONTRACT.md`
+
+The standalone release package is assembled from `release/pwndoctor/` and includes installer,
+documentation, validation recorder, catalog-fetch utility, tests, manifest/checksums and
+compatibility matrix.
+
+PwnDoctor v1 is software-complete but remains **physical-validation pending** until the exact RC
+artifact passes the real Jayofelony/Pi checklist.
 
 ## Layout
-- `reference/` — the real upstream plugin API, copied verbatim (ground truth; don't edit).
-- `templates/` — copy `plugin_template.py` + `plugin_template.config.toml` to start a plugin.
-- `tests/` — off-Pi test harness (`conftest.py` fakes the `pwnagotchi` package) + tests.
-- `<name>.py` / `<name>.config.toml` — plugins land at the top level as they're built.
+
+- `reference/` — upstream plugin API reference
+- `templates/` — plugin templates
+- `tests/` — off-Pi test harness
+- `<name>.py` / `<name>.config.toml` — individual plugins
 
 ## Develop
+
 ```bash
 pip install -r requirements-dev.txt
-PYTHONPATH= python -m pytest -q      # run from this directory
+PYTHONPATH= python -m pytest -q
 ```
-Read `reference/API_NOTES.md` and the project `CLAUDE.md` before writing a plugin.
 
-## Dependencies & requirements
-Install **only** what the plugins you enable need — these are per-plugin, not a global
-requirement set. `Pillow`/`numpy` already ship with Pwnagotchi, so plugins that only draw
-on the display need nothing extra. "✅" in the last column means the plugin is built and
-tested off-Pi.
+## Doctor dependencies
 
-| Plugin | Python (pip) | System / binary | Hardware | Built |
-|--------|--------------|-----------------|----------|:-----:|
-| P01 `handshake_janitor` | none | none | none | ✅ |
-| P02 `capture_grader` | none | none | none | ✅ |
-| P03 `crack_reconciler` | none | none | none | ✅ |
-| P04 `capture_retention` | none | none | none | ✅ |
-| P05 `own_network_allowlist` | none | none | none | ✅ |
-| P06 `doctor` | none | systemctl/iw/rfkill/vcgencmd/journalctl/dpkg (guarded) | none | ✅ v0.7-pre1 |
-| P07 `sd_wear` | none | none | none | ✅ |
-| P12 `battery_historian` | none *(optional `smbus2`)* | none | UPS/PiSugar (optional) | ✅ |
-| P13 `fan_curve` | `RPi.GPIO` or `gpiozero` | PWM enabled | PWM-capable fan | ✅ |
-| P14 `thermal_predictor` | none | none | none | ✅ |
-| P18 `ha_mqtt` | `paho-mqtt` | reachable MQTT broker | none | ✅ |
-| P20 `mesh_vpn_presence` | none | `tailscale` **or** `wireguard-tools` | none | ✅ |
-| P21 `channel_occupancy` | none | none | none | ✅ |
-| P24 `rtl433_ambient` | none | `rtl_433` binary | RTL-SDR | ✅ |
-| P25 `adsb_ambient` | none | `dump1090` (JSON feed) | RTL-SDR | ✅ |
-| P29 `offline_reader` | `libzim` *(or `kiwix-tools`)* | none | a `.zim` file | ✅ |
-| P30 `boot_post` | none | none | none | ✅ |
-| P33 `circadian_faces` | none | none | none | ✅ |
-| P34 `achievements` | none | none | none | ✅ |
-| P35 `daily_digest` | none *(Pillow ships already)* | none | none | ✅ |
-| P36 `conflict_referee` | none | none | none | ✅ |
-| P37 `eink_ghosting` | none | none | e-ink display | ✅ |
-| P38 `signal_compass` | none | none | none | ✅ |
-| P39 `streaks` | none | none | none | ✅ |
-| P40 `multi_adapter` | none | `iw` / `ip` (usually present) | 2+ Wi-Fi adapters | ✅ |
-| P41 `auto_timezone` | *(optional `timezonefinder`)* | `timedatectl` + `gpsd` | GPS | ✅ |
-| P42 `wordlist_manager` | none | none | none | ✅ |
-| P43 `ble_console` | `bluezero` | BlueZ | BLE adapter | ✅ |
-| P44 `env_sensors` | `smbus2` + per-sensor libs | I²C enabled | I²C sensor(s) | ✅ |
-| P45 `auto_dim` | *(optional light-sensor lib)* | backlight sysfs/GPIO | light sensor (optional) | ✅ |
-| P46 `field_notes` | none | `gpsd` (optional) | GPS (optional) | ✅ |
-| P47 `deep_thoughts` | none | none | none | ✅ |
-| P48 `happy_thoughts` | none | none | none | ✅ |
-| P49 `milestone_fireworks` | none | none | none | ✅ |
-| P50 `pet_quips` | none | none | none | ✅ |
-| P51 `display_setup_helper` | none | none | none | ✅ |
-| P52 `why_no_handshakes` | none | `iw`/`ip` (usually present) | none | ✅ |
-| P53 `captive_portal` | none | none | none | ✅ |
-| P54 `stat_source_bridge` | none | Korrie71 Theme Manager installed | none | ✅ |
-
-Each plugin also states its requirements in its module docstring and in a `Requires:` line
-at the top of its `config.toml`. Rows without pip/system/hardware needs run on a stock
-Jayofelony image as-is.
+PwnDoctor itself requires no pip package. It conditionally uses standard system commands such as
+`systemctl`, `iw`, `rfkill`, `vcgencmd`, `timedatectl`, `journalctl`, `dpkg` and
+`uname`. Missing optional commands reduce coverage rather than preventing load.
 
 ## License
-GPLv3 (see repo `LICENSE`), matching upstream Pwnagotchi.
+
+GPLv3.
