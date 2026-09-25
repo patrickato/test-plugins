@@ -93,7 +93,7 @@ def assemble(output_root: Path) -> Path:
         "README.md", "INSTALL.md", "CONFIGURATION.md", "DEPENDENCIES.md", "USAGE.md",
         "SECURITY_AND_SAFETY.md", "COMPATIBILITY.md", "TROUBLESHOOTING.md",
         "RELEASE_CHECKLIST.md", "RC_READINESS.md", "PHYSICAL_VALIDATION.md",
-        "CHANGELOG.md", "PACKAGE_MANIFEST.md",
+        "CHANGELOG.md", "PACKAGE_MANIFEST.md", "KNOWN_LIMITATIONS.md",
     ):
         copy_file(HERE / name, package / ("README.md" if name == "README.md" else f"docs/{name}"))
 
