@@ -7,6 +7,8 @@
 - [ ] no stale version strings in config/docs
 - [ ] bundled pack schema validation green
 - [ ] release manifest/checksums generated from frozen files
+- [ ] bundled Condition Pack inventory generated and verified (ids + hashes + duplicate check)
+- [ ] compatibility matrix included; no physical-validation claim without completed hardware row
 
 ## Documentation gate
 - [ ] README describes purpose and limits
