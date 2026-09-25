@@ -1719,6 +1719,24 @@ def _load_physical_validation_module():
     return module
 
 
+def _load_catalog_fetch_module():
+    import importlib.util
+    path = ROOT.parent / "release" / "pwndoctor" / "catalog_fetch.py"
+    spec = importlib.util.spec_from_file_location("pwndoctor_catalog_fetch", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_catalog_fetch_refuses_unpinned_or_non_https(tmp_path):
+    import pytest
+    cf = _load_catalog_fetch_module()
+    with pytest.raises(ValueError):
+        cf.fetch_pack("http://example.invalid/pack.json", "0" * 64, tmp_path)
+    with pytest.raises(ValueError):
+        cf.fetch_pack("https://example.invalid/pack.json", "not-a-sha", tmp_path)
+
+
 def test_physical_validation_recorder_requires_all_required_passes(tmp_path):
     pv = _load_physical_validation_module()
     record = pv.new_record(
