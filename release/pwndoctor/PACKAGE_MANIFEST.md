@@ -1,51 +1,63 @@
-# PwnDoctor package manifest
+# PwnDoctor v1 package manifest
 
-This file defines the standalone PwnDoctor release assembled from the collaboration repository.
+## Target
 
-## Current target
+- release candidate: `1.0.0-rc1`
+- canonical runtime: `pwnagotchi-plugins/doctor.py`
+- first-party Medical Library: `pwnagotchi-plugins/doctor_packs/`
+- public contracts are locked and verified during release assembly.
 
-- release candidate: `0.7.0-pre1`
-- canonical runtime source: `pwnagotchi-plugins/doctor.py`
-- canonical first-party Medical Library: `pwnagotchi-plugins/doctor_packs/`
-- release assembly is reproducible and CI-verified
-- Claude and OpenAI work in separate collaboration lanes; packaging consumes the integrated source without rewriting collaborator history
+## Package map
 
-## Canonical source → standalone package
+- `doctor.py`
+- `doctor_packs/`
+- `examples/doctor.config.toml`
+- `examples/doctor.d/`
+- `catalog_fetch.py`
+- `physical_validation.py`
+- `docs/CONDITION_PACK_SCHEMA.md`
+- `docs/DEVELOPMENT_ROADMAP.md`
+- `docs/UPSTREAM_COMPATIBILITY_CONTRACT.md`
+- release documentation under `docs/`
+- `tests/`
+- `COMPATIBILITY_MATRIX.json`
+- `LICENSE`
 
-- `pwnagotchi-plugins/doctor.py` → `doctor.py`
-- `pwnagotchi-plugins/doctor_packs/` → `doctor_packs/`
-- `pwnagotchi-plugins/doctor.config.toml` → `examples/doctor.config.toml`
-- `pwnagotchi-plugins/doctor.d/` → `examples/doctor.d/`
-- `pwnagotchi-plugins/CONDITION_PACK_SCHEMA.md` → `docs/CONDITION_PACK_SCHEMA.md`
-- `pwnagotchi-plugins/DOCTOR_ROADMAP.md` → `docs/DEVELOPMENT_ROADMAP.md`
-- `pwnagotchi-plugins/DOCTOR_COMPATIBILITY_CONTRACT.md` → `docs/UPSTREAM_COMPATIBILITY_CONTRACT.md`
-- `pwnagotchi-plugins/tests/test_doctor.py` + required harness → `tests/`
-- repo `LICENSE` → `LICENSE`
-- `release/pwndoctor/*.md` → top-level/docs as appropriate
-- `release/pwndoctor/COMPATIBILITY_MATRIX.json` → `COMPATIBILITY_MATRIX.json`
+## Public contract lock
 
-## Do not package
+The release assembler reads `PUBLIC_CONTRACTS` from packaged `doctor.py` and verifies the
+package against it:
 
-- collaborator handoff notes;
-- unrelated plugins;
-- private checkpoints;
-- development-only branch notes;
-- stale screenshots/logs/credentials/device-specific state.
+- `condition-pack/v1`
+- Patient Chart schema `2`
+- `pwndoctor/status/v1`
+- `pwndoctor/physical-validation/v1`
+- `pwndoctor/provider/v1`
+
+Assembly fails if required contract identifiers drift or the physical-validation recorder does
+not match the runtime's declared validation contract.
 
 ## Generated integrity files
 
-The release assembler generates:
-- `RELEASE_MANIFEST.json` — package name/version plus SHA-256 for every canonical packaged file;
-- `SHA256SUMS` — verification hashes for the assembled artifact.
+`RELEASE_MANIFEST.json` contains:
+- release name/version;
+- SHA-256 for every canonical packaged file;
+- public contracts;
+- per-pack id/version/hash/remedy inventory;
+- compatibility-matrix path.
 
-The assembler verifies both before returning success.
+`SHA256SUMS` covers the assembled package.
 
-## Condition Pack inventory
+Verification rejects missing/hash-mismatched files, duplicate/mismatched bundled pack ids,
+contract drift, malformed compatibility matrix or target-version mismatch.
 
-`RELEASE_MANIFEST.json` records every bundled Condition Pack with filename, pack id, declared pack version, SHA-256 and whether it carries a remedy. Assembly verification rejects missing files, hash mismatches, id mismatches and duplicate bundled ids.
+## Trust boundary
 
-The manifest points to `COMPATIBILITY_MATRIX.json`; package verification rejects a missing/malformed matrix and rejects a matrix whose `target_version` does not match `Doctor.__version__`.
+Do not package collaborator handoff notes, device-specific state, logs, secrets or unrelated
+plugins. Catalog/provider runtime state is not release content.
 
-## Promotion rule
+## Promotion
 
-The CI-tested archive is the artifact to physically validate. A stable release/tag is promoted only after the exact artifact passes the physical checklist and the compatibility matrix records the hardware/image evidence.
+The exact CI-produced archive is the physical-validation candidate. Stable `1.0.0` promotion
+requires the exact archive to pass the guided checklist and produce a valid
+`physical_validated` compatibility row.
