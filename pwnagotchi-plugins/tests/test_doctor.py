@@ -620,6 +620,87 @@ def test_treatment_decision_trace_names_owner_and_safety_gates():
     assert out[0]["decision"]["reason"] == "low_confidence"
 
 
+def test_remedy_efficacy_can_only_reduce_autonomy(tmp_path):
+    chart = doc.PatientChart(str(tmp_path / "patient.json"))
+    chart._write = lambda: True
+    chart.data["remedies"] = [
+        {"condition": "rfkill_blocked", "action": "rfkill_unblock", "outcome": "fix_failed", "at": 1},
+        {"condition": "rfkill_blocked", "action": "rfkill_unblock", "outcome": "fix_failed", "at": 2},
+        {"condition": "rfkill_blocked", "action": "rfkill_unblock", "outcome": "fix_failed", "at": 3},
+        {"condition": "rfkill_blocked", "action": "rfkill_unblock", "outcome": "fixed", "at": 4},
+        {"condition": "rfkill_blocked", "action": "rfkill_unblock",
+         "outcome": "executed_verification_unknown", "at": 5},
+    ]
+    finding = _safe_finding()
+    doc.annotate_remedy_efficacy(finding, chart, min_verified=4, poor_success_rate=0.30)
+    assert finding[0]["efficacy"]["verified_attempts"] == 4
+    assert finding[0]["efficacy"]["success_rate"] == 0.25
+    assert finding[0]["_efficacy_hold"] is True
+
+    calls = []
+    out = doc.apply_fixes(
+        finding, {"rfkill_blocked": True}, "assertive",
+        lambda cmd: calls.append(cmd), doc.CircuitBreaker(), {},
+        recollect=lambda: {"rfkill_blocked": False},
+    )
+    assert out[0]["outcome"] == "awaiting_confirm"
+    assert out[0]["decision"]["reason"] == "poor_historical_efficacy_requires_confirmation"
+    assert calls == []
+
+
+def test_root_cause_suppression_keeps_diagnosis_but_blocks_downstream_treatment():
+    findings = [
+        {"id": "sd_errors", "severity": "high", "confidence": "high", "fix": None,
+         "outcome": "detected", "howto": [], "symptom": "media errors", "cause": "media"},
+        {"id": "sd_readonly", "severity": "high", "confidence": "high",
+         "fix": {"action": "remount_rw", "tier": "risky"},
+         "outcome": "detected", "howto": [], "symptom": "read-only", "cause": "ro",
+         "_detect": lambda s: True},
+    ]
+    doc.suppress_downstream_treatments(findings)
+    assert findings[1]["_suppressed_by"] == "sd_errors"
+    calls = []
+    out = doc.apply_fixes(
+        findings, {"dmesg": {"sd_error": 1}}, "assertive",
+        lambda cmd: calls.append(cmd), doc.CircuitBreaker(), {},
+        recollect=lambda: {},
+    )
+    child = [x for x in out if x["id"] == "sd_readonly"][0]
+    assert child["outcome"] == "needs_user"
+    assert child["decision"]["reason"] == "downstream_treatment_suppressed"
+    assert calls == []
+
+
+def test_recovery_posture_requires_explicit_confirmation_for_mutation():
+    recovery = doc.recovery_posture(
+        {"dmesg": {"sd_error": 2}, "disk": {"root_ro": True}, "config": {"valid": True}},
+        [],
+    )
+    assert recovery["active"] is True
+    finding = _safe_finding()
+    calls = []
+    out = doc.apply_fixes(
+        finding, {"rfkill_blocked": True}, "assertive",
+        lambda cmd: calls.append(cmd), doc.CircuitBreaker(), {},
+        recollect=lambda: {"rfkill_blocked": False},
+        recovery=recovery,
+    )
+    assert out[0]["outcome"] == "awaiting_confirm"
+    assert out[0]["decision"]["reason"] == "recovery_mode_requires_confirmation"
+    assert calls == []
+
+    # Explicit owner confirmation may proceed; recovery never silently expands authority.
+    finding = _safe_finding()
+    out = doc.apply_fixes(
+        finding, {"rfkill_blocked": True}, "assertive",
+        lambda cmd: calls.append(cmd), doc.CircuitBreaker(), {},
+        recollect=lambda: {"rfkill_blocked": False},
+        recovery=recovery, force={"rfkill_blocked"},
+    )
+    assert out[0]["outcome"] == "fixed"
+    assert calls[-1] == ["rfkill", "unblock", "wifi"]
+
+
 def test_actions_and_meta_in_sync():
     assert set(doc.ACTIONS) == set(doc.ACTION_META)
     for meta in doc.ACTION_META.values():
