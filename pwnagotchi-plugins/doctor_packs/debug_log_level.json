@@ -1,0 +1,17 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "debug_log_level",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "info",
+  "confidence": "high",
+  "signals": ["pwnagotchi.config.debug"],
+  "detect": {"key": "pwnagotchi.config.debug", "is": true},
+  "symptom": "debug logging is enabled",
+  "cause": "verbose debug logs fill the disk and wear the SD in normal operation",
+  "howto": [
+    "Turn logging back to info/warning in /etc/pwnagotchi/config.toml.",
+    "Debug is great while troubleshooting, but not for daily wardriving."
+  ],
+  "causal_chain": []
+}

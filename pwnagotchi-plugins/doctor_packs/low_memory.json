@@ -1,0 +1,14 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "low_memory",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "warn",
+  "confidence": "high",
+  "signals": ["system.memory.used_pct"],
+  "detect": {"key": "system.memory.used_pct", "ge": 92},
+  "symptom": "memory is nearly exhausted",
+  "cause": "too many plugins / a memory leak",
+  "howto": ["Disable heavy plugins; look for a leak in the log."],
+  "causal_chain": []
+}

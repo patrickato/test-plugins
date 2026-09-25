@@ -1,0 +1,18 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "system.memory_pressure_warn",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "info",
+  "confidence": "medium",
+  "signals": ["system.memory.used_pct"],
+  "detect": {"all": [{"key": "system.memory.used_pct", "ge": 85}]},
+  "symptom": "memory use is climbing (early warning)",
+  "cause": "RAM is filling up; if it reaches ~92% the built-in low_memory condition fires",
+  "howto": [
+    "Disable heavy plugins you don't actually need.",
+    "Watch the log for a plugin that leaks memory over time."
+  ],
+  "causal_chain": [],
+  "provenance": {"source": "example", "author": "pwnagotchi-gap-plugins"}
+}

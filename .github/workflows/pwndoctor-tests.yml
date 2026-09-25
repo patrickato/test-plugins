@@ -1,0 +1,63 @@
+name: PwnDoctor collaboration tests
+
+on:
+  push:
+    branches:
+      - "main"
+      - "claude/happy-newton-60zxt8"
+      - "openai/pwndoctor-v0.6-collab"
+      - "openai/pwndoctor-v0.7-release"
+      - "openai/pwndoctor-v1-roadmap"
+    tags:
+      - "pwndoctor-v*"
+  pull_request:
+    paths:
+      - "pwnagotchi-plugins/doctor.py"
+      - "pwnagotchi-plugins/doctor.config.toml"
+      - "pwnagotchi-plugins/CONDITION_PACK_SCHEMA.md"
+      - "pwnagotchi-plugins/tests/**"
+      - "pwnagotchi-plugins/doctor_packs/**"
+      - "release/pwndoctor/**"
+      - ".github/workflows/pwndoctor-tests.yml"
+
+jobs:
+  doctor-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pwnagotchi-plugins
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+
+  release-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Assemble standalone PwnDoctor package
+        run: python release/pwndoctor/build_release.py --output /tmp/pwndoctor-dist
+      - name: Inspect assembled package
+        run: find /tmp/pwndoctor-dist -maxdepth 3 -type f -print | sort
+      - name: Archive tested standalone package
+        run: |
+          PKG="$(find /tmp/pwndoctor-dist -mindepth 1 -maxdepth 1 -type d -name 'pwndoctor-*' | head -n1)"
+          test -n "$PKG"
+          tar -C "$(dirname "$PKG")" -czf /tmp/pwndoctor-release.tar.gz "$(basename "$PKG")"
+          (cd /tmp && sha256sum pwndoctor-release.tar.gz > pwndoctor-release.tar.gz.sha256)
+      - name: Upload tested standalone package
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwndoctor-tested-release-package
+          path: |
+            /tmp/pwndoctor-release.tar.gz
+            /tmp/pwndoctor-release.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30

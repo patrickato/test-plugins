@@ -1,0 +1,16 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "rfkill_blocked",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "high",
+  "confidence": "high",
+  "signals": ["wifi.rfkill.blocked"],
+  "detect": {"key": "wifi.rfkill.blocked", "is": true},
+  "symptom": "Wi-Fi is soft-blocked (rfkill)",
+  "cause": "the wireless radio is blocked, so nothing can be captured",
+  "fix": {"action": "rfkill_unblock", "tier": "safe",
+          "verify": {"key": "wifi.rfkill.blocked", "is": false}},
+  "howto": ["sudo rfkill unblock wifi"],
+  "causal_chain": []
+}

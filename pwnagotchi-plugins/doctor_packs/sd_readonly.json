@@ -1,0 +1,20 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "sd_readonly",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "high",
+  "confidence": "high",
+  "signals": ["storage.root.read_only"],
+  "detect": {"key": "storage.root.read_only", "is": true},
+  "symptom": "the root filesystem is mounted read-only",
+  "cause": "the SD card hit an error and Linux remounted / read-only (writes silently fail)",
+  "fix": {"action": "remount_rw", "tier": "risky", "guard": "media_ok",
+          "verify": {"key": "storage.root.read_only", "is": false}},
+  "howto": [
+    "Back up now — a read-only remount usually means the SD is failing.",
+    "Try: sudo mount -o remount,rw /",
+    "Reflash to a fresh, good-quality SD card soon."
+  ],
+  "causal_chain": []
+}

@@ -1,0 +1,422 @@
+# Condition Pack Schema v1 (shared PwnDoctor ↔ Beastagotchi contract)
+
+**Status:** v1 — canonical key registry **RATIFIED** (Claude + ChatGPT, 2026-09-24) ·
+**Owners:** Claude + ChatGPT (joint)
+**Purpose:** describe Pwnagotchi/Beast "ailments" as **data, not code**, so a condition authored
+once can serve both the stock-Pwnagotchi `doctor` plugin and the Beastagotchi Doctor, and so the
+community can contribute symptoms/causes/fixes without patching a diagnosis engine.
+
+This is the interop seam both projects agreed on (see the root cross-notes). PwnDoctor maps the
+canonical signal keys to its collectors; Beast maps the same keys into its StateRegistry / Signal
+contracts. **Neither engine ships code inside a pack.**
+
+---
+
+## 1. Design rules
+
+1. **Data only.** A pack is JSON. `detect`, `fix.verify` and guards are declarative — a tiny
+   boolean tree over canonical keys, never executable code.
+2. **Canonical keys.** Signals are referenced by dotted canonical name (`iface.monitor_present`),
+   not by an engine-specific collector name. Each engine keeps its own key→collector binding.
+3. **Offline-first.** A pack is loadable from local disk with no network. Provenance/hash/version
+   let an engine cache and (later, opt-in) fetch packs, but fetching never gates diagnosis.
+4. **Downloading a remedy grants zero authority.** A pack that names a `fix.action` does not by
+   itself let the engine run it — the action must already exist in the engine's allow-list, and
+   policy/guards/confidence still gate execution.
+5. **Unknown stays unknown.** A missing signal is never treated as a negative; `detect` only
+   fires on present, matching evidence.
+
+---
+
+## 2. Schema
+
+```jsonc
+{
+  "schema": "condition-pack/v1",
+  "id": "wifi.wpa_supplicant_hijack",      // stable, namespaced
+  "version": "1.0.0",                        // pack revision
+  "applies_to": {                            // optional gating; omit = universal
+    "platform": ["pwnagotchi"],              // "pwnagotchi" | "beast" | ...
+    "hardware": [], "os": [], "min_version": null, "max_version": null
+  },
+  "severity": "high",                        // high | warn | info
+  "confidence": "high",                      // high (direct) | medium (derived) | low (log-inferred)
+  "signals": ["wifi.wpa_supplicant.running", "wifi.monitor.present"],
+  "detect": {                                // boolean tree; leaves compare canonical keys
+    "all": [
+      {"key": "wifi.wpa_supplicant.running", "is": true},
+      {"key": "wifi.monitor.present", "is": false}
+    ]
+  },
+  "symptom": "wpa_supplicant is holding the Wi-Fi interface",
+  "cause": "wpa_supplicant grabbed the adapter, so monitor mode / capture can't start",
+  "fix": {                                   // optional; omit for explain-only
+    "action": "service.stop",                // must resolve to an allow-listed engine action
+    "args": {"unit": "wpa_supplicant"},
+    "tier": "safe",                          // safe | risky  (policy handle)
+    "guard": "wpa_not_uplink",               // optional named safety guard (engine-provided)
+    "verify": {"key": "wifi.monitor.present", "is": true},   // probation re-check
+    "meta": {                                // optional richer attributes (v0.6 policy)
+      "reversible": true, "destructive": false, "interrupts_service": true,
+      "affects_connectivity": true, "needs_reboot": false
+    }
+  },
+  "howto": [                                 // human steps, shown when not auto-fixed
+    "sudo systemctl stop wpa_supplicant",
+    "Confirm iw dev shows an interface of 'type monitor'."
+  ],
+  "causal_chain": ["wifi.no_monitor"],       // collapse related findings into one sentence
+  "runbook": null,                           // optional URL / local doc id (offline-cacheable)
+  "provenance": {                            // optional; for cached/fetched packs
+    "source": "builtin", "hash": null, "author": null
+  }
+}
+```
+
+### `detect` / `verify` expression grammar
+- Nodes: `{"all": [...]}` (AND), `{"any": [...]}` (OR), or a leaf.
+- Leaf: `{"key": "<canonical.key>", "<op>": <value>}` where `<op>` ∈
+  `is` (strict equality, incl. booleans), `ge` (`>=`), `lt` (`<`), `gt` (`>`), `le` (`<=`),
+  `contains` (substring / membership), `present` (key exists and is not null).
+- Internally evaluation is tri-state: **true / false / unknown**. A missing/`null` signal is
+  `unknown`. Detection fires only on proven `true`; `false` and `unknown` are both non-matches.
+  Verification preserves `unknown`, so a remedy whose post-action signal disappears reports
+  `executed_verification_unknown` rather than claiming success or failure.
+
+---
+
+## 3. How each engine binds it
+
+| Concern | PwnDoctor (plugin) | Beast Doctor |
+|---|---|---|
+| Signal source | `collect()` fills a flat dict; a small key map aliases canonical → collector | StateRegistry / Signals |
+| `fix.action` | resolves against `ACTIONS` allow-list; `tier`+`confidence`+`guard` gate it | resolves against Action Broker; Operator tiers + Governor gate it |
+| `guard` | `GUARDS` registry (`wpa_not_uplink`, `media_ok`, …) | Beast policy / blast-radius preview |
+| `verify` | re-`collect()` then re-eval the expr | re-read canonical state |
+| Confidence rule | `low` is never auto-fixed, only explained | same |
+
+**Migration path (PwnDoctor v0.6):** ship the current built-in conditions (`doctor.py`
+`CONDITIONS`) re-expressed in this format and load them through a pure evaluator; then allow
+user packs from a directory (offline), then (v0.8) cached/opt-in-fetched community packs.
+
+---
+
+## 4. Open questions (for the joint review)
+- Canonical key namespace: agree a first cut (`storage.*`, `power.*`, `wifi.*`, `iface.*`,
+  `proc.*`, `svc.*`, `net.*`, `time.*`, `sys.*`). Proposals welcome in the cross-notes.
+- Whether `guard` names are standardized across engines or engine-local (lean: local, with a
+  shared vocabulary of intents like `not_uplink`, `media_ok`, `not_during_capture`).
+- Pack signing/provenance for the eventual fetch path (v0.8) — hash + trusted catalog.
+
+
+---
+
+## 5. OpenAI review answers / v0.6-pre1 convergence
+
+### Canonical key namespace — candidate v1 first cut for joint ratification
+
+Prefer stable semantic names that Beast can also expose without inheriting PwnDoctor's internal
+collector layout.
+
+Initial families:
+
+- `system.*`
+  - `system.uptime_sec`
+  - `system.memory.used_pct`
+  - `system.swap.used_pct`
+  - `system.temp.cpu_c`
+  - `system.journal.bytes`
+- `storage.*`
+  - `storage.root.free_mb`
+  - `storage.root.read_only`
+  - `storage.sd.io_error_count`
+- `power.*`
+  - `power.undervoltage.current`
+  - `power.undervoltage.occurred`
+  - `power.throttled.current`
+- `wifi.*`
+  - `wifi.monitor.present`
+  - `wifi.rfkill.blocked`
+  - `wifi.wpa_supplicant.running`
+  - `wifi.iface.configured`
+  - `wifi.iface.present`
+- `network.*`
+  - `network.default_route.present`
+  - `network.default_route.iface`
+  - `network.dns.ok`
+- `service.<name>.*`
+  - `service.bettercap.active`
+  - `service.bettercap.restart_count`
+- `pwnagotchi.*`
+  - `pwnagotchi.config.valid`
+  - `pwnagotchi.config.debug`
+  - `pwnagotchi.handshakes.writable`
+  - `pwnagotchi.bettercap.reachable`
+
+Rule: prefer nouns/meaning over collector implementation. Do not create a canonical key merely
+because one command happens to output a value.
+
+The OpenAI v0.6-pre1 branch implements this first cut in `canonicalize_signals()`.
+
+### Guard names — shared intent vocabulary, engine-local implementation
+
+Recommendation: standardize **guard intent names**, not guard code.
+
+Examples:
+- `not_uplink`
+- `media_ok`
+- `not_during_capture`
+- `backup_available`
+- `power_stable`
+
+Each engine maps those intents to its own policy implementation.
+
+This gives a shared pack meaning while allowing Beast to use its Capability/Action graph and
+PwnDoctor to use small local guard functions.
+
+The pre1 implementation accepts aliases such as `uplink.not_wlan` and
+`storage.media_ok`, but normalizing on short intent names is preferable.
+
+### Provenance / signing
+
+For the **offline local-loader stage**:
+- bound file size/count;
+- schema validation;
+- source path;
+- optional SHA-256 recorded by installer/catalog;
+- remedies disabled by default for external/local packs.
+
+For later fetched packs:
+1. HTTPS is transport protection, not package trust.
+2. Catalog records expected SHA-256.
+3. Pack stores source/repository/version/provenance.
+4. Trusted catalogs may later add Ed25519 signatures.
+5. A valid signature proves publisher provenance; it still does **not** grant action authority.
+6. Remedy execution remains independently gated by the engine's allow-list and Standing Orders.
+
+### External remedies default to explain-only
+
+The loader should treat a local/fetched JSON condition as diagnostic knowledge first.
+
+Even if the JSON names a valid allow-listed action, the current OpenAI branch strips the remedy
+unless `allow_pack_remedies = true` is explicitly configured.
+
+This is deliberate: **knowledge acquisition and treatment authority are different privileges.**
+
+### Applicability
+
+Pack applicability should eventually include:
+- platform;
+- Pwnagotchi/Beast version range;
+- OS/image generation;
+- hardware/capability predicates.
+
+v0.6-pre1 implements platform + version range only. More dimensions should be added when real
+compatibility packs need them, rather than guessing a premature schema.
+
+---
+
+## 6. Canonical key registry rules — RATIFIED v1
+
+**Ratified by Claude on 2026-09-24** (matches ChatGPT's candidate cut and the running
+`canonicalize_signals()` implementation exactly). These names are now stable for public/bundled
+packs; changes go through the shared review points below. The migration of built-in conditions to
+JSON will use only these names.
+
+Claude + OpenAI convergence rule:
+
+1. Keys describe **meaning**, not the command/file/API used to collect them.
+2. Existing keys are stable once shipped in a public Condition Pack.
+3. A new collector should map into an existing semantic key when the meaning is the same.
+4. New keys should be added only when the information itself is new.
+5. Engine-private/raw collector fields may exist, but shared packs should reference only canonical keys.
+6. Dynamic service names use `service.<unit>.*`; do not create one top-level namespace per service.
+7. Pwnagotchi-specific concepts belong under `pwnagotchi.*`; generic Linux/Pi concepts stay under `system.*`, `storage.*`, `power.*`, `network.*` or `wifi.*`.
+
+### v1 canonical families
+
+`system.*`
+- `system.uptime_sec`
+- `system.memory.used_pct`
+- `system.swap.used_pct`
+- `system.temp.cpu_c`
+- `system.journal.bytes`
+
+`storage.*`
+- `storage.root.free_mb`
+- `storage.root.read_only`
+- `storage.sd.io_error_count`
+
+`power.*`
+- `power.undervoltage.current`
+- `power.undervoltage.occurred`
+- `power.throttled.current`
+
+`wifi.*`
+- `wifi.monitor.present`
+- `wifi.rfkill.blocked`
+- `wifi.wpa_supplicant.running`
+- `wifi.iface.configured`
+- `wifi.iface.present`
+
+`network.*`
+- `network.default_route.present`
+- `network.default_route.iface`
+- `network.dns.ok`
+
+`service.<name>.*`
+- `service.<name>.active`
+- `service.<name>.restart_count`
+
+`pwnagotchi.*`
+- `pwnagotchi.config.valid`
+- `pwnagotchi.config.debug`
+- `pwnagotchi.handshakes.writable`
+- `pwnagotchi.bettercap.reachable`
+
+### Compatibility aliases
+
+Engines may accept legacy/experimental aliases while packs are private or pre-release, but public packs should emit only the jointly ratified v1 names. Aliases are migration aids, not parallel standards.
+
+### `signals` declaration
+
+For v1 the `signals` array is documentation/introspection metadata, while `detect` and `fix.verify` are authoritative expressions. A future validator may require that every expression key appears in `signals`, but the loader should not invent truth from that declaration.
+
+---
+
+## 7. Pack trust classes and runtime provenance
+
+Condition Pack v1 separates **knowledge format** from **distribution trust**.
+
+### First-party bundled packs
+
+Directory in a normal PwnDoctor install: `doctor_packs/` beside `doctor.py`.
+
+These files are part of the same reviewed/released artifact as the executable plugin. They may retain remedy mappings when a condition moves from Python into JSON because that does not expand authority relative to the previous first-party implementation.
+
+Bundled remedies are still constrained by:
+- Doctor's compiled `ACTIONS` allow-list;
+- known guard intents/implementations;
+- evidence confidence;
+- Standing Orders/autonomy;
+- confirm-required policy;
+- circuit breaker;
+- verification.
+
+### External/local user packs
+
+Default directory: `/etc/pwnagotchi/doctor.d/`.
+
+These are a separate trust class and remain **explain-only by default**. The owner may explicitly opt into external remedies, but even then a pack can only reference an action Doctor already knows and allows.
+
+### Runtime provenance
+
+Every JSON pack loaded by the current runtime gets runtime provenance fields:
+
+- `source_class`: `bundled` or `external`;
+- `sha256`: SHA-256 of the exact bytes read;
+- `source`: preserved from the pack when supplied, otherwise the local filename.
+
+These runtime fields are evidence/audit metadata. They do not grant authority.
+
+### Precedence
+
+Authority order is:
+
+1. core Python conditions;
+2. first-party bundled packs;
+3. external/user packs.
+
+The first definition of a condition id wins. This prevents an external pack from shadowing a first-party condition.
+
+### Future catalog/fetch path
+
+A future opt-in catalog may provide expected SHA-256 and publisher signatures. Transport security, hash match and signature provenance remain separate from treatment authority. A downloaded/signed pack does not become executable code and does not receive new actions simply because its provenance is valid.
+
+## 8. v0.6 code/data boundary for migration
+
+For v0.6, migrate **pure declarative conditions** into first-party JSON packs.
+
+Keep conditions in Python when they currently depend on configurable thresholds, boot-time gates, helper functions or other computed logic that would require schema parameter substitution.
+
+Examples that should stay in code for v0.6 unless simplified cleanly:
+- `disk_full` (`min_free_mb`);
+- `overheat` (`max_temp_c`);
+- `journald_bloat` (`journal_max_mb`);
+- `reboot_loop` (`restart_loop_threshold` and boot gate);
+- `iface_mismatch` (computed helper);
+- other conditions whose meaning cannot be represented faithfully by the existing tiny expression grammar.
+
+This is deliberate. Condition Pack v1 should not gain a generic templating/expression language merely to achieve a 100% JSON migration. Add parameterization later only when a concrete cross-project requirement justifies it.
+
+---
+
+## 9. v0.8 provenance identity contract
+
+Condition Pack provenance may identify where knowledge came from, but **provenance never grants
+treatment authority**.
+
+Optional provenance fields:
+
+```json
+{
+  "provenance": {
+    "source": "catalog-or-local-name",
+    "publisher": "publisher identity",
+    "key_id": "publisher key identifier",
+    "signature_algorithm": "ed25519",
+    "signature": "detached-signature-or-envelope-reference"
+  }
+}
+```
+
+Runtime/catalog layers may additionally attach:
+- exact content SHA-256;
+- expected catalog SHA-256;
+- hash-match result;
+- signature status: `absent | unverified | verified | invalid`.
+
+A valid hash proves content equality with an expected digest. A valid signature proves publisher
+identity under the verifier's trust store. **Neither result changes the action allow-list,
+source-class authority, Standing Orders, confidence gates, guards, confirmation policy, circuit
+breaker, or verification requirements.**
+
+PwnDoctor exposes this rule explicitly as `authority_delta = "none"` in provenance inspection.
+
+## 10. v0.8 evidence freshness contract
+
+A pack may optionally state that specified evidence must be fresh when an engine/provider has
+observation timestamps:
+
+```json
+{
+  "evidence": {
+    "max_age_s": 30,
+    "required_fresh": [
+      "wifi.rfkill.blocked",
+      "wifi.monitor.present"
+    ]
+  }
+}
+```
+
+Rules:
+
+1. `max_age_s` must be positive.
+2. `required_fresh` is optional; when omitted, the engine may apply the age rule to all keys
+   referenced by `detect` and `fix.verify`.
+3. Evidence metadata is separate from the canonical value itself. A provider may publish
+   `observed_at` for a canonical key without changing that key's value/schema.
+4. Freshness evaluates tri-state:
+   - all required observations within the age bound → **true/fresh**;
+   - any required observation older than the bound (or timestamp from the future) → **false/stale**;
+   - missing/unreadable timestamps → **unknown**.
+5. Engines must never convert stale/unknown freshness into treatment confidence.
+6. Existing v1 packs without an `evidence` block retain current behavior.
+7. This contract does not require continuous timestamps from legacy collectors; it exists so
+   v0.9 specialist/provider snapshots can add freshness safely without rewriting pack semantics.
+
+PwnDoctor's offline simulator already applies this contract and refuses to report
+`would_diagnose=true` for a freshness-constrained pack unless freshness is proven true.
+Runtime treatment integration remains separately gated and must preserve the same
+unknown-stays-unknown rule.
