@@ -1178,20 +1178,46 @@ def _action_meta(action):
     return ACTION_META.get(action, {})
 
 
+def _decision_start(finding, level, dry_run=False):
+    fix = finding.get("fix") if isinstance(finding, dict) else None
+    fix = fix if isinstance(fix, dict) else {}
+    row = {
+        "condition": finding.get("id") if isinstance(finding, dict) else None,
+        "action": fix.get("action"),
+        "tier": fix.get("tier"),
+        "standing_order": level,
+        "dry_run": bool(dry_run),
+        "gates": [],
+    }
+    finding["decision"] = row
+    return row
+
+
+def _decision_gate(finding, gate, result, reason=None):
+    row = finding.setdefault("decision", {"gates": []})
+    gates = row.setdefault("gates", [])
+    item = {"gate": gate, "result": result}
+    if reason:
+        item["reason"] = reason
+    gates.append(item)
+    return item
+
+
+def _decision_finish(finding, outcome, reason):
+    finding["outcome"] = outcome
+    row = finding.setdefault("decision", {"gates": []})
+    row["outcome"] = outcome
+    row["reason"] = reason
+    return finding
+
+
 def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
                 recollect=None, now=None, dry_run=False, disabled=None, confirm=None,
                 force=None, denied_actions=None, allow_reboot=False):
-    """Attempt allowed fixes; guard; verify; set each finding's outcome. Returns findings.
+    """Attempt allowed fixes; guard; verify; set outcome + machine-readable decision trace.
 
-    Truth rules:
-      * a low-confidence (log-inferred) finding is NEVER auto-fixed, only explained;
-      * a guard that says "not safe right now" blocks the action (outcome blocked_guard);
-      * an action that runs but can't be re-verified is executed_verification_unknown, not fixed.
-
-    ACTION_META-driven policy:
-      * an action the owner listed in `denied_actions` is never run (explain only);
-      * a reboot-requiring action is held for confirmation unless `allow_reboot` is set;
-      * `force` (from the web "Confirm & apply" link) approves a held id for this pass only.
+    The trace is observational only: it explains the exact existing gates and never expands
+    treatment authority.
     """
     now = now if now is not None else time.time()
     disabled = set(disabled or ())
@@ -1199,23 +1225,41 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
     force = set(force or ())
     denied_actions = set(denied_actions or ())
     level = normalize_level(autofix)
+
     for f in findings:
         fix = f.get("fix")
+        _decision_start(f, level, dry_run=dry_run)
+
         if not fix:
-            f["outcome"] = "needs_user"
+            _decision_gate(f, "remedy", "blocked", "no_remedy")
+            _decision_finish(f, "needs_user", "no_remedy")
             continue
-        if f.get("confidence") == "low":            # weak evidence -> explain, never auto-act
-            f["outcome"] = "needs_user"
+        _decision_gate(f, "remedy", "passed")
+
+        if f.get("confidence") == "low":
+            _decision_gate(f, "confidence", "blocked", "low_confidence")
+            _decision_finish(f, "needs_user", "low_confidence")
             continue
-        if f["id"] in disabled:                     # owner opted this condition out of auto-fix
-            f["outcome"] = "needs_user"
+        _decision_gate(f, "confidence", "passed")
+
+        if f["id"] in disabled:
+            _decision_gate(f, "condition_opt_out", "blocked", "owner_disabled_condition")
+            _decision_finish(f, "needs_user", "owner_disabled_condition")
             continue
-        if fix.get("action") in denied_actions:     # owner forbade this action entirely
-            f["outcome"] = "needs_user"
+        _decision_gate(f, "condition_opt_out", "passed")
+
+        if fix.get("action") in denied_actions:
+            _decision_gate(f, "action_veto", "blocked", "owner_denied_action")
+            _decision_finish(f, "needs_user", "owner_denied_action")
             continue
+        _decision_gate(f, "action_veto", "passed")
+
         if not policy_allows(fix.get("tier", "risky"), level):
-            f["outcome"] = "needs_user"
+            _decision_gate(f, "standing_orders", "blocked", "autonomy_level_disallows_tier")
+            _decision_finish(f, "needs_user", "autonomy_level_disallows_tier")
             continue
+        _decision_gate(f, "standing_orders", "passed")
+
         guard = fix.get("guard")
         if guard:
             fn = GUARDS.get(guard)
@@ -1223,23 +1267,35 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
                 safe = bool(fn and fn(signals, ctx))
             except Exception:
                 safe = False
-            if not safe:                            # unsafe right now -> explain, don't act
-                f["outcome"] = "blocked_guard"
+            if not safe:
+                _decision_gate(f, "guard", "blocked", str(guard))
+                _decision_finish(f, "blocked_guard", "guard_blocked")
                 continue
-        # Hold for owner approval when the condition is confirm-required, or when the action
-        # would require a reboot and the owner hasn't opted into reboot-class actions. `force`
-        # (a one-tap approval) overrides either hold for this pass.
+            _decision_gate(f, "guard", "passed", str(guard))
+
         needs_reboot = bool(_action_meta(fix.get("action")).get("needs_reboot"))
         held = (f["id"] in confirm) or (needs_reboot and not allow_reboot)
         if held and f["id"] not in force and not dry_run:
-            f["outcome"] = "awaiting_confirm"
+            reason = "condition_requires_confirmation" if f["id"] in confirm else "reboot_action_requires_confirmation"
+            _decision_gate(f, "confirmation", "blocked", reason)
+            _decision_finish(f, "awaiting_confirm", reason)
             continue
+        _decision_gate(
+            f, "confirmation", "passed",
+            "owner_forced" if f["id"] in force else ("dry_run" if dry_run else None)
+        )
+
         if not breaker.allow(f["id"], now):
-            f["outcome"] = "gave_up"
+            _decision_gate(f, "circuit_breaker", "blocked", "attempt_budget_exhausted")
+            _decision_finish(f, "gave_up", "circuit_breaker_open")
             continue
-        if dry_run:                                 # would act, but the owner asked us not to
-            f["outcome"] = "would_fix"
+        _decision_gate(f, "circuit_breaker", "passed")
+
+        if dry_run:
+            _decision_gate(f, "mutation", "skipped", "dry_run")
+            _decision_finish(f, "would_fix", "dry_run")
             continue
+
         breaker.record(f["id"], now)
         action = ACTIONS.get(fix["action"])
         try:
@@ -1248,16 +1304,22 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
             logging.debug("[doctor] action %s failed: %s", fix.get("action"), e)
             ok = False
         if not ok:
-            f["outcome"] = "fix_failed"
+            _decision_gate(f, "action", "failed", "action_returned_false_or_raised")
+            _decision_finish(f, "fix_failed", "action_failed")
             continue
-        if recollect is None:                       # can't verify -> unknown stays unknown
-            f["outcome"] = "executed_verification_unknown"
+        _decision_gate(f, "action", "passed")
+
+        if recollect is None:
+            _decision_gate(f, "verification", "unknown", "no_recollect")
+            _decision_finish(f, "executed_verification_unknown", "verification_unavailable")
             continue
         try:
             fresh = recollect()
         except Exception:
-            f["outcome"] = "executed_verification_unknown"
+            _decision_gate(f, "verification", "unknown", "recollect_failed")
+            _decision_finish(f, "executed_verification_unknown", "verification_unavailable")
             continue
+
         verify_state = f.get("_verify_state")
         if callable(verify_state):
             try:
@@ -1265,13 +1327,22 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
             except Exception:
                 verified = None
             if verified is True:
-                f["outcome"] = "fixed"
+                _decision_gate(f, "verification", "passed")
+                _decision_finish(f, "fixed", "verified_fixed")
             elif verified is False:
-                f["outcome"] = "fix_failed"
+                _decision_gate(f, "verification", "failed")
+                _decision_finish(f, "fix_failed", "verification_failed")
             else:
-                f["outcome"] = "executed_verification_unknown"
+                _decision_gate(f, "verification", "unknown", "missing_or_unreadable_evidence")
+                _decision_finish(f, "executed_verification_unknown", "verification_unknown")
         else:
-            f["outcome"] = "fix_failed" if f["_detect"](fresh) else "fixed"
+            remains = bool(f["_detect"](fresh))
+            if remains:
+                _decision_gate(f, "verification", "failed")
+                _decision_finish(f, "fix_failed", "condition_still_present")
+            else:
+                _decision_gate(f, "verification", "passed")
+                _decision_finish(f, "fixed", "condition_cleared")
     return findings
 
 
