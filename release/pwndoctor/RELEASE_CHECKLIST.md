@@ -1,27 +1,29 @@
 # PwnDoctor release checklist
 
-## Automated gate  (verified on this commit — Claude, 2026-09-25)
-- [x] full repository test suite green on release commit (357 passed)
-- [x] Doctor-specific tests green (95)
-- [x] Python syntax/import check green
-- [x] no stale version strings in config/docs (all at 0.6.0-pre4)
-- [x] bundled pack schema validation green (build assembles all 12 packs)
-- [x] release manifest/checksums generated from frozen files
+## Automated gate — v0.7.0-pre1
+- [x] Claude v0.7-pre1 source head green in collaboration CI
+- [x] full repository suite green at handoff (364 passed)
+- [x] Doctor-specific tests green at handoff (102)
+- [x] Python syntax/import checks green
+- [x] bundled pack schema validation green (12 bundled packs)
+- [x] release manifest/checksums generated from canonical files
 - [x] bundled Condition Pack inventory generated and verified (ids + hashes + duplicate check)
-- [x] compatibility matrix included; no physical-validation claim without completed hardware row
+- [x] compatibility matrix targets v0.7.0-pre1 and makes no physical-validation claim
+- [ ] OpenAI v0.7 release branch CI green on final release-document commit
 
 ## Documentation gate
-- [ ] README describes purpose and limits
-- [ ] dependencies/system-command requirements documented
-- [ ] current Jayofelony install path verified
-- [ ] install/upgrade/rollback/uninstall documented
-- [ ] all config settings explained
-- [ ] safety/autonomy model explained
-- [ ] Condition Pack trust boundary explained
+- [x] README describes purpose and limits
+- [x] dependencies/system-command requirements documented
+- [ ] current Jayofelony install path physically verified on target image
+- [x] install/upgrade/rollback/uninstall documented
+- [x] all current config settings explained
+- [x] safety/autonomy model explained
+- [x] Condition Pack trust boundary explained
+- [x] sanitized support bundle documented
 - [x] troubleshooting guide complete
 - [x] license included
-- [x] changelog/release notes prepared (CHANGELOG.md)
-- [x] owner physical-validation runbook prepared (PHYSICAL_VALIDATION.md)
+- [x] changelog/release notes prepared
+- [x] owner physical-validation runbook prepared
 
 ## Physical Pi gate
 - [ ] clean install on target Jayofelony image
@@ -38,6 +40,8 @@
 - [ ] external pack remains explain-only by default
 - [ ] malformed/oversized pack fails safely
 - [ ] unavailable optional commands fail as unknown/unavailable, not crash
+- [ ] narrative summary renders coherently
+- [ ] sanitized support bundle generated and inspected for redaction
 
 ## Failure-injection gate
 - [ ] service-down condition
@@ -52,6 +56,9 @@
 ## Release decision
 - [ ] no unresolved critical/unsafe physical-test defects
 - [ ] all known limitations listed
-- [ ] final version/tag selected
-- [ ] standalone repository/folder package assembled from frozen canonical files
+- [x] release-candidate version selected: 0.7.0-pre1
+- [x] standalone package assembler targets canonical source
+- [ ] exact CI-tested artifact physically validated
+- [ ] compatibility matrix updated with physical_validated row
+- [ ] final tag created from validated source
 - [ ] final archive checksum published
