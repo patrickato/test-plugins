@@ -54,7 +54,14 @@ Options (main.plugins.doctor.*):
     handshakes       = "/root/handshakes"
     incident_path    = "/etc/pwnagotchi/doctor_incidents.json"
     checkpoint_path  = "/etc/pwnagotchi/doctor_known_good.json"
+    checkpoint_generations = 5          # bounded known-good history (1..20)
     breaker_path     = "/etc/pwnagotchi/doctor_breaker.json"
+    catalog_dir      = "/var/lib/pwnagotchi/doctor/catalog.d"
+    enable_cached_catalog = false       # cached/fetched packs are always explain-only
+    provider_dir     = "/run/pwnagotchi/health.d"
+    provider_max_age_s = 300            # stale specialist snapshots are rejected
+    efficacy_min_verified = 4           # history needed before a poor remedy is held
+    efficacy_hold_below = 0.25          # verified success rate below this -> confirmation
     min_free_mb      = 200
     max_temp_c       = 80
     journal_max_mb   = 200             # flag journald bloat above this
@@ -2172,9 +2179,9 @@ _UI_STATUS = {"OK": "OK", "HEALED": "healed", "ATTENTION": "attn",
 
 class Doctor(plugins.Plugin):
     __author__ = "patrickato"
-    __version__ = "0.7.0-pre1"
+    __version__ = "1.0.0-rc1"
     __license__ = "GPL3"
-    __description__ = "Autonomous health scan, diagnosis, plain-language explanation, guarded self-healing, known-good drift and a sanitized support bundle."
+    __description__ = "Offline-first Pwnagotchi health, diagnosis, guarded self-healing, memory, specialist evidence and release-grade support tooling."
 
     def __init__(self):
         self.options = dict()
