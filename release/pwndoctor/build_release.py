@@ -76,6 +76,7 @@ def assemble(output_root: Path) -> Path:
     ):
         copy_file(HERE / name, package / ("README.md" if name == "README.md" else f"docs/{name}"))
 
+    copy_file(HERE / "COMPATIBILITY_MATRIX.json", package / "COMPATIBILITY_MATRIX.json")
     copy_file(HERE / "install.sh", package / "install.sh")
     copy_file(REPO / "LICENSE", package / "LICENSE")
 
@@ -88,11 +89,26 @@ def assemble(output_root: Path) -> Path:
         rel = path.relative_to(package).as_posix()
         files[rel] = sha256(path)
 
+    pack_inventory = []
+    packs_root = package / "doctor_packs"
+    for path in sorted(packs_root.glob("*.json")):
+        obj = json.loads(path.read_text(encoding="utf-8"))
+        pack_inventory.append({
+            "file": path.name,
+            "id": obj.get("id"),
+            "version": obj.get("version"),
+            "sha256": sha256(path),
+            "has_fix": isinstance(obj.get("fix"), dict),
+        })
+
     manifest = {
         "name": "PwnDoctor",
         "version": version,
         "format": 1,
         "files": files,
+        "condition_packs": pack_inventory,
+        "condition_pack_count": len(pack_inventory),
+        "compatibility_matrix": "COMPATIBILITY_MATRIX.json",
     }
     manifest_path = package / "RELEASE_MANIFEST.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n",
@@ -118,6 +134,31 @@ def verify(package: Path) -> None:
         actual = sha256(path)
         if actual != expected:
             raise RuntimeError(f"hash mismatch for {rel}: {actual} != {expected}")
+
+    packs = data.get("condition_packs") or []
+    if data.get("condition_pack_count") != len(packs):
+        raise RuntimeError("condition pack count does not match inventory")
+    seen_ids = set()
+    for row in packs:
+        rel = "doctor_packs/" + str(row.get("file") or "")
+        path = package / rel
+        if not path.is_file():
+            raise RuntimeError(f"missing inventoried condition pack: {rel}")
+        if sha256(path) != row.get("sha256"):
+            raise RuntimeError(f"condition pack hash mismatch: {rel}")
+        pack = json.loads(path.read_text(encoding="utf-8"))
+        if pack.get("id") != row.get("id"):
+            raise RuntimeError(f"condition pack id mismatch: {rel}")
+        if pack.get("id") in seen_ids:
+            raise RuntimeError(f"duplicate condition pack id: {pack.get('id')}")
+        seen_ids.add(pack.get("id"))
+
+    matrix_path = package / str(data.get("compatibility_matrix") or "")
+    if not matrix_path.is_file():
+        raise RuntimeError("missing compatibility matrix")
+    matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
+    if matrix.get("schema") != 1 or not isinstance(matrix.get("rows"), list):
+        raise RuntimeError("invalid compatibility matrix")
 
     sums = package / "SHA256SUMS"
     if not sums.is_file():
