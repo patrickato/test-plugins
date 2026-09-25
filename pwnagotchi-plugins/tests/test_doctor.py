@@ -369,6 +369,37 @@ def test_known_good_generations_preserve_legacy_format_and_bound_history(load_pl
     assert [row["config_hash"] for row in history] == ["h3", "h2", "h1"]
 
 
+def test_doctor_self_test_is_read_only_and_reports_capabilities(load_plugin, tmp_path, monkeypatch):
+    p = _make(load_plugin, tmp_path)
+    monkeypatch.setattr(doc.shutil, "which", lambda name: "/usr/bin/" + name if name in {"systemctl", "iw"} else None)
+    row = p.self_test()
+    assert row["schema"] == "pwndoctor/self-test/v1"
+    assert row["doctor_version"] == p.__version__
+    assert row["commands"]["systemctl"] is True
+    assert row["commands"]["iw"] is True
+    assert row["commands"]["rfkill"] is False
+    assert "config_readable" in row["paths"]
+    assert "patient_chart_writable" in row["paths"]
+
+
+def test_complete_v1_config_contains_new_safety_and_hub_options():
+    text = (ROOT / "doctor.config.toml").read_text()
+    for key in (
+        "checkpoint_generations",
+        "catalog_dir",
+        "enable_cached_catalog",
+        "provider_dir",
+        "provider_max_age_s",
+        "efficacy_min_verified",
+        "efficacy_hold_below",
+        "support_dir",
+        "support_log_lines",
+    ):
+        assert "main.plugins.doctor.%s" % key in text
+    assert 'main.plugins.doctor.autofix = "observe"' in text
+    assert "main.plugins.doctor.dry_run = true" in text
+
+
 def test_status_contract_is_stable_and_privacy_light(load_plugin, tmp_path):
     p = _make(load_plugin, tmp_path)
     p._status = "DEGRADED"
