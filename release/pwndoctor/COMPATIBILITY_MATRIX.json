@@ -1,6 +1,7 @@
 {
   "schema": 1,
   "plugin": "PwnDoctor",
+  "target_version": "0.7.0-pre1",
   "policy": "Evidence labels are descriptive. Unknown is not compatible-by-default.",
   "evidence_labels": {
     "physical_validated": "Executed on named real hardware/image against the RC physical checklist.",
@@ -19,7 +20,7 @@
       "architecture": "x86_64 runner",
       "python": "3.13",
       "kernel": null,
-      "notes": "Validates Doctor engine, pack loader, policy, Patient Chart, Condition Packs, release assembly and guarded actions through the fake Pwnagotchi harness. Does not establish physical radio/display/service compatibility."
+      "notes": "Validates Doctor engine, pack loader, policy, Patient Chart, Condition Packs, narrative/support-bundle helpers, release assembly and guarded actions through the fake Pwnagotchi harness. Does not establish physical radio/display/service compatibility."
     }
   ],
   "physical_validation_pending": true
