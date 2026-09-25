@@ -1277,24 +1277,71 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
 
 
 # ======================================================================================
-# Patient Chart v1 — bounded device-specific memory, not an unlimited log archive
+# Patient Chart v2 — bounded device-specific memory with explicit schema migration
 # ======================================================================================
 class PatientChart:
-    SCHEMA = 1
+    SCHEMA = 2
 
-    def __init__(self, path, *, max_remedies=100):
-        self.path = path
-        self.max_remedies = max(10, int(max_remedies))
-        self.data = {
-            "schema": self.SCHEMA,
+    @classmethod
+    def _blank(cls):
+        return {
+            "schema": cls.SCHEMA,
             "identity": {},
             "known_good": {},
             "coverage": {},
             "status": None,
             "chronic": {},
             "remedies": [],
+            "migrations": [],
             "updated_at": None,
         }
+
+    @classmethod
+    def migrate(cls, obj):
+        """Return (migrated_object, changed).
+
+        Migrations are monotonic and lossless for fields Doctor owns. A chart from a
+        *newer* Doctor is deliberately rejected rather than downgraded/overwritten.
+        """
+        if not isinstance(obj, dict):
+            raise ValueError("patient chart must be an object")
+        try:
+            schema = int(obj.get("schema", 1))
+        except (TypeError, ValueError):
+            raise ValueError("patient chart schema is invalid")
+        if schema > cls.SCHEMA:
+            raise RuntimeError("patient chart schema %s is newer than supported %s" %
+                               (schema, cls.SCHEMA))
+        if schema < 1:
+            raise ValueError("patient chart schema is unsupported")
+
+        out = dict(obj)
+        changed = False
+        while schema < cls.SCHEMA:
+            if schema == 1:
+                history = list(out.get("migrations") or [])
+                history.append({"from": 1, "to": 2})
+                out["migrations"] = history[-16:]
+                schema = 2
+                out["schema"] = schema
+                changed = True
+            else:
+                raise RuntimeError("no patient chart migration from schema %s" % schema)
+
+        # Fill newly introduced optional keys without discarding unknown forward-compatible
+        # data that may have been written by another component on the same schema.
+        for key, value in cls._blank().items():
+            if key not in out:
+                out[key] = value
+                changed = True
+        return out, changed
+
+    def __init__(self, path, *, max_remedies=100):
+        self.path = path
+        self.max_remedies = max(10, int(max_remedies))
+        self.data = self._blank()
+        self.load_error = None
+        self._write_enabled = True
         self.load()
 
     def load(self):
@@ -1302,16 +1349,23 @@ class PatientChart:
             if self.path and os.path.exists(self.path):
                 with open(self.path, "rt", encoding="utf-8") as fp:
                     obj = json.load(fp)
-                if isinstance(obj, dict) and obj.get("schema") == self.SCHEMA:
-                    for key in self.data:
-                        if key in obj:
-                            self.data[key] = obj[key]
+                migrated, changed = self.migrate(obj)
+                self.data = migrated
+                if changed:
+                    self._write()
+        except RuntimeError as exc:
+            # Critical rollback rule: an older Doctor must never clobber a Patient Chart
+            # created by a newer schema it cannot understand.
+            self.load_error = str(exc)
+            self._write_enabled = False
+            logging.warning("[doctor] patient chart left read-only: %s", exc)
         except Exception as exc:
+            self.load_error = str(exc)
             logging.debug("[doctor] patient chart load failed: %s", exc)
         return self
 
     def _write(self):
-        if not self.path:
+        if not self.path or not self._write_enabled:
             return False
         try:
             parent = os.path.dirname(self.path)
@@ -1474,6 +1528,8 @@ class PatientChart:
                         if isinstance(row, dict) and int(row.get("episodes", 0)) >= 2)
         return {
             "schema": self.data.get("schema"),
+            "load_error": self.load_error,
+            "migration_count": len(self.data.get("migrations") or []),
             "status": self.data.get("status"),
             "identity": dict(self.data.get("identity") or {}),
             "coverage": dict(self.data.get("coverage") or {}),
