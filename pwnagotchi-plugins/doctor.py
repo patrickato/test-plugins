@@ -1857,6 +1857,9 @@ class Doctor(plugins.Plugin):
                                                "/etc/pwnagotchi/doctor_incidents.json")
         self._checkpoint_path = self.options.get("checkpoint_path",
                                                  "/etc/pwnagotchi/doctor_known_good.json")
+        self._checkpoint_generations = max(
+            1, min(20, int(self.options.get("checkpoint_generations", 5)))
+        )
         self._breaker_path = self.options.get("breaker_path",
                                               "/etc/pwnagotchi/doctor_breaker.json")
         self._patient_path = self.options.get("patient_path",
@@ -2188,27 +2191,80 @@ class Doctor(plugins.Plugin):
         fp["saved_at"] = time.time()
         return fp
 
+    def _load_checkpoint_store(self):
+        try:
+            if os.path.exists(self._checkpoint_path):
+                with open(self._checkpoint_path) as f:
+                    obj = json.load(f)
+                if isinstance(obj, dict) and obj.get("schema") == 2:
+                    gens = [x for x in (obj.get("generations") or []) if isinstance(x, dict)]
+                    current = obj.get("current") if isinstance(obj.get("current"), dict) else None
+                    if current is None and gens:
+                        current = gens[-1]
+                    return {"schema": 2, "current": current, "generations": gens}
+                # Backward-compatible import of the original single-fingerprint format.
+                if isinstance(obj, dict) and (
+                        "saved_at" in obj or "config_hash" in obj or "packages" in obj):
+                    return {"schema": 2, "current": obj, "generations": [obj]}
+        except Exception as exc:
+            logging.debug("[doctor] checkpoint load failed: %s", exc)
+        return {"schema": 2, "current": None, "generations": []}
+
     def save_checkpoint(self, runner=None):
         fp = self.build_fingerprint(runner)
+        store = self._load_checkpoint_store()
+        generations = list(store.get("generations") or [])
+        generations.append(fp)
+        generations = generations[-self._checkpoint_generations:]
+        payload = {"schema": 2, "current": fp, "generations": generations}
         try:
-            os.makedirs(os.path.dirname(self._checkpoint_path), exist_ok=True)
-            with open(self._checkpoint_path, "w") as f:
-                json.dump(fp, f)
+            parent = os.path.dirname(self._checkpoint_path)
+            if parent:
+                os.makedirs(parent, exist_ok=True)
+            tmp = self._checkpoint_path + ".tmp"
+            with open(tmp, "w") as out:
+                json.dump(payload, out, indent=2, sort_keys=True)
+                out.write("\n")
+            try:
+                os.chmod(tmp, 0o600)
+            except Exception:
+                pass
+            os.replace(tmp, self._checkpoint_path)
         except Exception as e:
             logging.debug("[doctor] checkpoint save failed: %s", e)
         return fp
 
-    def load_checkpoint(self):
+    def load_checkpoint(self, generation=0):
+        store = self._load_checkpoint_store()
+        generations = store.get("generations") or []
+        if generation in (None, 0):
+            current = store.get("current")
+            return dict(current) if isinstance(current, dict) else None
         try:
-            if os.path.exists(self._checkpoint_path):
-                with open(self._checkpoint_path) as f:
-                    return json.load(f)
-        except Exception:
-            pass
-        return None
+            offset = int(generation)
+        except (TypeError, ValueError):
+            return None
+        if offset < 0 or offset >= len(generations):
+            return None
+        row = generations[-1 - offset]
+        return dict(row) if isinstance(row, dict) else None
 
-    def diff_since_checkpoint(self, runner=None):
-        old = self.load_checkpoint()
+    def checkpoint_history(self):
+        store = self._load_checkpoint_store()
+        rows = []
+        for fp in reversed(store.get("generations") or []):
+            rows.append({
+                "saved_at": fp.get("saved_at"),
+                "kernel": fp.get("kernel"),
+                "os": fp.get("os"),
+                "plugin_count": len(fp.get("plugins") or []),
+                "package_count": len(fp.get("packages") or {}),
+                "config_hash": fp.get("config_hash"),
+            })
+        return rows
+
+    def diff_since_checkpoint(self, runner=None, generation=0):
+        old = self.load_checkpoint(generation=generation)
         if not old:
             return None
         return diff_fingerprint(old, self.build_fingerprint(runner))
@@ -2217,6 +2273,45 @@ class Doctor(plugins.Plugin):
     def narrative(self):
         """Current human-readable summary (also reusable by daily_digest etc.)."""
         return self._narrative
+
+    def status_contract(self):
+        """Stable privacy-light machine-readable Doctor status for local consumers."""
+        patient = self._patient.summary() if self._patient is not None else {}
+        findings = []
+        for finding in self._findings:
+            findings.append({
+                "id": finding.get("id"),
+                "severity": finding.get("severity"),
+                "confidence": finding.get("confidence"),
+                "symptom": finding.get("symptom"),
+                "outcome": finding.get("outcome"),
+                "decision": dict(finding.get("decision") or {}),
+                "provenance": dict(finding.get("provenance") or {}),
+            })
+        history = self.checkpoint_history()
+        return {
+            "schema": "pwndoctor/status/v1",
+            "doctor_version": self.__version__,
+            "status": self._status,
+            "narrative": self._narrative,
+            "autonomy": {
+                "level": self._autofix,
+                "dry_run": bool(self._dry_run),
+            },
+            "findings": findings,
+            "causal": list(self._causal or []),
+            "patient": patient,
+            "packs": {
+                "bundled": len(self._bundled_conditions),
+                "external": len(self._external_conditions),
+                "errors": list(self._pack_errors),
+            },
+            "known_good": {
+                "generation_count": len(history),
+                "current_saved_at": history[0].get("saved_at") if history else None,
+            },
+            "compatibility": compatibility_fingerprint(),
+        }
 
     def _support_report(self):
         lines = [
