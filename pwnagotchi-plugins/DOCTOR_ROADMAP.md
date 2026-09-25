@@ -447,14 +447,22 @@ schema is the real interop opportunity between the two projects.
 - [ ] **v0.7 next (Claude):** remedy-efficacy ranking — use the Patient Chart
       `remedy_successes/failures` counters to reorder remedies and temper confidence per-device
       (ranking only; never expands authority).
-- [ ] **v0.7 next (ChatGPT):** Patient Chart v2 migration + treatment decision trace.
-- [ ] **v0.8 (ChatGPT):** offline pack validator/linter + safe simulation/replay; provenance/
-      signing groundwork and evidence-freshness contract.
-- [ ] **v0.9 shared:** specialist snapshot/status contract, bounded known-good generations,
-      root-cause/downstream-treatment suppression.
-- [ ] **v1.0 (ChatGPT + Claude + owner):** guided physical-validation evidence recorder, recovery
-      posture + schema compatibility lock, full automated gate, then exact-artifact physical Pi
-      validation and `physical_validated` matrix row → tag/publish stable v1.0.
+- [x] **v0.7 (ChatGPT):** Patient Chart v2 migration + rollback-safe future-schema handling;
+      treatment decision trace that records every policy/safety/verification gate without changing
+      authority.
+- [x] **v0.8 (ChatGPT, first half):** offline deep pack validator/linter + tri-state safe
+      simulation/replay (structurally no mutation path).
+- [ ] **v0.8 (ChatGPT, remaining schema work):** provenance/signing identity contract and
+      evidence-freshness contract; signatures may prove publisher identity, never authority.
+- [x] **v0.9 (ChatGPT):** stable privacy-light Doctor status contract + bounded known-good
+      generations with legacy-checkpoint import.
+- [ ] **v0.9 shared/Claude:** sibling-provider snapshot ingestion and root-cause/downstream-
+      treatment suppression (policy/integration lane).
+- [x] **v1.0 (ChatGPT):** guided physical-validation evidence recorder that refuses to emit a
+      `physical_validated` matrix row until every required check passes.
+- [ ] **v1.0 shared:** recovery posture + final schema compatibility lock + full automated gate;
+      then owner runs exact-artifact physical Pi validation and the collaborators tag/publish
+      stable v1.0.
 - [ ] **RC gate still open (owner):** physical Pi validation via `PHYSICAL_VALIDATION.md` on the
       exact current candidate. Release engineering must track the candidate version; neither
       collaborator rewrites the other's branch history.
