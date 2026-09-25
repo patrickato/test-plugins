@@ -348,3 +348,75 @@ Examples that should stay in code for v0.6 unless simplified cleanly:
 - other conditions whose meaning cannot be represented faithfully by the existing tiny expression grammar.
 
 This is deliberate. Condition Pack v1 should not gain a generic templating/expression language merely to achieve a 100% JSON migration. Add parameterization later only when a concrete cross-project requirement justifies it.
+
+---
+
+## 9. v0.8 provenance identity contract
+
+Condition Pack provenance may identify where knowledge came from, but **provenance never grants
+treatment authority**.
+
+Optional provenance fields:
+
+```json
+{
+  "provenance": {
+    "source": "catalog-or-local-name",
+    "publisher": "publisher identity",
+    "key_id": "publisher key identifier",
+    "signature_algorithm": "ed25519",
+    "signature": "detached-signature-or-envelope-reference"
+  }
+}
+```
+
+Runtime/catalog layers may additionally attach:
+- exact content SHA-256;
+- expected catalog SHA-256;
+- hash-match result;
+- signature status: `absent | unverified | verified | invalid`.
+
+A valid hash proves content equality with an expected digest. A valid signature proves publisher
+identity under the verifier's trust store. **Neither result changes the action allow-list,
+source-class authority, Standing Orders, confidence gates, guards, confirmation policy, circuit
+breaker, or verification requirements.**
+
+PwnDoctor exposes this rule explicitly as `authority_delta = "none"` in provenance inspection.
+
+## 10. v0.8 evidence freshness contract
+
+A pack may optionally state that specified evidence must be fresh when an engine/provider has
+observation timestamps:
+
+```json
+{
+  "evidence": {
+    "max_age_s": 30,
+    "required_fresh": [
+      "wifi.rfkill.blocked",
+      "wifi.monitor.present"
+    ]
+  }
+}
+```
+
+Rules:
+
+1. `max_age_s` must be positive.
+2. `required_fresh` is optional; when omitted, the engine may apply the age rule to all keys
+   referenced by `detect` and `fix.verify`.
+3. Evidence metadata is separate from the canonical value itself. A provider may publish
+   `observed_at` for a canonical key without changing that key's value/schema.
+4. Freshness evaluates tri-state:
+   - all required observations within the age bound → **true/fresh**;
+   - any required observation older than the bound (or timestamp from the future) → **false/stale**;
+   - missing/unreadable timestamps → **unknown**.
+5. Engines must never convert stale/unknown freshness into treatment confidence.
+6. Existing v1 packs without an `evidence` block retain current behavior.
+7. This contract does not require continuous timestamps from legacy collectors; it exists so
+   v0.9 specialist/provider snapshots can add freshness safely without rewriting pack semantics.
+
+PwnDoctor's offline simulator already applies this contract and refuses to report
+`would_diagnose=true` for a freshness-constrained pack unless freshness is proven true.
+Runtime treatment integration remains separately gated and must preserve the same
+unknown-stays-unknown rule.
