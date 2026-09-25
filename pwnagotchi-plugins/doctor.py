@@ -503,6 +503,200 @@ def validate_condition_pack(pack):
     return errors
 
 
+_CANONICAL_STATIC_KEYS = frozenset({
+    "system.uptime_sec", "system.memory.used_pct", "system.swap.used_pct",
+    "system.temp.cpu_c", "storage.root.free_mb", "storage.root.read_only",
+    "storage.sd.io_error_count", "power.undervoltage.current",
+    "power.undervoltage.occurred", "power.throttled.current",
+    "wifi.monitor.present", "wifi.rfkill.blocked", "wifi.wpa_supplicant.running",
+    "wifi.iface.configured", "wifi.iface.present", "network.default_route.present",
+    "network.default_route.iface", "network.dns.ok", "pwnagotchi.config.valid",
+    "pwnagotchi.config.debug", "pwnagotchi.handshakes.writable",
+    "pwnagotchi.bettercap.reachable", "system.journal.bytes",
+})
+_EXPR_COMPARE_OPS = frozenset({"is", "present", "contains", "ge", "gt", "le", "lt"})
+
+
+def canonical_key_known(key):
+    if key in _CANONICAL_STATIC_KEYS:
+        return True
+    return bool(re.fullmatch(r"service\.[a-zA-Z0-9_.-]+\.(?:active|restart_count)", str(key or "")))
+
+
+def _lint_expr(expr, path="expr"):
+    errors, keys = [], []
+    if not isinstance(expr, dict):
+        return ["%s must be an expression object" % path], keys
+
+    branch_ops = [name for name in ("all", "any") if name in expr]
+    if branch_ops:
+        if len(branch_ops) != 1 or "key" in expr:
+            errors.append("%s must use exactly one of all|any|key" % path)
+            return errors, keys
+        op = branch_ops[0]
+        rows = expr.get(op)
+        if not isinstance(rows, list) or not rows:
+            errors.append("%s.%s must be a non-empty list" % (path, op))
+            return errors, keys
+        for i, row in enumerate(rows):
+            sub_errors, sub_keys = _lint_expr(row, "%s.%s[%d]" % (path, op, i))
+            errors.extend(sub_errors)
+            keys.extend(sub_keys)
+        unknown_fields = set(expr) - {op}
+        if unknown_fields:
+            errors.append("%s has unsupported fields: %s" %
+                          (path, ", ".join(sorted(unknown_fields))))
+        return errors, keys
+
+    key = expr.get("key")
+    if not isinstance(key, str) or not key:
+        errors.append("%s.key must be a non-empty string" % path)
+        return errors, keys
+    keys.append(key)
+    compare_ops = [name for name in _EXPR_COMPARE_OPS if name in expr]
+    if len(compare_ops) != 1:
+        errors.append("%s must contain exactly one comparison operator" % path)
+    allowed = {"key"} | _EXPR_COMPARE_OPS
+    unknown_fields = set(expr) - allowed
+    if unknown_fields:
+        errors.append("%s has unsupported fields: %s" %
+                      (path, ", ".join(sorted(unknown_fields))))
+    return errors, keys
+
+
+def lint_condition_pack(pack):
+    """Deep offline lint. Returns structured errors/warnings; never executes a remedy."""
+    errors = list(validate_condition_pack(pack))
+    warnings = []
+    referenced = []
+
+    if isinstance(pack, dict):
+        detect = pack.get("detect")
+        if isinstance(detect, dict):
+            expr_errors, expr_keys = _lint_expr(detect, "detect")
+            errors.extend(expr_errors)
+            referenced.extend(expr_keys)
+
+        fix = pack.get("fix")
+        if isinstance(fix, dict):
+            verify = fix.get("verify")
+            if verify is None:
+                warnings.append("fix has no explicit verify expression")
+            elif isinstance(verify, dict):
+                expr_errors, expr_keys = _lint_expr(verify, "fix.verify")
+                errors.extend(expr_errors)
+                referenced.extend(expr_keys)
+            else:
+                errors.append("fix.verify must be an expression object when present")
+
+            raw_action = fix.get("action")
+            mapped_action = _PACK_ACTION_ALIASES.get(raw_action, raw_action)
+            if mapped_action not in globals().get("ACTIONS", {}):
+                warnings.append("fix action is not in this Doctor's allow-list: %s" % raw_action)
+
+            raw_guard = fix.get("guard")
+            if raw_guard:
+                mapped_guard = _PACK_GUARD_ALIASES.get(raw_guard, raw_guard)
+                if mapped_guard not in globals().get("GUARDS", {}):
+                    warnings.append("fix guard is unknown to this Doctor: %s" % raw_guard)
+
+        declared = pack.get("signals", [])
+        if declared is None:
+            declared = []
+        if not isinstance(declared, list) or any(not isinstance(x, str) for x in declared):
+            errors.append("signals must be a list of canonical-key strings")
+            declared = []
+        referenced_unique = sorted(set(referenced))
+        declared_unique = sorted(set(declared))
+        missing_declarations = sorted(set(referenced_unique) - set(declared_unique))
+        unused_declarations = sorted(set(declared_unique) - set(referenced_unique))
+        if missing_declarations:
+            warnings.append("referenced keys missing from signals: %s" %
+                            ", ".join(missing_declarations))
+        if unused_declarations:
+            warnings.append("declared signals not referenced by detect/verify: %s" %
+                            ", ".join(unused_declarations))
+        unknown_keys = sorted(k for k in set(referenced_unique) if not canonical_key_known(k))
+        if unknown_keys:
+            warnings.append("keys outside the current canonical registry: %s" %
+                            ", ".join(unknown_keys))
+    else:
+        referenced_unique, declared_unique = [], []
+
+    # Stable de-duplication keeps CLI/UI output deterministic.
+    errors = list(dict.fromkeys(errors))
+    warnings = list(dict.fromkeys(warnings))
+    return {
+        "valid": not errors,
+        "errors": errors,
+        "warnings": warnings,
+        "referenced_keys": referenced_unique,
+        "declared_signals": declared_unique,
+    }
+
+
+def simulate_condition_pack(pack, canonical_signals, *, platform_name="pwnagotchi",
+                            version=None):
+    """Pure/dry Condition Pack replay against canonical signals.
+
+    This intentionally has no runner/action parameter and cannot mutate the device.
+    """
+    lint = lint_condition_pack(pack)
+    result = {
+        "valid": lint["valid"],
+        "errors": list(lint["errors"]),
+        "warnings": list(lint["warnings"]),
+        "referenced_keys": list(lint["referenced_keys"]),
+        "applies": False,
+        "detect_state": None,
+        "verify_state": None,
+        "would_diagnose": False,
+        "remedy": {
+            "declared": False,
+            "action": None,
+            "mapped_action": None,
+            "allowlisted": False,
+            "guard": None,
+            "guard_known": True,
+        },
+        "mutation_possible": False,
+    }
+    if not lint["valid"]:
+        return result
+
+    result["applies"] = pack_applies(
+        pack, platform_name=platform_name, version=version
+    )
+    if not result["applies"]:
+        return result
+
+    canonical = dict(canonical_signals or {})
+    result["detect_state"] = eval_condition_expr_state(pack.get("detect"), canonical)
+    result["would_diagnose"] = result["detect_state"] is True
+
+    fix = pack.get("fix")
+    if isinstance(fix, dict):
+        raw_action = fix.get("action")
+        mapped_action = _PACK_ACTION_ALIASES.get(raw_action, raw_action)
+        raw_guard = fix.get("guard")
+        mapped_guard = _PACK_GUARD_ALIASES.get(raw_guard, raw_guard) if raw_guard else None
+        result["remedy"] = {
+            "declared": True,
+            "action": raw_action,
+            "mapped_action": mapped_action,
+            "allowlisted": mapped_action in globals().get("ACTIONS", {}),
+            "guard": raw_guard,
+            "guard_known": (not raw_guard or mapped_guard in globals().get("GUARDS", {})),
+        }
+        verify = fix.get("verify")
+        if isinstance(verify, dict):
+            result["verify_state"] = eval_condition_expr_state(verify, canonical)
+
+    # Explicit invariant for callers/tests: this API never executes anything.
+    result["mutation_possible"] = False
+    return result
+
+
 def _version_key(value):
     if not value:
         return None
