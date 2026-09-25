@@ -11,8 +11,10 @@ Pwnagotchi release. Cross-notes live at repo root (`OPENAI_TO_CLAUDE_*`,
 
 **Division of labor (by demonstrated strengths):**
 - **ChatGPT owns** the spec / data-model / security seams: Condition Pack schema evolution +
-  loader hardening, Patient Chart evolution (incl. chronic/recurrence memory), canonical-key
-  stewardship, guard *intent* vocabulary, and the future provenance/signing design (v0.8).
+  loader hardening, Patient Chart evolution (incl. chronic/recurrence memory + schema migration),
+  canonical-key stewardship, guard *intent* vocabulary, treatment-decision audit semantics,
+  pack validation/simulation tooling, compatibility-evidence structure, and the future
+  provenance/signing design (v0.8).
 - **Claude owns** integration / content / release: migrating built-in conditions → JSON packs,
   the `ACTION_META`→policy engine, collectors/effectors + new ailments, the incident/verify
   loop, test coverage, plugin lifecycle/UI, CI + release engineering, and the physical-validation
@@ -313,17 +315,29 @@ Chart move up to v0.6** (don't accumulate more hard-coded conditions before the 
   assembler + installer + CI ✅ (ChatGPT). Threshold/boot-gated/computed conditions stay in
   Python per the ruling (no threshold parameterization in v0.6). v0.6 is release-doc complete;
   what remains before RC is v0.7 polish + physical validation.
-- **v0.7 — Learn + explain:** remedy-efficacy ranking (ranking only — never expands authority);
-  **one-click sanitized support bundle**; plain-language narrative. (Confirm-required tier already
-  landed in v0.6-pre2.)
+- **v0.7 — Learn + explain:** remedy-efficacy ranking (Claude; ranking only — never expands
+  authority); **one-click sanitized support bundle** + plain-language narrative ✅; **Patient
+  Chart v2 migration framework** (ChatGPT — preserve v1 history across upgrades); **treatment
+  decision trace** (ChatGPT — explain why a remedy ran, waited, or was blocked without changing
+  policy authority). (Confirm-required tier already landed in v0.6-pre2.)
 - **v0.8 — Specialists on demand (offline-first, opt-in fetch):** cached condition/runbook
-  registry; plugin-contributed health providers. Knowledge may be fetched; **remedies/actions
-  gain zero authority merely by being downloaded.**
+  registry; plugin-contributed health providers; **offline Condition Pack validator/linter +
+  dry simulation/replay** (ChatGPT — evaluate a pack against sanitized/saved canonical signals
+  without touching the device); **provenance/signing groundwork** (identity/authenticity only,
+  never treatment authority); evidence-freshness metadata so stale evidence cannot silently
+  justify treatment. Knowledge may be fetched; **remedies/actions gain zero authority merely by
+  being downloaded.**
 - **v0.9 — One Doctor, many specialists (hub, §5):** consume sibling-plugin snapshots via
-  `/run/pwnagotchi/health.d/` (tmpfs, no SD wear).
-- **v1.0 — RC + physical validation + release:** full off-Pi suite; physical Pi validation
-  (broken-config, monitor/radio, service-restart, connectivity, storage-warning cases);
-  install/rollback/recovery docs; tag RC → release.
+  `/run/pwnagotchi/health.d/` (tmpfs, no SD wear); publish a small stable machine-readable
+  Doctor status contract for sibling plugins/Beastagotchi; bounded known-good generations
+  rather than a single forever-checkpoint; root-cause/dependency suppression prevents multiple
+  downstream symptoms from triggering redundant treatments.
+- **v1.0 — RC + physical validation + release:** full off-Pi suite; **guided physical-validation
+  recorder** (ChatGPT — produces sanitized evidence suitable for a `physical_validated`
+  compatibility row); physical Pi validation (broken-config, monitor/radio, service-restart,
+  connectivity, storage-warning cases); recovery posture when storage/config integrity is
+  questionable; final Patient Chart + Condition Pack schema compatibility lock; install/
+  rollback/recovery docs; exact tested artifact checksum; tag RC → validated v1.0 release.
 - **Later (gated):** blast-radius preview, optional local-AI triage (advisory only, never acts
   outside the allow-list).
 
@@ -433,6 +447,14 @@ schema is the real interop opportunity between the two projects.
 - [ ] **v0.7 next (Claude):** remedy-efficacy ranking — use the Patient Chart
       `remedy_successes/failures` counters to reorder remedies and temper confidence per-device
       (ranking only; never expands authority).
-- [ ] **RC gate still open (owner):** physical Pi validation via `PHYSICAL_VALIDATION.md`, then
-      the `physical_validated` matrix row + freeze/tag/publish. (Note: version moved to
-      0.7.0-pre1; ChatGPT owns re-baselining the release/ RC docs to the tagged commit.)
+- [ ] **v0.7 next (ChatGPT):** Patient Chart v2 migration + treatment decision trace.
+- [ ] **v0.8 (ChatGPT):** offline pack validator/linter + safe simulation/replay; provenance/
+      signing groundwork and evidence-freshness contract.
+- [ ] **v0.9 shared:** specialist snapshot/status contract, bounded known-good generations,
+      root-cause/downstream-treatment suppression.
+- [ ] **v1.0 (ChatGPT + Claude + owner):** guided physical-validation evidence recorder, recovery
+      posture + schema compatibility lock, full automated gate, then exact-artifact physical Pi
+      validation and `physical_validated` matrix row → tag/publish stable v1.0.
+- [ ] **RC gate still open (owner):** physical Pi validation via `PHYSICAL_VALIDATION.md` on the
+      exact current candidate. Release engineering must track the candidate version; neither
+      collaborator rewrites the other's branch history.
