@@ -1,45 +1,69 @@
-# PwnDoctor security and safety model
+# PwnDoctor v1 security and safety model
 
 ## Trust classes
 
 ### Core runtime
-`doctor.py` is executable first-party code.
+`doctor.py` is first-party executable code.
 
-### First-party bundled Medical Library
-`doctor_packs/` ships in the same reviewed release. Packs are JSON/data-only and may retain existing first-party remedy mappings. They can reference only actions already compiled into Doctor's allow-list.
+### Bundled Medical Library
+`doctor_packs/` ships in the reviewed release and may retain mappings to existing allow-listed
+actions. Every normal policy/guard/verification gate still applies.
 
-### User/community Medical Library
-`/etc/pwnagotchi/doctor.d/` is a separate trust class. Packs are explain-only by default. Copying a JSON file onto the device does not grant it treatment authority.
+### Owner/community packs
+`/etc/pwnagotchi/doctor.d/` is explain-only by default. Explicit owner opt-in can expose only
+actions that Doctor already compiles.
+
+### Cached catalog
+`catalog_dir` is **always explain-only**. The optional fetch tool requires HTTPS plus a pinned
+SHA-256. Hash/signature provenance proves content/publisher identity only; authority delta is
+always none.
+
+### Specialist providers
+`pwndoctor/provider/v1` snapshots contribute fresh evidence and explain-only findings. They
+cannot define remedies. Core-collected evidence has precedence over provider values.
 
 ## Treatment gates
 
-A remedy may still be blocked by confidence, autonomy level, owner opt-out, confirm-required policy, named safety guard, circuit breaker, dry-run, missing action, or failed applicability.
+A mutation can be blocked/reduced by:
+
+- no remedy / unavailable action;
+- low confidence;
+- owner condition opt-out;
+- owner action veto;
+- Standing Orders/tier;
+- root-cause downstream suppression;
+- named safety guard;
+- recovery posture;
+- poor verified per-device efficacy;
+- confirm-required/reboot policy;
+- persistent circuit breaker;
+- dry-run;
+- action failure;
+- verification failure/unknown.
+
+The machine-readable treatment decision trace records which gate decided the outcome.
+
+## Recovery posture
+
+Storage I/O errors, read-only-root evidence and invalid-config crash loops trigger a conservative
+recovery posture. Mutation requires explicit owner confirmation. Recovery never expands authority.
 
 ## Verification
 
-Condition Pack expressions use internal tri-state truth: true, false, unknown.
+Unknown stays unknown. An action is not called fixed merely because a command returned success.
 
-After a pack remedy:
-- true verification → fixed;
-- false verification → fix failed;
-- missing/unreadable verification evidence → executed, verification unknown.
+## Patient Chart
 
-Unknown is never converted into success.
+Patient Chart v2 is bounded, atomic/change-gated and migration-aware. An older Doctor refuses to
+overwrite a future/newer chart schema it cannot understand.
 
-## Provenance
+## Provenance and signatures
 
-The loader computes SHA-256 over the exact bytes of each loaded JSON pack and records a `source_class` (`bundled` or `external`) in runtime provenance.
+A hash can prove byte equality. A signature can prove publisher identity under a verifier's
+trust policy. Neither grants a new action, bypasses Standing Orders or changes trust class.
 
-Future network-fetched catalogs may add expected hashes/signatures. A valid signature proves publisher provenance; it will not grant treatment authority by itself.
+## Support data
 
-## Circuit breaker
-
-Attempt history persists across restart/reboot so restarting Doctor cannot reset a failing repair loop.
-
-## Media failure
-
-Doctor must not treat a read-only root filesystem as permission to blindly remount read/write when kernel evidence indicates SD/media failure. Rescue/recovery takes precedence.
-
-## Data handling
-
-Patient Chart is bounded technical state, not an unlimited raw-log archive. The plugin should avoid unnecessary writes on SD-backed systems.
+Support bundles and status contracts intentionally avoid unnecessary personal/network identity.
+Redaction is defense-in-depth, not a promise that arbitrary input can never contain something a
+user considers sensitive; inspect an archive before public sharing.
