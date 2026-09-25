@@ -40,3 +40,4 @@ The assembler verifies both before returning success.
 The generated `RELEASE_MANIFEST.json` records every bundled Condition Pack with filename, pack id, declared pack version, SHA-256 and whether it carries a remedy. Assembly verification rejects missing files, hash mismatches, id mismatches and duplicate bundled ids.
 
 The manifest also points to `COMPATIBILITY_MATRIX.json`; package verification rejects a missing or malformed matrix.
+- `release/pwndoctor/RC_READINESS.md` → `docs/RC_READINESS.md`
