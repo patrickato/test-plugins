@@ -79,6 +79,7 @@ def assemble(output_root: Path) -> Path:
 
     copy_file(HERE / "COMPATIBILITY_MATRIX.json", package / "COMPATIBILITY_MATRIX.json")
     copy_file(HERE / "install.sh", package / "install.sh")
+    copy_file(HERE / "physical_validation.py", package / "physical_validation.py")
     copy_file(REPO / "LICENSE", package / "LICENSE")
 
     copy_file(PLUGINS / "tests" / "test_doctor.py", package / "tests" / "test_doctor.py")
