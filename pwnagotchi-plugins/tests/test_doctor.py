@@ -668,6 +668,71 @@ def test_validate_condition_pack_and_version_gate():
     assert doc.pack_applies(gated, platform_name="beast", version="2.9.5.9") is False
 
 
+def test_condition_pack_linter_catches_expression_and_registry_problems():
+    bad = _condition_pack(
+        signals=["wifi.rfkill.blocked"],
+        detect={"all": [{"key": "wifi.rfkill.blocked", "is": True},
+                        {"key": "future.unknown.signal", "ge": 1}],
+                "extra": True},
+    )
+    lint = doc.lint_condition_pack(bad)
+    assert lint["valid"] is False
+    assert any("unsupported fields" in e for e in lint["errors"])
+
+    pack = _condition_pack(
+        signals=["wifi.rfkill.blocked"],
+        detect={"key": "future.unknown.signal", "is": True},
+    )
+    lint = doc.lint_condition_pack(pack)
+    assert lint["valid"] is True
+    assert any("outside the current canonical registry" in w for w in lint["warnings"])
+    assert any("missing from signals" in w for w in lint["warnings"])
+
+
+def test_condition_pack_simulation_is_tristate_and_non_mutating():
+    pack = _condition_pack(
+        id="wifi.rfkill_sim",
+        signals=["wifi.rfkill.blocked"],
+        detect={"key": "wifi.rfkill.blocked", "is": True},
+        fix={"action": "wifi.rfkill_unblock", "tier": "safe",
+             "verify": {"key": "wifi.rfkill.blocked", "is": False}},
+    )
+
+    hit = doc.simulate_condition_pack(
+        pack, {"wifi.rfkill.blocked": True}, version="2.9.5.9")
+    assert hit["valid"] is True
+    assert hit["applies"] is True
+    assert hit["detect_state"] is True
+    assert hit["would_diagnose"] is True
+    assert hit["verify_state"] is False
+    assert hit["remedy"]["allowlisted"] is True
+    assert hit["mutation_possible"] is False
+
+    clear = doc.simulate_condition_pack(
+        pack, {"wifi.rfkill.blocked": False}, version="2.9.5.9")
+    assert clear["detect_state"] is False
+    assert clear["would_diagnose"] is False
+    assert clear["verify_state"] is True
+
+    unknown = doc.simulate_condition_pack(pack, {}, version="2.9.5.9")
+    assert unknown["detect_state"] is None
+    assert unknown["verify_state"] is None
+    assert unknown["mutation_possible"] is False
+
+
+def test_condition_pack_simulation_respects_version_gate_without_execution():
+    pack = _condition_pack(
+        applies_to={"platform": ["pwnagotchi"], "min_version": "9.0.0"},
+        detect={"key": "system.memory.used_pct", "ge": 90},
+    )
+    row = doc.simulate_condition_pack(
+        pack, {"system.memory.used_pct": 99}, version="2.9.5.9")
+    assert row["valid"] is True
+    assert row["applies"] is False
+    assert row["would_diagnose"] is False
+    assert row["mutation_possible"] is False
+
+
 def test_local_condition_pack_loader_is_explain_only_by_default(tmp_path):
     pack = _condition_pack(fix={
         "action": "wifi.rfkill_unblock",
