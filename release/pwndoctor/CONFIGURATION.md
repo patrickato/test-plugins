@@ -54,7 +54,10 @@ The bundle redacts configured secret/location/identity values and common MAC, IP
 
 - Patient Chart: `/var/lib/pwnagotchi/doctor/patient.json`
 - incidents: configured by `incident_path`
-- known-good checkpoint: configured by `checkpoint_path`
+- known-good checkpoint/history: configured by `checkpoint_path`
+- `checkpoint_generations` — bounded number of known-good fingerprints retained (default 5,
+  minimum 1, hard maximum 20); `load_checkpoint()` remains backward compatible and returns
+  the current generation by default.
 - persistent circuit breaker: configured by `breaker_path`
 
 Runtime state is intentionally separate from first-party plugin files so upgrades do not erase the patient's history.
