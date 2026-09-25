@@ -444,25 +444,26 @@ schema is the real interop opportunity between the two projects.
       standalone repo (order in `RC_READINESS.md`).
 - [x] **v0.7-pre1 (owner lifted the freeze):** plain-language narrative + one-click sanitized
       support bundle (with redaction) shipped. 102 tests / 364 repo.
-- [ ] **v0.7 next (Claude):** remedy-efficacy ranking — use the Patient Chart
-      `remedy_successes/failures` counters to reorder remedies and temper confidence per-device
-      (ranking only; never expands authority).
+- [x] **v0.7 remedy efficacy:** Patient Chart verified outcomes now produce per-device efficacy
+      stats/ranking; repeated poor verified results reduce automation to confirmation and never
+      expand authority.
 - [x] **v0.7 (ChatGPT):** Patient Chart v2 migration + rollback-safe future-schema handling;
       treatment decision trace that records every policy/safety/verification gate without changing
       authority.
 - [x] **v0.8 (ChatGPT, first half):** offline deep pack validator/linter + tri-state safe
       simulation/replay (structurally no mutation path).
-- [ ] **v0.8 (ChatGPT, remaining schema work):** provenance/signing identity contract and
-      evidence-freshness contract; signatures may prove publisher identity, never authority.
+- [x] **v0.8 complete:** provenance/signing identity contract + evidence freshness + cached
+      explain-only catalog + SHA-pinned opt-in fetch; signatures/hashes never grant authority.
 - [x] **v0.9 (ChatGPT):** stable privacy-light Doctor status contract + bounded known-good
       generations with legacy-checkpoint import.
-- [ ] **v0.9 shared/Claude:** sibling-provider snapshot ingestion and root-cause/downstream-
-      treatment suppression (policy/integration lane).
+- [x] **v0.9 complete:** bounded fresh sibling-provider ingestion via `/run/pwnagotchi/health.d/`
+      plus root-cause/downstream-treatment suppression.
 - [x] **v1.0 (ChatGPT):** guided physical-validation evidence recorder that refuses to emit a
       `physical_validated` matrix row until every required check passes.
-- [ ] **v1.0 shared:** recovery posture + final schema compatibility lock + full automated gate;
-      then owner runs exact-artifact physical Pi validation and the collaborators tag/publish
-      stable v1.0.
+- [x] **v1.0 software complete:** recovery posture, public-contract lock, self-test and guided
+      validation recorder implemented. Final cumulative CI/artifact gate remains before handoff.
+- [ ] **v1.0 physical gate — owner:** run exact-artifact validation; if all checks pass, add the
+      generated `physical_validated` row and promote RC1 to stable `1.0.0` with no feature delta.
 - [ ] **RC gate still open (owner):** physical Pi validation via `PHYSICAL_VALIDATION.md` on the
       exact current candidate. Release engineering must track the candidate version; neither
       collaborator rewrites the other's branch history.
