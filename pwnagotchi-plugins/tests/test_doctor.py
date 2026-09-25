@@ -186,7 +186,9 @@ def _make(load_plugin, tmp_path, **opts):
                "handshakes": str(tmp_path / "hs"),
                "incident_path": str(tmp_path / "incidents.json"),
                "checkpoint_path": str(tmp_path / "known_good.json"),
-               "breaker_path": str(tmp_path / "breaker.json"), "scan_every": 0}
+               "breaker_path": str(tmp_path / "breaker.json"),
+               "patient_path": str(tmp_path / "patient.json"),
+               "support_dir": str(tmp_path / "support"), "scan_every": 0}
     options.update(opts)
     (tmp_path / "config.toml").write_text('main.plugins.x.enabled = true\n')
     (tmp_path / "pwn.log").write_text("ok\n")
@@ -1213,3 +1215,90 @@ def test_bundled_sd_readonly_media_guard_blocks_on_failing_card():
     out = doc.apply_fixes(findings, s, "assertive", lambda c: calls.append(c),
                           doc.CircuitBreaker(), {}, recollect=lambda: s)
     assert out[0]["outcome"] == "blocked_guard" and calls == []
+
+
+# ========================================================================================
+# v0.7 — plain-language narrative + sanitized support bundle (Claude)
+# ========================================================================================
+def test_redact_text():
+    t = doc.redact_text("client aa:bb:cc:dd:ee:ff at 192.168.1.5 mailed bob@example.com")
+    assert "aa:bb:cc:dd:ee:ff" not in t and "<mac>" in t
+    assert "192.168.1.5" not in t and "<ip>" in t
+    assert "bob@example.com" not in t and "<email>" in t
+    assert doc.redact_text("nothing sensitive here") == "nothing sensitive here"
+
+
+def test_redact_config():
+    cfg = ('main.plugins.wpa_sec.api_key = "SECRET123"\n'
+           'main.plugins.doctor.enabled = true\n'
+           'main.bt.mac = "aa:bb:cc:dd:ee:ff"\n'
+           'main.plugins.gps.latitude = 40.1\n'
+           'main.plugins.doctor.min_free_mb = 200\n')
+    out = doc.redact_config(cfg)
+    assert "SECRET123" not in out
+    assert "40.1" not in out                       # latitude key redacted
+    assert "aa:bb:cc:dd:ee:ff" not in out          # mac key redacted
+    assert "main.plugins.doctor.enabled = true" in out    # benign kept
+    assert "main.plugins.doctor.min_free_mb = 200" in out  # benign kept
+
+
+def test_narrate_states():
+    assert "healthy" in doc.narrate("OK", [])
+    fixed = [{"outcome": "fixed", "symptom": "Wi-Fi soft-blocked", "severity": "high"}]
+    assert "Auto-fixed" in doc.narrate("HEALED", fixed)
+    remaining = [{"outcome": "needs_user", "symptom": "no monitor interface",
+                  "severity": "high", "howto": ["check the adapter"]}]
+    n = doc.narrate("ACTION_REQUIRED", remaining)
+    assert "Needs you" in n and "no monitor interface" in n and "check the adapter" in n
+
+
+def test_narrate_awaiting_and_drift():
+    awaiting = [{"outcome": "awaiting_confirm", "symptom": "bettercap down", "severity": "high"}]
+    n = doc.narrate("ACTION_REQUIRED", awaiting, causal=["a -> b"],
+                    drift={"has_changes": True, "config_changed": True,
+                           "plugins_added": ["newplug"]})
+    assert "approval" in n and "Likely chain" in n
+    assert "known-good checkpoint" in n and "config.toml changed" in n and "newplug" in n
+
+
+def test_scan_sets_narrative(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path)
+    p.scan(runner=lambda c: "", now=0)
+    assert isinstance(p.narrative(), str) and p.narrative()
+
+
+def test_build_support_bundle_is_sanitized(load_plugin, tmp_path):
+    import zipfile
+    p = _make(load_plugin, tmp_path)
+    # a config with a secret + a MAC-bearing key, and a log line with PII
+    (tmp_path / "config.toml").write_text(
+        'main.plugins.wpa_sec.api_key = "TOPSECRETKEY"\n'
+        'main.plugins.doctor.enabled = true\n')
+    (tmp_path / "pwn.log").write_text(
+        "handshake from aa:bb:cc:dd:ee:ff on 10.0.0.9 ssid HomeNet\n")
+    p._status = "DEGRADED"
+    p._findings = [{"severity": "warn", "confidence": "high", "symptom": "sym",
+                    "cause": "cz", "outcome": "needs_user", "howto": ["do x"]}]
+    p._narrative = doc.narrate(p._status, p._findings)
+    out = p.build_support_bundle()
+    assert out and out.endswith(".zip") and __import__("os").path.exists(out)
+    with zipfile.ZipFile(out) as z:
+        names = z.namelist()
+        assert "REPORT.txt" in names and "config.redacted.toml" in names
+        cfg = z.read("config.redacted.toml").decode()
+        assert "TOPSECRETKEY" not in cfg and "<redacted>" in cfg
+        log = z.read("pwnagotchi.log.tail.redacted.txt").decode()
+        assert "aa:bb:cc:dd:ee:ff" not in log and "10.0.0.9" not in log
+        report = z.read("REPORT.txt").decode()
+        assert "PwnDoctor support report" in report and "FINDINGS" in report
+
+
+def test_support_bundle_action_via_webhook(load_plugin, tmp_path):
+    p = _make(load_plugin, tmp_path)
+
+    class _Req:
+        args = {"action": "support_bundle"}
+    # patch scan to avoid real collectors; just exercise the action branch
+    p.scan = lambda runner=None, now=None, force_ids=None: {"status": "OK", "findings": []}
+    html = p.on_webhook("/", _Req())
+    assert "support bundle" in html.lower()

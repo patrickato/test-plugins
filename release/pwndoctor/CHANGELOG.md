@@ -4,6 +4,23 @@ Versions below the horizontal rule are development pre-releases on the collabora
 Physical-Pi validation is pending until a `physical_validated` row exists in
 `COMPATIBILITY_MATRIX.json`; see `RC_READINESS.md` and `PHYSICAL_VALIDATION.md`.
 
+## 0.7.0-pre1 — "explain better" (dev, resumes after RC freeze lifted by owner)
+
+- **Plain-language narrative:** one human paragraph stitching status + auto-fixes + what-needs-you
+  + causal chain + known-good drift. Shown on the Doctor page ("Summary") and reusable by other
+  plugins via `Doctor.narrative()`.
+- **One-click sanitized support bundle:** the Doctor page's "Download sanitized support bundle"
+  writes a forum-ready `.zip` (report + redacted config + redacted log tail + incidents + Patient
+  Chart summary + environment/drift). **Redaction** strips MACs, IPv4, emails, and secret/
+  location/identity option values (api keys, SSID/BSSID, GPS, tokens, …). Written to
+  `support_dir` (0600); the web handler stays a bounded request/response (writes to disk, returns
+  the path — no streaming).
+- New options: `support_dir`, `support_log_lines`.
+- 102 Doctor tests / 364 repo green; package assembles as `pwndoctor-0.7.0-pre1`.
+
+_Note: v0.6.0-pre4 remains the physical-validation RC below; v0.7 is additive dev on top. The
+RC gate (`RC_READINESS.md` / `PHYSICAL_VALIDATION.md`) still applies to whichever commit is tagged._
+
 ## 0.6.0-pre4 — Release Candidate (physical-validation pending)
 
 Doctor is now the Pwnagotchi's data-driven "immune system": broad-but-bounded sensing, narrow and

@@ -1,4 +1,4 @@
-# Example config for the "doctor" plugin (v0.6-pre4 collaboration branch).
+# Example config for the "doctor" plugin (v0.7-pre1 collaboration branch).
 # Copy into /etc/pwnagotchi/config.toml and edit.
 # Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl/
 #           journalctl when present, all guarded). Auto-fix actions need root (Pwnagotchi
@@ -38,6 +38,12 @@ main.plugins.doctor.deny_actions = []
 # Reboot-class actions (restore_config, quarantine_plugin) queue for confirmation by default,
 # even at "assertive". Set true to let them auto-run.
 main.plugins.doctor.allow_reboot_actions = false
+
+# One-click sanitized support bundle: written here when you click "Download sanitized support
+# bundle" on the Doctor web page. It's forum-ready — MACs, IPs, SSIDs, keys, GPS and emails are
+# stripped. support_log_lines controls how much (redacted) log tail is included.
+main.plugins.doctor.support_dir = "/var/lib/pwnagotchi/doctor"
+main.plugins.doctor.support_log_lines = 400
 
 # Run a full scan every N epochs (0 = only on startup and when you open the web page).
 main.plugins.doctor.scan_every = 30

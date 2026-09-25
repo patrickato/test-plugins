@@ -1,6 +1,6 @@
 # Doctor Plugin — Design Notes & Roadmap
 
-**Plugin:** `doctor` (P06) · **Current version:** v0.6.0-pre4 · **Last updated:** 2026-09-24
+**Plugin:** `doctor` (P06) · **Current version:** v0.7.0-pre1 · **Last updated:** 2026-09-25
 **Scope:** stock Pwnagotchi only (this is *not* the Beastagotchi Doctor; see §9 for the link).
 **Status caveat:** everything below is source/CI reasoning + off-Pi tests. **Physical Pi
 validation of the auto-fix effectors is still pending.**
@@ -65,7 +65,22 @@ Growth happens on four axes plus one structural idea:
 
 ---
 
-## 2. Current state (v0.6.0-pre4)
+## 2. Current state (v0.7.0-pre1)
+
+**New in v0.7-pre1 (owner lifted the RC freeze to keep developing):**
+- **Plain-language narrative** (`narrate()`, pure): one human paragraph = status + auto-fixes +
+  what-needs-you + causal chain + known-good drift. On the Doctor page as "Summary", stored on
+  `self._narrative`, exposed via `Doctor.narrative()` for reuse (e.g. daily_digest).
+- **One-click sanitized support bundle** (`build_support_bundle()` + `?action=support_bundle`):
+  forum-ready `.zip` (report + redacted config + redacted log tail + incidents + Patient Chart
+  summary + environment/drift), written to `support_dir` at 0600. `redact_text`/`redact_config`
+  strip MACs, IPv4, emails and secret/location/identity option values. Bounded web response
+  (writes to disk, returns the path — no streaming).
+- New options: `support_dir`, `support_log_lines`. 102 Doctor tests / 364 repo green.
+- v0.6.0-pre4 remains the physical-validation RC; v0.7 is additive dev on top (the RC gate still
+  applies to whatever commit gets tagged).
+
+## 2b. RC state (v0.6.0-pre4)
 
 **New in v0.6-pre4:**
 - **Compatibility fingerprint** (ChatGPT): privacy-light environment fingerprint in the Patient
@@ -413,6 +428,11 @@ schema is the real interop opportunity between the two projects.
       against the assembled `pwndoctor-0.6.0-pre4` artifact on a real Jayofelony Pi, then add the
       `physical_validated` row to `COMPATIBILITY_MATRIX.json`, freeze/tag, and publish the
       standalone repo (order in `RC_READINESS.md`).
-- [ ] **v0.7 (next dev line, post-RC — frozen out of this RC):** one-click sanitized support
-      bundle + plain-language narrative; then remedy-efficacy ranking (uses the Patient Chart
-      recurrence counters).
+- [x] **v0.7-pre1 (owner lifted the freeze):** plain-language narrative + one-click sanitized
+      support bundle (with redaction) shipped. 102 tests / 364 repo.
+- [ ] **v0.7 next (Claude):** remedy-efficacy ranking — use the Patient Chart
+      `remedy_successes/failures` counters to reorder remedies and temper confidence per-device
+      (ranking only; never expands authority).
+- [ ] **RC gate still open (owner):** physical Pi validation via `PHYSICAL_VALIDATION.md`, then
+      the `physical_validated` matrix row + freeze/tag/publish. (Note: version moved to
+      0.7.0-pre1; ChatGPT owns re-baselining the release/ RC docs to the tagged commit.)

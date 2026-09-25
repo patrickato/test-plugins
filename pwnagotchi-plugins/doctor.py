@@ -45,6 +45,8 @@ Options (main.plugins.doctor.*):
     allow_reboot_actions = false       # allow reboot-class actions (restore_config,
                                        #   quarantine_plugin) to auto-run; otherwise they queue
                                        #   for confirmation even at "assertive"
+    support_dir      = "/var/lib/pwnagotchi/doctor"   # where the sanitized support bundle is written
+    support_log_lines = 400            # how many log lines to include (redacted) in the bundle
     scan_every       = 30              # full scan every N epochs (0 = only on start / web)
     boot_grace_s     = 25              # don't flag service-down before this many seconds uptime
     log_path         = "/etc/pwnagotchi/log/pwnagotchi.log"
@@ -123,6 +125,39 @@ def compatibility_fingerprint(os_release_text=None):
         "os_version_id": osr.get("VERSION_ID"),
         "os_build_id": osr.get("BUILD_ID") or osr.get("IMAGE_ID"),
     }
+
+
+# --- redaction (for the sanitized support bundle) -------------------------------------
+_MAC_RE = re.compile(r"\b(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}\b")
+_IPV4_RE = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+_EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.-]+\b")
+# config keys whose *values* are secret/location/identity and must never leave the device
+_SENSITIVE_KEYS = ("password", "passwd", "secret", "token", "api_key", "apikey", "psk",
+                   "ssid", "bssid", "lat", "lon", "latitude", "longitude", "gps",
+                   "whitelist", "allowlist", "email", "key")
+
+
+def redact_text(text):
+    """Strip MACs, emails and IPv4 addresses from free text (logs, JSON)."""
+    if not text:
+        return text or ""
+    t = _MAC_RE.sub("<mac>", text)
+    t = _EMAIL_RE.sub("<email>", t)
+    t = _IPV4_RE.sub("<ip>", t)
+    return t
+
+
+def redact_config(text):
+    """Redact secret/location/identity option *values* by key name; scrub MAC/IP/email too."""
+    lines = []
+    for line in (text or "").splitlines():
+        if "=" in line and not line.lstrip().startswith("#"):
+            key = line.split("=", 1)[0]
+            if any(tok in key.lower() for tok in _SENSITIVE_KEYS):
+                lines.append(key + '= "<redacted>"')
+                continue
+        lines.append(redact_text(line))
+    return "\n".join(lines)
 
 
 def parse_throttled(value):
@@ -883,6 +918,59 @@ def overall_status(findings):
 
 
 # ======================================================================================
+# Plain-language narrative ("explain better") — pure, for the web page / logs / digest
+# ======================================================================================
+_STATUS_HEAD = {
+    "OK": "Everything looks healthy — no problems detected.",
+    "HEALED": "All clear now — I detected and fixed problem(s) this cycle.",
+    "ATTENTION": "Mostly fine, with a minor thing to note.",
+    "DEGRADED": "Degraded — some functions may not be working well.",
+    "ACTION_REQUIRED": "Needs attention — something important is wrong.",
+}
+
+
+def narrate(status, findings, causal=None, drift=None):
+    """Stitch status + findings + causal chain + known-good drift into one human paragraph."""
+    findings = findings or []
+    fixed = [f for f in findings if f.get("outcome") == "fixed"]
+    awaiting = [f for f in findings if f.get("outcome") == "awaiting_confirm"]
+    remaining = [f for f in findings
+                 if f.get("outcome") in _REMAINING and f.get("outcome") != "awaiting_confirm"]
+    parts = [_STATUS_HEAD.get(status, "Health status: %s." % status)]
+    if fixed:
+        parts.append("Auto-fixed: %s." % ", ".join(f.get("symptom", "?") for f in fixed))
+    if awaiting:
+        parts.append("Waiting for your approval: %s (open the Doctor page to confirm)."
+                     % ", ".join(f.get("symptom", "?") for f in awaiting))
+    if remaining:
+        top = remaining[:3]
+        parts.append("Needs you: %s." % "; ".join(
+            "%s — %s" % (f.get("symptom", "?"), (f.get("howto") or ["see the Doctor page"])[0])
+            for f in top))
+        if len(remaining) > 3:
+            parts.append("(+%d more on the Doctor page.)" % (len(remaining) - 3))
+    if causal:
+        parts.append("Likely chain: %s" % " ".join(causal))
+    if drift and drift.get("has_changes"):
+        bits = []
+        if drift.get("config_changed"):
+            bits.append("config.toml changed")
+        if drift.get("plugins_added"):
+            bits.append("plugins enabled (%s)" % ", ".join(drift["plugins_added"][:5]))
+        if drift.get("plugins_removed"):
+            bits.append("plugins disabled (%s)" % ", ".join(drift["plugins_removed"][:5]))
+        if drift.get("packages_changed"):
+            bits.append("packages changed (%s)" % ", ".join(drift["packages_changed"][:5]))
+        if drift.get("kernel_changed"):
+            bits.append("kernel changed")
+        if drift.get("os_changed"):
+            bits.append("OS changed")
+        if bits:
+            parts.append("Since your known-good checkpoint: %s." % "; ".join(bits))
+    return " ".join(parts)
+
+
+# ======================================================================================
 # Remediation: allow-listed actions + circuit breaker
 # ======================================================================================
 def act_restart_service(args, runner, signals, ctx):
@@ -1409,15 +1497,16 @@ _UI_STATUS = {"OK": "OK", "HEALED": "healed", "ATTENTION": "attn",
 
 class Doctor(plugins.Plugin):
     __author__ = "patrickato"
-    __version__ = "0.6.0-pre4"
+    __version__ = "0.7.0-pre1"
     __license__ = "GPL3"
-    __description__ = "Autonomous health scan, diagnosis, causal explanation, guarded self-healing and known-good drift."
+    __description__ = "Autonomous health scan, diagnosis, plain-language explanation, guarded self-healing, known-good drift and a sanitized support bundle."
 
     def __init__(self):
         self.options = dict()
         self._findings = []
         self._status = "OK"
         self._causal = []
+        self._narrative = _STATUS_HEAD["OK"]
         self._breaker = CircuitBreaker()
         self._open = {}          # id -> {opened_at, severity, summary, snapshot}
         self._history = []
@@ -1436,6 +1525,8 @@ class Doctor(plugins.Plugin):
         self._confirm_required = set(self.options.get("confirm_required", []) or [])
         self._deny_actions = set(self.options.get("deny_actions", []) or [])
         self._allow_reboot = bool(self.options.get("allow_reboot_actions", False))
+        self._support_dir = self.options.get("support_dir", "/var/lib/pwnagotchi/doctor")
+        self._support_log_lines = int(self.options.get("support_log_lines", 400))
         self._scan_every = int(self.options.get("scan_every", 30))
         self._boot_grace = float(self.options.get("boot_grace_s", 25))
         self._log_path = self.options.get("log_path", "/etc/pwnagotchi/log/pwnagotchi.log")
@@ -1709,6 +1800,7 @@ class Doctor(plugins.Plugin):
         self._findings = findings
         self._status = overall_status(findings)
         self._causal = build_causal(f["id"] for f in findings)
+        self._narrative = narrate(self._status, findings, self._causal)
         self._update_incidents(findings, signals, now)
         if self._patient is not None:
             self._patient.observe(signals, findings, self._status, now=now,
@@ -1800,6 +1892,92 @@ class Doctor(plugins.Plugin):
             return None
         return diff_fingerprint(old, self.build_fingerprint(runner))
 
+    # -- plain-language narrative + sanitized support bundle ----------------------------
+    def narrative(self):
+        """Current human-readable summary (also reusable by daily_digest etc.)."""
+        return self._narrative
+
+    def _support_report(self):
+        lines = [
+            "PwnDoctor support report",
+            "generated: %s UTC" % time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()),
+            "doctor version: %s" % self.__version__,
+            "status: %s" % self._status,
+            "",
+            "SUMMARY",
+            narrate(self._status, self._findings, self._causal),
+            "",
+            "FINDINGS",
+        ]
+        if not self._findings:
+            lines.append("  (none)")
+        for f in self._findings:
+            lines.append("- [%s/%s] %s -> %s" % (f.get("severity", "?"), f.get("confidence", "?"),
+                                                 f.get("symptom", "?"), f.get("outcome", "?")))
+            lines.append("    cause: %s" % f.get("cause", ""))
+            for step in f.get("howto", []):
+                lines.append("    - %s" % step)
+        return redact_text("\n".join(lines))
+
+    def build_support_bundle(self, out_path=None, runner=None):
+        """Write a forum-ready, REDACTED zip: report + config + log tail + incidents + chart +
+        environment. Secrets/SSIDs/MACs/IPs/GPS/emails are stripped. Returns the path (or None)."""
+        import zipfile
+        ts = time.strftime("%Y%m%d-%H%M%S", time.gmtime())
+        if out_path is None:
+            base = self._support_dir or os.path.dirname(self._patient_path or "") or "."
+            out_path = os.path.join(base, "doctor_support_%s.zip" % ts)
+
+        files = {"REPORT.txt": self._support_report()}
+        try:
+            with open(self._config_path, "rt", errors="ignore") as fp:
+                files["config.redacted.toml"] = redact_config(fp.read())
+        except Exception:
+            pass
+        try:
+            with open(self._log_path, "rt", errors="ignore") as fp:
+                tail = "".join(fp.readlines()[-self._support_log_lines:])
+            files["pwnagotchi.log.tail.redacted.txt"] = redact_text(tail)
+        except Exception:
+            pass
+        try:
+            if os.path.exists(self._incident_path):
+                with open(self._incident_path, "rt", errors="ignore") as fp:
+                    files["incidents.json"] = redact_text(fp.read())
+        except Exception:
+            pass
+        try:
+            if self._patient is not None:
+                files["patient_summary.json"] = json.dumps(self._patient.summary(),
+                                                           indent=2, default=str)
+        except Exception:
+            pass
+        try:
+            env = {"doctor_version": self.__version__,
+                   "compatibility": compatibility_fingerprint(),
+                   "drift": self.diff_since_checkpoint(runner=runner),
+                   "pack_count": len(self._pack_conditions),
+                   "pack_errors": self._pack_errors}
+            files["environment.json"] = redact_text(json.dumps(env, indent=2, default=str))
+        except Exception:
+            pass
+
+        try:
+            parent = os.path.dirname(out_path)
+            if parent:
+                os.makedirs(parent, exist_ok=True)
+            with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as z:
+                for name, content in files.items():
+                    z.writestr(name, content if isinstance(content, str) else str(content))
+            try:
+                os.chmod(out_path, 0o600)
+            except Exception:
+                pass
+            return out_path
+        except Exception as e:
+            logging.debug("[doctor] support bundle failed: %s", e)
+            return None
+
     # -- events ------------------------------------------------------------------------
     def on_ready(self, agent):
         self.scan()
@@ -1860,15 +2038,32 @@ class Doctor(plugins.Plugin):
                 % "".join(rows))
 
     def on_webhook(self, path, request):
-        drift = self._drift_html(request)
         force_ids = None
+        action = None
         try:
             if request is not None:
+                action = request.args.get("action")
                 cid = request.args.get("confirm")
                 if cid:
                     force_ids = {cid}
         except Exception:
             force_ids = None
+        # One-click sanitized support bundle (write to disk; bounded response with the path).
+        if action == "support_bundle":
+            self.scan(force_ids=force_ids)
+            out = self.build_support_bundle()
+            if out:
+                size = os.path.getsize(out) if os.path.exists(out) else 0
+                msg = ("<h3>Support bundle written ✅</h3>"
+                       "<p><code>%s</code> (%d bytes)</p>"
+                       "<p>It's sanitized (MACs, IPs, SSIDs, keys, GPS and emails stripped). "
+                       "Copy it off with scp and attach it to a forum post or issue.</p>"
+                       "<p><a href='?'>&larr; back to Doctor</a></p>" % (out, size))
+            else:
+                msg = ("<h3>Support bundle failed</h3><p>Could not write the bundle "
+                       "(check the support_dir path/permissions).</p><p><a href='?'>&larr; back</a></p>")
+            return "<html><body><h1>Doctor</h1>%s</body></html>" % msg
+        drift = self._drift_html(request)
         self.scan(force_ids=force_ids)
         fixed = [f for f in self._findings if f["outcome"] == "fixed"]
         need = [f for f in self._findings
@@ -1883,8 +2078,10 @@ class Doctor(plugins.Plugin):
                 "patient coverage: %d/%d · recurring: %d</small></p>"
                 % (self._autofix, " · dry-run" if self._dry_run else "",
                    len(self._pack_conditions), covered, len(coverage), recurring))
+        summary = "<h3>Summary</h3><p>%s</p>" % self._narrative
+        tools = "<p><a href='?action=support_bundle'>Download sanitized support bundle</a></p>"
         if not self._findings:
-            body = mode + "<p><b>OK</b> — no issues detected. 🎉</p>"
+            body = mode + summary + "<p><b>OK</b> — no issues detected. 🎉</p>" + tools
             return "<html><body><h1>Doctor</h1>{}{}</body></html>".format(body, drift)
         else:
             def block(f):
@@ -1896,9 +2093,10 @@ class Doctor(plugins.Plugin):
                         "<td>{outcome}</td><td><ol>{steps}</ol></td></tr>").format(
                             sev=f["severity"], conf=f["confidence"], sym=f["symptom"],
                             cause=f["cause"], outcome=outcome, steps=steps)
-            body = (mode + "<p>Status: <b>{st}</b> — auto-fixed {nf}, needs you {nn}</p>{causal}"
+            body = (mode + summary
+                    + "<p>Status: <b>{st}</b> — auto-fixed {nf}, needs you {nn}</p>{causal}"
                     "<table border=1><tr><th>sev</th><th>confidence</th><th>symptom</th>"
-                    "<th>cause</th><th>outcome</th><th>what to do</th></tr>{rows}</table>").format(
+                    "<th>cause</th><th>outcome</th><th>what to do</th></tr>{rows}</table>{tools}").format(
                         st=self._status, nf=len(fixed), nn=len(need), causal=causal,
-                        rows="".join(block(f) for f in self._findings))
+                        rows="".join(block(f) for f in self._findings), tools=tools)
         return "<html><body><h1>Doctor</h1>{}{}</body></html>".format(body, drift)
