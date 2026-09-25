@@ -805,6 +805,60 @@ def test_condition_pack_simulation_respects_version_gate_without_execution():
     assert row["mutation_possible"] is False
 
 
+def test_pack_provenance_never_grants_authority():
+    pack = _condition_pack(provenance={
+        "publisher": "example",
+        "key_id": "k1",
+        "signature_algorithm": "ed25519",
+        "signature": "deadbeef",
+    })
+    row = doc.inspect_pack_provenance(
+        pack,
+        actual_sha256="aa",
+        expected_sha256="aa",
+        signature_verified=True,
+    )
+    assert row["signature_status"] == "verified"
+    assert row["hash_match"] is True
+    assert row["authority_delta"] == "none"
+
+
+def test_evidence_freshness_can_block_simulated_diagnosis_without_mutation():
+    pack = _condition_pack(
+        signals=["wifi.rfkill.blocked"],
+        detect={"key": "wifi.rfkill.blocked", "is": True},
+        evidence={"max_age_s": 30, "required_fresh": ["wifi.rfkill.blocked"]},
+    )
+    fresh = doc.simulate_condition_pack(
+        pack,
+        {"wifi.rfkill.blocked": True},
+        version="2.9.5.9",
+        evidence_meta={"wifi.rfkill.blocked": {"observed_at": 90}},
+        now=100,
+    )
+    assert fresh["freshness"]["state"] is True
+    assert fresh["would_diagnose"] is True
+    assert fresh["mutation_possible"] is False
+
+    stale = doc.simulate_condition_pack(
+        pack,
+        {"wifi.rfkill.blocked": True},
+        version="2.9.5.9",
+        evidence_meta={"wifi.rfkill.blocked": {"observed_at": 1}},
+        now=100,
+    )
+    assert stale["detect_state"] is True
+    assert stale["freshness"]["state"] is False
+    assert stale["would_diagnose"] is False
+
+    unknown = doc.simulate_condition_pack(
+        pack, {"wifi.rfkill.blocked": True}, version="2.9.5.9",
+        evidence_meta={}, now=100,
+    )
+    assert unknown["freshness"]["state"] is None
+    assert unknown["would_diagnose"] is False
+
+
 def test_local_condition_pack_loader_is_explain_only_by_default(tmp_path):
     pack = _condition_pack(fix={
         "action": "wifi.rfkill_unblock",
