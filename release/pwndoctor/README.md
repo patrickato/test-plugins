@@ -1,77 +1,76 @@
-# PwnDoctor — v0.7.0-pre1 release candidate
+# PwnDoctor v1.0.0-rc1
 
-> Status: **CI-validated release candidate; physical Pi/Jayofelony validation pending.**
+**Status:** software-complete v1 release candidate; automated/off-Pi validation green when the
+final release gate passes; exact-artifact physical Jayofelony/Pi validation remains required
+before the stable `1.0.0` tag.
 
-PwnDoctor is an offline-first health, diagnosis and guarded self-healing plugin for Jayofelony Pwnagotchi. It is designed as a single Doctor with a small trusted runtime, a persistent Patient Chart, owner-controlled Standing Orders, a local Toolbox, and a data-driven Medical Library of Condition Packs.
+PwnDoctor is an offline-first health, diagnosis and guarded self-healing plugin for stock
+Jayofelony Pwnagotchi. It acts as the device's local "immune system":
 
-## What it does
+**probe → diagnose → explain → gated-treat → verify → remember**
 
-- inspects core services, storage, power/throttle state, Wi-Fi/monitor state, rfkill, Pwnagotchi config, Bettercap reachability, time/NTP, memory/swap, route/DNS, temperature, logs and selected failure signatures;
-- matches evidence against built-in and data-driven conditions;
-- explains likely causes and practical next steps;
-- provides a plain-language narrative summary;
-- can apply only allow-listed remedies, under owner-selected autonomy policy;
-- verifies repairs and reports `verification unknown` when evidence is insufficient;
-- uses persistent circuit breakers to avoid repair loops;
-- maintains a bounded Patient Chart with device identity, diagnostic coverage, known-good summary, recurrence episodes and remedy outcomes;
-- supports first-party bundled Condition Packs and separate user/community packs;
-- can create a sanitized support ZIP with bounded/redacted diagnostic evidence;
-- works offline; network access is not required for core diagnosis or treatment.
+## v1 feature set
 
-## Safety model
+- broad guarded system/service/radio/storage/power/config/network diagnostics;
+- Condition Pack v1 Medical Library with bundled vs external/catalog trust classes;
+- tri-state truth: true / false / unknown;
+- allow-listed remedies with Standing Orders, owner vetoes, confirmations, guards and a
+  persistent circuit breaker;
+- treatment decision trace explaining every allow/block/verify decision;
+- Patient Chart v2 with lossless schema migration, recurrence/chronic memory and bounded
+  remedy-outcome history;
+- per-device remedy efficacy: poor verified history can only reduce automation to confirmation;
+- causal/root suppression so downstream symptoms do not trigger redundant automatic repairs;
+- recovery posture for questionable media/config integrity;
+- bounded known-good generations and drift comparison;
+- plain-language narrative;
+- sanitized one-click support bundle;
+- offline pack linter + tri-state simulation/replay;
+- SHA-pinned opt-in catalog fetch utility; cached catalog packs are always explain-only;
+- specialist-provider hub via `/run/pwnagotchi/health.d/` using
+  `pwndoctor/provider/v1` snapshots;
+- privacy-light `pwndoctor/status/v1` machine-readable status contract;
+- Doctor self-test/capability map;
+- reproducible package assembly, manifest/checksums and public-contract lock;
+- guided physical-validation recorder that refuses to emit a `physical_validated` row until
+  every required check passes.
 
-PwnDoctor follows four rules:
+## Safe first run
 
-1. **Unknown stays unknown.** Missing evidence never becomes fake success.
-2. **Knowledge is not authority.** Loading a Condition Pack does not grant it arbitrary execution rights.
-3. **The owner sets Standing Orders.** Observe, conservative, assertive, dry-run, opt-outs and confirm-required conditions are explicit.
-4. **Verify or say you cannot verify.** A remedy is not called fixed merely because a command returned.
+Use the included `examples/doctor.config.toml` and start with:
 
-See `docs/SECURITY_AND_SAFETY.md` for the full model.
+```toml
+main.plugins.doctor.enabled = true
+main.plugins.doctor.autofix = "observe"
+main.plugins.doctor.dry_run = true
+```
 
-## Requirements
+Then restart Pwnagotchi, open Doctor in the WebUI, review findings/self-test, and only increase
+autonomy after you are comfortable with the behavior on your hardware.
 
-- Jayofelony/Pwnagotchi custom-plugin support;
-- Python standard library only for Doctor itself;
-- Pwnagotchi normally runs plugins with sufficient privileges for guarded system actions;
-- optional system commands are used only when present: `systemctl`, `iw`, `rfkill`, `vcgencmd`, `timedatectl`, `journalctl`, `dpkg`;
-- no additional Python package is required by Doctor.
+## Package contents
 
-## Install location
+- `doctor.py`
+- `doctor_packs/` — first-party Medical Library
+- `examples/doctor.config.toml`
+- `examples/doctor.d/`
+- `catalog_fetch.py` — optional pinned HTTPS catalog staging utility
+- `physical_validation.py` — guided validation evidence recorder
+- `docs/` — installation, configuration, usage, security, compatibility, troubleshooting,
+  schema/roadmap/validation docs
+- `tests/`
+- `RELEASE_MANIFEST.json`
+- `SHA256SUMS`
+- `COMPATIBILITY_MATRIX.json`
+- `LICENSE`
 
-Current Jayofelony defaults use:
+## Important safety rule
 
-`/etc/pwnagotchi/custom-plugins/`
-
-with `main.custom_plugins` controlling the actual custom-plugin directory.
-
-See `docs/INSTALL.md`.
-
-## Package layout
-
-The standalone archive contains:
-
-- `doctor.py` — plugin runtime;
-- `doctor_packs/` — first-party bundled Medical Library;
-- `examples/doctor.config.toml` — complete example configuration;
-- `examples/doctor.d/` — user/community Condition Pack examples;
-- `docs/` — install, configuration, safety, troubleshooting, compatibility and validation guides;
-- `tests/` — off-Pi test suite/harness;
-- `LICENSE` — GPLv3;
-- `RELEASE_MANIFEST.json` and `SHA256SUMS`.
+Knowledge and authority are separate. Downloading, caching, signing or loading a Condition Pack
+does not create treatment authority. Only compiled allow-listed actions plus owner Standing
+Orders and all safety/verification gates can permit mutation.
 
 ## Validation status
 
-- v0.7.0-pre1 automated/off-Pi suite: required green;
-- Python 3.13 CI: active;
-- release assembly/integrity verification: required green;
-- real Pi/Jayofelony physical validation: **pending**;
-- no `physical_validated` compatibility claim will be made until the exact CI-tested artifact passes the owner checklist.
-
-## Collaboration
-
-Claude and OpenAI develop PwnDoctor in separate collaboration lanes. The release branch consumes Claude's green runtime work and adds release/integrity engineering without rewriting Claude's branch history.
-
-## License
-
-GPLv3, matching the repository license and upstream project ecosystem.
+Until the exact v1 RC artifact passes `docs/PHYSICAL_VALIDATION.md` on a real Jayofelony unit,
+compatibility remains correctly labeled `ci_validated` / `physical_validation_pending`.
