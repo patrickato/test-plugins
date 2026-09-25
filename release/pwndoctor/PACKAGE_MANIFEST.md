@@ -33,3 +33,10 @@ The release assembler generates:
 - `SHA256SUMS` — verification hashes for the assembled artifact.
 
 The assembler verifies both before returning success.
+- `release/pwndoctor/COMPATIBILITY_MATRIX.json` → `COMPATIBILITY_MATRIX.json`
+
+## Condition Pack inventory
+
+The generated `RELEASE_MANIFEST.json` records every bundled Condition Pack with filename, pack id, declared pack version, SHA-256 and whether it carries a remedy. Assembly verification rejects missing files, hash mismatches, id mismatches and duplicate bundled ids.
+
+The manifest also points to `COMPATIBILITY_MATRIX.json`; package verification rejects a missing or malformed matrix.
