@@ -25,13 +25,13 @@ Run this way first, inspect findings, then choose your Standing Orders.
 
 `dry_run = true` prevents mutation while showing what Doctor would do.
 
-`disable_autofix = ["condition.id"]` permanently blocks auto-treatment for named conditions while retaining diagnosis.
+`disable_autofix = ["condition.id"]` blocks automatic treatment for named conditions while retaining diagnosis.
 
 `confirm_required = ["condition.id"]` holds an otherwise-eligible action until the owner approves it from the Doctor WebUI. Held actions do not consume circuit-breaker budget.
 
-`deny_actions = ["action_name"]` is an owner veto on specific actions (e.g. `restart_service`): the Doctor will still diagnose and explain, but never run them. Action names: `restart_service`, `rfkill_unblock`, `set_time`, `remount_rw`, `make_handshakes_dir`, `prune_logs`, `stop_wpa_supplicant`, `vacuum_journal`, `restore_config`, `quarantine_plugin`.
+`deny_actions = ["action_name"]` is an owner veto on specific actions. Doctor will still diagnose and explain, but never run denied actions.
 
-`allow_reboot_actions = false` (default) holds reboot-class actions (`restore_config`, `quarantine_plugin`) for confirmation even at `assertive`, since they typically require a restart to take effect. Set `true` to let them auto-run. This gate is driven by each action's metadata, not its condition.
+`allow_reboot_actions = false` (default) holds reboot-class actions for confirmation even at `assertive`.
 
 ## Condition Packs
 
@@ -41,6 +41,15 @@ Run this way first, inspect findings, then choose your Standing Orders.
 
 First-party release packs live beside `doctor.py` in `doctor_packs/` and are treated as part of the reviewed release artifact. They still cannot create arbitrary new actions.
 
+## Support bundle
+
+v0.7 adds a sanitized support-bundle path for sharing useful diagnostic evidence without intentionally exporting sensitive device/network identity.
+
+- `support_dir` — directory where generated support ZIP files are written.
+- `support_log_lines` — bounded number of recent log lines included before redaction.
+
+The bundle redacts configured secret/location/identity values and common MAC, IPv4 and email patterns. Inspect any bundle before sharing it publicly.
+
 ## Runtime state
 
 - Patient Chart: `/var/lib/pwnagotchi/doctor/patient.json`
@@ -48,11 +57,11 @@ First-party release packs live beside `doctor.py` in `doctor_packs/` and are tre
 - known-good checkpoint: configured by `checkpoint_path`
 - persistent circuit breaker: configured by `breaker_path`
 
-Runtime state is intentionally separate from the first-party plugin files so upgrades do not erase the patient's history.
+Runtime state is intentionally separate from first-party plugin files so upgrades do not erase the patient's history.
 
 ## Thresholds
 
-v0.6 deliberately keeps config-tunable/computed thresholds in Python rather than adding generic parameter substitution to Condition Pack v1. This keeps the public schema small and understandable.
+v0.7 keeps config-tunable/computed thresholds in Python rather than turning Condition Pack v1 into a general programming language.
 
 Current configurable examples include free-space, temperature, journald size and restart-loop thresholds.
 
