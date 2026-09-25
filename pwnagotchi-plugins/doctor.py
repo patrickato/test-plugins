@@ -89,6 +89,7 @@ PUBLIC_CONTRACTS = {
     "patient_chart": 2,
     "doctor_status": "pwndoctor/status/v1",
     "physical_validation": "pwndoctor/physical-validation/v1",
+    "health_provider": "pwndoctor/provider/v1",
 }
 
 _SEV_RANK = {"high": 0, "warn": 1, "info": 2}
@@ -409,12 +410,117 @@ def canonicalize_signals(signals):
         "pwnagotchi.bettercap.reachable": s.get("bettercap_reachable"),
         "system.journal.bytes": s.get("journal_bytes"),
     }
+    provider = s.get("_provider_canonical", {}) or {}
+    if isinstance(provider, dict):
+        for key, value in provider.items():
+            if value is not None and canonical_key_known(key) and out.get(key) is None:
+                out[key] = value
+
     for name, row in (s.get("services", {}) or {}).items():
         if isinstance(row, dict):
             out["service.%s.active" % name] = row.get("active")
     for name, count in (s.get("service_restarts", {}) or {}).items():
         out["service.%s.restart_count" % name] = count
     return {k: v for k, v in out.items() if v is not None}
+
+
+def load_health_provider_snapshots(directory, *, now=None, max_files=64,
+                                   max_bytes=128 * 1024, max_age_s=300):
+    """Load bounded, fresh, read-only specialist snapshots from tmpfs.
+
+    Provider snapshots may add canonical evidence and explain-only findings. They cannot
+    provide remedies/actions.
+    """
+    now = float(time.time() if now is None else now)
+    canonical, findings, evidence_meta, providers, errors = {}, [], {}, [], []
+    if not directory or not os.path.isdir(directory):
+        return canonical, findings, evidence_meta, providers, errors
+    try:
+        names = sorted(x for x in os.listdir(directory) if x.lower().endswith(".json"))
+    except Exception as exc:
+        return {}, [], {}, [], [{"file": str(directory), "error": "list failed: %s" % exc}]
+    for name in names[:max_files]:
+        path = os.path.join(directory, name)
+        try:
+            if os.path.getsize(path) > max_bytes:
+                raise ValueError("provider snapshot exceeds %d byte limit" % max_bytes)
+            with open(path, "rt", encoding="utf-8") as fp:
+                obj = json.load(fp)
+            if not isinstance(obj, dict) or obj.get("schema") != PUBLIC_CONTRACTS["health_provider"]:
+                raise ValueError("schema must be %s" % PUBLIC_CONTRACTS["health_provider"])
+            provider_id = obj.get("id")
+            if not isinstance(provider_id, str) or not _PACK_ID_RE.fullmatch(provider_id):
+                raise ValueError("provider id must be a lowercase namespaced identifier")
+            observed_at = float(obj.get("observed_at"))
+            age = now - observed_at
+            if age < 0 or age > float(max_age_s):
+                raise ValueError("provider snapshot stale or future-dated (age=%.1fs)" % age)
+
+            accepted = 0
+            for key, value in (obj.get("signals") or {}).items():
+                if not canonical_key_known(key):
+                    continue
+                if key not in canonical:
+                    canonical[key] = value
+                    evidence_meta[key] = {
+                        "observed_at": observed_at,
+                        "provider": provider_id,
+                    }
+                    accepted += 1
+
+            for row in obj.get("findings") or []:
+                if not isinstance(row, dict):
+                    continue
+                fid = row.get("id")
+                if not isinstance(fid, str) or not _PACK_ID_RE.fullmatch(fid):
+                    continue
+                severity = row.get("severity", "info")
+                confidence = row.get("confidence", "medium")
+                if severity not in ("high", "warn", "info") or confidence not in ("high", "medium", "low"):
+                    continue
+                findings.append({
+                    "id": fid,
+                    "severity": severity,
+                    "confidence": confidence,
+                    "symptom": str(row.get("symptom") or "specialist finding")[:240],
+                    "cause": str(row.get("cause") or "")[:500],
+                    "howto": [str(x)[:500] for x in (row.get("howto") or [])[:20]],
+                    "fix": None,
+                    "_detect": lambda s: True,
+                    "_verify_state": None,
+                    "provenance": {
+                        "source_class": "provider",
+                        "source": provider_id,
+                        "observed_at": observed_at,
+                    },
+                    "outcome": "detected",
+                })
+            providers.append({
+                "id": provider_id,
+                "observed_at": observed_at,
+                "age_s": age,
+                "signal_count": accepted,
+                "finding_count": len(obj.get("findings") or []),
+            })
+        except Exception as exc:
+            errors.append({"file": name, "error": str(exc)[:240]})
+    if len(names) > max_files:
+        errors.append({"file": str(directory),
+                       "error": "provider count exceeds %d; extras ignored" % max_files})
+    return canonical, findings, evidence_meta, providers, errors
+
+
+def merge_provider_findings(findings, provider_findings):
+    """Append explain-only specialist findings without shadowing core/pack ids."""
+    out = list(findings or [])
+    seen = {row.get("id") for row in out}
+    for row in provider_findings or []:
+        if row.get("id") not in seen:
+            out.append(row)
+            seen.add(row.get("id"))
+    out.sort(key=lambda f: (_SEV_RANK.get(f.get("severity"), 9),
+                            _CONF_RANK.get(f.get("confidence"), 9)))
+    return out
 
 
 def eval_condition_expr_state(expr, canonical):
@@ -1959,8 +2065,12 @@ class Doctor(plugins.Plugin):
         self._patient = None
         self._bundled_conditions = []
         self._external_conditions = []
+        self._catalog_conditions = []
         self._pack_conditions = []
         self._pack_errors = []
+        self._providers = []
+        self._provider_errors = []
+        self._provider_evidence_meta = {}
 
     def _read_options(self):
         """Parse options into attrs. Called on load AND on_config_changed (live-editable)."""
@@ -1990,6 +2100,11 @@ class Doctor(plugins.Plugin):
                                               "/var/lib/pwnagotchi/doctor/patient.json")
         self._condition_dir = self.options.get("condition_dir",
                                                "/etc/pwnagotchi/doctor.d")
+        self._catalog_dir = self.options.get("catalog_dir",
+                                             "/var/lib/pwnagotchi/doctor/catalog.d")
+        self._enable_cached_catalog = bool(self.options.get("enable_cached_catalog", False))
+        self._provider_dir = self.options.get("provider_dir", "/run/pwnagotchi/health.d")
+        self._provider_max_age_s = max(1, int(self.options.get("provider_max_age_s", 300)))
         self._allow_pack_remedies = bool(self.options.get("allow_pack_remedies", False))
         self._min_free_mb = int(self.options.get("min_free_mb", 200))
         self._max_temp_c = float(self.options.get("max_temp_c", 80))
@@ -2035,10 +2150,19 @@ class Doctor(plugins.Plugin):
             self._condition_dir, allow_remedies=self._allow_pack_remedies,
             platform_name="pwnagotchi", version=version, source_class="external")
 
-        # Ordering is authority: core Python conditions win first, then first-party bundled
-        # packs, then external packs. diagnose() also de-duplicates ids in that order.
-        self._pack_conditions = self._bundled_conditions + self._external_conditions
-        self._pack_errors = bundled_errors + external_errors
+        # Cached catalog knowledge is always explain-only. Staging/fetching knowledge never
+        # grants treatment authority, even if the JSON names an allow-listed action.
+        if self._enable_cached_catalog:
+            self._catalog_conditions, catalog_errors = load_condition_packs(
+                self._catalog_dir, allow_remedies=False,
+                platform_name="pwnagotchi", version=version, source_class="catalog")
+        else:
+            self._catalog_conditions, catalog_errors = [], []
+
+        # Ordering is authority: core Python -> bundled -> owner external -> cached catalog.
+        self._pack_conditions = (self._bundled_conditions + self._external_conditions
+                                 + self._catalog_conditions)
+        self._pack_errors = bundled_errors + external_errors + catalog_errors
         for row in self._pack_errors[:10]:
             logging.warning("[doctor] condition pack skipped: %s: %s",
                             row.get("file"), row.get("error"))
@@ -2228,6 +2352,17 @@ class Doctor(plugins.Plugin):
             s["log"] = {}
             s["log_size"] = None
 
+        provider_signals, provider_findings, provider_meta, providers, provider_errors = (
+            load_health_provider_snapshots(
+                self._provider_dir, now=time.time(), max_age_s=self._provider_max_age_s
+            )
+        )
+        s["_provider_canonical"] = provider_signals
+        s["_provider_findings"] = provider_findings
+        self._provider_evidence_meta = provider_meta
+        self._providers = providers
+        self._provider_errors = provider_errors
+
         return s
 
     # -- the autonomous loop -----------------------------------------------------------
@@ -2235,6 +2370,7 @@ class Doctor(plugins.Plugin):
         now = now if now is not None else time.time()
         signals = self.collect(runner)
         findings = diagnose(signals, extra_conditions=self._pack_conditions)
+        findings = merge_provider_findings(findings, signals.get("_provider_findings") or [])
         acting = self._autofix not in ("off", "observe", "notify") and not self._dry_run
         # confirm-required conditions (and reboot-class actions) wait for owner approval;
         # force_ids (from the web "Confirm & apply" link) approve a specific one for this pass.
@@ -2428,7 +2564,13 @@ class Doctor(plugins.Plugin):
             "packs": {
                 "bundled": len(self._bundled_conditions),
                 "external": len(self._external_conditions),
+                "catalog": len(self._catalog_conditions),
                 "errors": list(self._pack_errors),
+            },
+            "providers": {
+                "count": len(self._providers),
+                "items": list(self._providers),
+                "errors": list(self._provider_errors),
             },
             "known_good": {
                 "generation_count": len(history),
