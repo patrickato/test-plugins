@@ -1287,7 +1287,54 @@ CHAINS = [
      "text": "no default route → DNS fails → uploads can't reach the internet."},
     {"when": {"no_route", "wpa_sec_errors"},
      "text": "no uplink → wpa-sec uploads fail."},
-]
+] 
+
+# Root -> downstream symptoms. Presence of a root never hides diagnosis; it only prevents
+# redundant automatic treatment of the downstream symptom in the same pass.
+CAUSAL_ROOTS = {
+    "rfkill_blocked": {"no_monitor"},
+    "wpa_supplicant_hijack": {"no_monitor"},
+    "iface_mismatch": {"no_monitor"},
+    "config_invalid": {"reboot_loop"},
+    "journald_bloat": {"disk_full"},
+    "undervoltage": {"usb_resets"},
+    "sd_errors": {"sd_readonly"},
+    "disk_full": {"sd_readonly"},
+    "no_route": {"dns_broken", "wpa_sec_errors"},
+}
+
+
+def suppress_downstream_treatments(findings):
+    by_id = {row.get("id"): row for row in (findings or []) if row.get("id")}
+    for root, downstream_ids in CAUSAL_ROOTS.items():
+        if root not in by_id:
+            continue
+        for child in downstream_ids:
+            row = by_id.get(child)
+            if row is not None and row.get("fix"):
+                row["_suppressed_by"] = root
+    return findings
+
+
+def recovery_posture(signals, findings=None):
+    """Conservative recovery posture for questionable media/config integrity."""
+    signals = signals or {}
+    reasons = []
+    dmesg = signals.get("dmesg", {}) or {}
+    disk = signals.get("disk", {}) or {}
+    config = signals.get("config", {}) or {}
+    ids = {row.get("id") for row in (findings or []) if row.get("id")}
+    if int(dmesg.get("sd_error", 0) or 0) > 0:
+        reasons.append("storage_io_errors")
+    if disk.get("root_ro") is True:
+        reasons.append("root_read_only")
+    if config.get("valid") is False and "reboot_loop" in ids:
+        reasons.append("invalid_config_crash_loop")
+    return {
+        "active": bool(reasons),
+        "reasons": sorted(set(reasons)),
+        "policy": "confirm_mutations",
+    }
 
 
 def build_causal(finding_ids):
@@ -1635,9 +1682,26 @@ def _decision_finish(finding, outcome, reason):
     return finding
 
 
+def annotate_remedy_efficacy(findings, patient, *, min_verified=4, poor_success_rate=0.25):
+    """Attach per-device remedy history; poor verified efficacy can only reduce autonomy."""
+    if patient is None:
+        return findings
+    for finding in findings or []:
+        fix = finding.get("fix")
+        if not isinstance(fix, dict):
+            continue
+        stats = patient.remedy_efficacy(finding.get("id"), action=fix.get("action"))
+        finding["efficacy"] = stats
+        verified = int(stats.get("verified_attempts", 0) or 0)
+        rate = stats.get("success_rate")
+        if verified >= int(min_verified) and rate is not None and float(rate) < float(poor_success_rate):
+            finding["_efficacy_hold"] = True
+    return findings
+
+
 def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
                 recollect=None, now=None, dry_run=False, disabled=None, confirm=None,
-                force=None, denied_actions=None, allow_reboot=False):
+                force=None, denied_actions=None, allow_reboot=False, recovery=None):
     """Attempt allowed fixes; guard; verify; set outcome + machine-readable decision trace.
 
     The trace is observational only: it explains the exact existing gates and never expands
@@ -1684,6 +1748,12 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
             continue
         _decision_gate(f, "standing_orders", "passed")
 
+        if f.get("_suppressed_by"):
+            _decision_gate(f, "root_cause", "blocked", "suppressed_by:%s" % f["_suppressed_by"])
+            _decision_finish(f, "needs_user", "downstream_treatment_suppressed")
+            continue
+        _decision_gate(f, "root_cause", "passed")
+
         guard = fix.get("guard")
         if guard:
             fn = GUARDS.get(guard)
@@ -1697,10 +1767,19 @@ def apply_fixes(findings, signals, autofix, runner, breaker, ctx,
                 continue
             _decision_gate(f, "guard", "passed", str(guard))
 
+        recovery_active = bool((recovery or {}).get("active"))
+        efficacy_hold = bool(f.get("_efficacy_hold"))
         needs_reboot = bool(_action_meta(fix.get("action")).get("needs_reboot"))
-        held = (f["id"] in confirm) or (needs_reboot and not allow_reboot)
+        held = (f["id"] in confirm) or (needs_reboot and not allow_reboot) or recovery_active or efficacy_hold
         if held and f["id"] not in force and not dry_run:
-            reason = "condition_requires_confirmation" if f["id"] in confirm else "reboot_action_requires_confirmation"
+            if recovery_active:
+                reason = "recovery_mode_requires_confirmation"
+            elif efficacy_hold:
+                reason = "poor_historical_efficacy_requires_confirmation"
+            elif f["id"] in confirm:
+                reason = "condition_requires_confirmation"
+            else:
+                reason = "reboot_action_requires_confirmation"
             _decision_gate(f, "confirmation", "blocked", reason)
             _decision_finish(f, "awaiting_confirm", reason)
             continue
@@ -2017,6 +2096,51 @@ class PatientChart:
             return dict(row) if isinstance(row, dict) else None
         return {k: dict(v) for k, v in chronic.items() if isinstance(v, dict)}
 
+    def remedy_efficacy(self, condition_id, action=None):
+        rows = [
+            row for row in (self.data.get("remedies") or [])
+            if isinstance(row, dict)
+            and row.get("condition") == condition_id
+            and (action is None or row.get("action") == action)
+        ]
+        successes = sum(1 for row in rows if row.get("outcome") == "fixed")
+        failures = sum(1 for row in rows if row.get("outcome") == "fix_failed")
+        unknowns = sum(1 for row in rows if row.get("outcome") == "executed_verification_unknown")
+        verified = successes + failures
+        rate = (float(successes) / verified) if verified else None
+        if verified < 2:
+            classification = "insufficient_history"
+        elif rate is not None and rate >= 0.75:
+            classification = "usually_effective"
+        elif rate is not None and rate < 0.25:
+            classification = "poor_history"
+        else:
+            classification = "mixed_history"
+        return {
+            "condition": condition_id,
+            "action": action,
+            "attempts": len(rows),
+            "verified_attempts": verified,
+            "successes": successes,
+            "failures": failures,
+            "verification_unknowns": unknowns,
+            "success_rate": rate,
+            "classification": classification,
+        }
+
+    def rank_remedies(self, condition_id, remedies):
+        """Stable per-device ranking; history never grants authority."""
+        scored = []
+        for index, remedy in enumerate(remedies or []):
+            action = remedy.get("action") if isinstance(remedy, dict) else None
+            stats = self.remedy_efficacy(condition_id, action=action)
+            rate = stats.get("success_rate")
+            # No evidence is neutral; known poor history sorts last.
+            score = 0.5 if rate is None else float(rate)
+            scored.append((score, -int(stats.get("verified_attempts", 0) or 0), -index, remedy, stats))
+        scored.sort(reverse=True, key=lambda row: row[:3])
+        return [{"remedy": row[3], "efficacy": row[4]} for row in scored]
+
     def summary(self):
         chronic = self.data.get("chronic") or {}
         recurring = sum(1 for row in chronic.values()
@@ -2071,6 +2195,7 @@ class Doctor(plugins.Plugin):
         self._providers = []
         self._provider_errors = []
         self._provider_evidence_meta = {}
+        self._recovery = {"active": False, "reasons": [], "policy": "confirm_mutations"}
 
     def _read_options(self):
         """Parse options into attrs. Called on load AND on_config_changed (live-editable)."""
@@ -2371,6 +2496,10 @@ class Doctor(plugins.Plugin):
         signals = self.collect(runner)
         findings = diagnose(signals, extra_conditions=self._pack_conditions)
         findings = merge_provider_findings(findings, signals.get("_provider_findings") or [])
+        suppress_downstream_treatments(findings)
+        annotate_remedy_efficacy(findings, self._patient)
+        recovery = recovery_posture(signals, findings)
+        self._recovery = recovery
         acting = self._autofix not in ("off", "observe", "notify") and not self._dry_run
         # confirm-required conditions (and reboot-class actions) wait for owner approval;
         # force_ids (from the web "Confirm & apply" link) approve a specific one for this pass.
@@ -2379,7 +2508,8 @@ class Doctor(plugins.Plugin):
                     recollect=(lambda: self.collect(runner)) if acting else None,
                     now=now, dry_run=self._dry_run, disabled=self._disabled,
                     confirm=self._confirm_required, force=set(force_ids or ()),
-                    denied_actions=self._deny_actions, allow_reboot=self._allow_reboot)
+                    denied_actions=self._deny_actions, allow_reboot=self._allow_reboot,
+                    recovery=recovery)
         self._save_breaker()
         self._findings = findings
         self._status = overall_status(findings)
@@ -2392,7 +2522,8 @@ class Doctor(plugins.Plugin):
         if findings:
             logging.info("[doctor] %s: %d issue(s), %d auto-fixed", self._status,
                          len(findings), sum(1 for f in findings if f["outcome"] == "fixed"))
-        return {"status": self._status, "findings": findings, "causal": self._causal}
+        return {"status": self._status, "findings": findings, "causal": self._causal,
+                "recovery": dict(self._recovery)}
 
     def _snapshot(self, signals):
         return {k: signals.get(k) for k in _SNAPSHOT_KEYS}
@@ -2567,6 +2698,7 @@ class Doctor(plugins.Plugin):
                 "catalog": len(self._catalog_conditions),
                 "errors": list(self._pack_errors),
             },
+            "recovery": dict(self._recovery),
             "providers": {
                 "count": len(self._providers),
                 "items": list(self._providers),
