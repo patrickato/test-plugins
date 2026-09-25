@@ -16,7 +16,7 @@ if [ ! -f "$SCRIPT_DIR/doctor.py" ] || [ ! -d "$SCRIPT_DIR/doctor_packs" ]; then
   exit 1
 fi
 
-mkdir -p "$DEST" /etc/pwnagotchi/doctor.d /var/lib/pwnagotchi/doctor
+mkdir -p "$DEST" /etc/pwnagotchi/doctor.d /var/lib/pwnagotchi/doctor /var/lib/pwnagotchi/doctor/catalog.d
 
 if [ -f "$DEST/doctor.py" ]; then
   cp -a "$DEST/doctor.py" "$DEST/doctor.py.bak-$STAMP"
