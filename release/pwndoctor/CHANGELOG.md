@@ -4,7 +4,7 @@ Versions below the horizontal rule are development pre-releases on the collabora
 Physical-Pi validation is pending until a `physical_validated` row exists in
 `COMPATIBILITY_MATRIX.json`; see `RC_READINESS.md` and `PHYSICAL_VALIDATION.md`.
 
-## 0.7.0-pre1 — "explain better" (dev, resumes after RC freeze lifted by owner)
+## 0.7.0-pre1 — Release Candidate — "explain better"
 
 - **Plain-language narrative:** one human paragraph stitching status + auto-fixes + what-needs-you
   + causal chain + known-good drift. Shown on the Doctor page ("Summary") and reusable by other
