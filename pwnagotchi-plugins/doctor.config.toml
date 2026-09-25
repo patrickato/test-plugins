@@ -1,86 +1,92 @@
-# Example config for the "doctor" plugin (v0.7-pre1 collaboration branch).
-# Copy into /etc/pwnagotchi/config.toml and edit.
-# Requires: none (Python standard library; uses systemctl/iw/rfkill/vcgencmd/timedatectl/
-#           journalctl when present, all guarded). Auto-fix actions need root (Pwnagotchi
-#           already runs as root).
+# PwnDoctor v1.0.0-rc1 — complete example configuration
+# Copy the settings you want into /etc/pwnagotchi/config.toml.
+# PwnDoctor itself uses only the Python standard library. Optional Linux/Pi commands are
+# capability probes; missing commands reduce coverage instead of preventing plugin load.
 
 main.plugins.doctor.enabled = true
 
-# --- Autonomy dial (Standing Orders) — you control this and can change it at any time. ------
-#   "off"          = do nothing (fully disabled acting; still loads)
-#   "observe"      = diagnose + explain only, never change anything
-#   "notify"       = same as observe (notification wiring comes later)
-#   "conservative" = auto-apply safe, reversible fixes; riskier ones give instructions  (DEFAULT)
-#   "assertive"    = also auto-apply riskier fixes (remount ro /, quarantine plugin, restore cfg)
-# Legacy values still work: "safe" -> conservative, "all" -> assertive.
-# Note: low-confidence (log-inferred) findings are NEVER auto-fixed, only explained. Risky
-# actions are additionally guarded (e.g. won't stop wpa_supplicant if it carries your uplink,
-# won't remount rw when the SD looks like it's failing).
-main.plugins.doctor.autofix = "conservative"
+# ---------------------------- Standing Orders / autonomy -------------------------------
+# off          = diagnose is effectively inactive for treatment
+# observe      = diagnose + explain only
+# notify       = observe semantics; reserved for notification integrations
+# conservative = safe eligible remedies may run automatically (recommended after validation)
+# assertive    = risky allow-listed remedies may also run, subject to every other gate
+main.plugins.doctor.autofix = "observe"
 
-# Dry run: log what the Doctor *would* fix, but change nothing. Great for a first run.
-main.plugins.doctor.dry_run = false
+# Recommended for first boot. Shows what Doctor would do without mutating the device.
+main.plugins.doctor.dry_run = true
 
-# Per-condition opt-out: list condition ids the Doctor must never auto-fix (still explained).
-# e.g. ["wpa_supplicant_hijack", "prune_logs"]
+# Condition IDs Doctor must never auto-treat.
 main.plugins.doctor.disable_autofix = []
 
-# Confirm-required: condition ids that should NOT auto-fix but instead queue for your one-tap
-# approval (outcome "awaiting_confirm"). Approve from the Doctor web page ("Confirm & apply").
-# The middle ground between fully automatic and fully manual. e.g. ["bettercap_down"]
+# Condition IDs that always require one-tap owner confirmation.
 main.plugins.doctor.confirm_required = []
 
-# Deny specific actions outright (owner veto): the Doctor will explain but never run them.
-# Action names: restart_service, rfkill_unblock, set_time, remount_rw, make_handshakes_dir,
-# prune_logs, stop_wpa_supplicant, vacuum_journal, restore_config, quarantine_plugin.
+# Owner veto on specific actions.
+# Available actions:
+# restart_service, rfkill_unblock, set_time, remount_rw, make_handshakes_dir,
+# prune_logs, stop_wpa_supplicant, vacuum_journal, restore_config, quarantine_plugin
 main.plugins.doctor.deny_actions = []
 
-# Reboot-class actions (restore_config, quarantine_plugin) queue for confirmation by default,
-# even at "assertive". Set true to let them auto-run.
+# Reboot-class actions remain confirmation-gated by default.
 main.plugins.doctor.allow_reboot_actions = false
 
-# One-click sanitized support bundle: written here when you click "Download sanitized support
-# bundle" on the Doctor web page. It's forum-ready — MACs, IPs, SSIDs, keys, GPS and emails are
-# stripped. support_log_lines controls how much (redacted) log tail is included.
-main.plugins.doctor.support_dir = "/var/lib/pwnagotchi/doctor"
-main.plugins.doctor.support_log_lines = 400
+# ---------------------------- Learning / recurrence ------------------------------------
+# Doctor remembers verified remedy outcomes per patient. History NEVER grants extra authority.
+# If a remedy has at least efficacy_min_verified proven outcomes and its verified success rate
+# is below efficacy_hold_below, automatic treatment is reduced to owner confirmation.
+main.plugins.doctor.efficacy_min_verified = 4
+main.plugins.doctor.efficacy_hold_below = 0.25
 
-# Run a full scan every N epochs (0 = only on startup and when you open the web page).
+# ---------------------------- Scan / diagnostic behavior -------------------------------
+# Full scan every N epochs. 0 = startup/web/manual scans only.
 main.plugins.doctor.scan_every = 30
-
-# Don't flag "service down" / "crash loop" before this many seconds of uptime (boot grace).
 main.plugins.doctor.boot_grace_s = 25
 
-# Paths.
+# Core thresholds.
+main.plugins.doctor.min_free_mb = 200
+main.plugins.doctor.max_temp_c = 80
+main.plugins.doctor.journal_max_mb = 200
+main.plugins.doctor.journal_keep_mb = 100
+main.plugins.doctor.restart_loop_threshold = 5
+
+# Services to inspect.
+main.plugins.doctor.services = ["pwnagotchi", "bettercap", "pwngrid-peer"]
+
+# ---------------------------- Paths / durable state ------------------------------------
 main.plugins.doctor.log_path = "/etc/pwnagotchi/log/pwnagotchi.log"
 main.plugins.doctor.config_path = "/etc/pwnagotchi/config.toml"
 main.plugins.doctor.handshakes = "/root/handshakes"
 main.plugins.doctor.incident_path = "/etc/pwnagotchi/doctor_incidents.json"
-# Known-good checkpoint (for "what changed since it worked?"). Save it from the web page.
-main.plugins.doctor.checkpoint_path = "/etc/pwnagotchi/doctor_known_good.json"
-# Circuit-breaker history persists here so attempt budgets survive a restart/reboot.
 main.plugins.doctor.breaker_path = "/etc/pwnagotchi/doctor_breaker.json"
 
-# Patient Chart: bounded device-specific identity/coverage/remedy memory.
-# Mutable runtime state belongs under /var/lib rather than /etc.
+# Patient Chart v2: bounded device identity, coverage, recurrence and remedy history.
 main.plugins.doctor.patient_path = "/var/lib/pwnagotchi/doctor/patient.json"
 
-# Local/offline Condition Pack directory. Data-only JSON packs load from here.
+# Known-good generations. load/diff defaults to the newest; older generations remain available.
+main.plugins.doctor.checkpoint_path = "/etc/pwnagotchi/doctor_known_good.json"
+main.plugins.doctor.checkpoint_generations = 5
+
+# ---------------------------- Condition Packs ------------------------------------------
+# Owner/local packs. Explain-only unless you explicitly opt into allow-listed remedies.
 main.plugins.doctor.condition_dir = "/etc/pwnagotchi/doctor.d"
-# SAFETY DEFAULT: external/local packs are explain-only. A pack cannot gain self-healing
-# authority merely by being copied onto the device. Set true only if you explicitly want
-# trusted local packs to reference Doctor actions that are already allow-listed.
 main.plugins.doctor.allow_pack_remedies = false
 
-# Thresholds.
-main.plugins.doctor.min_free_mb = 200
-main.plugins.doctor.max_temp_c = 80
-main.plugins.doctor.journal_max_mb = 200          # flag journald bloat above this
-main.plugins.doctor.journal_keep_mb = 100         # vacuum target when trimming the journal
-main.plugins.doctor.restart_loop_threshold = 5    # NRestarts >= this (after boot) = crash loop
+# Optional cached catalog. Packs staged here are ALWAYS explain-only, even if they name a remedy.
+main.plugins.doctor.catalog_dir = "/var/lib/pwnagotchi/doctor/catalog.d"
+main.plugins.doctor.enable_cached_catalog = false
 
-# Services to check are active (and to count restarts on).
-main.plugins.doctor.services = ["pwnagotchi", "bettercap", "pwngrid-peer"]
+# ---------------------------- Specialist provider hub ----------------------------------
+# Sibling plugins may publish read-only pwndoctor/provider/v1 JSON snapshots here.
+# /run is normally tmpfs, avoiding SD-card write churn. Provider findings cannot carry actions.
+main.plugins.doctor.provider_dir = "/run/pwnagotchi/health.d"
+main.plugins.doctor.provider_max_age_s = 300
 
-# UI position "x,y" for the "dr:" status (OK / healed / attn / DEGR / ACT!).
+# ---------------------------- Support bundle -------------------------------------------
+# WebUI can generate a sanitized support ZIP. Inspect it before public sharing.
+main.plugins.doctor.support_dir = "/var/lib/pwnagotchi/doctor"
+main.plugins.doctor.support_log_lines = 400
+
+# ---------------------------- UI --------------------------------------------------------
+# Small "dr:" field position on the Pwnagotchi display.
 main.plugins.doctor.position = "0,0"
