@@ -1,37 +1,82 @@
-# PwnDoctor troubleshooting
+# PwnDoctor v1 troubleshooting
 
-## Doctor does not appear
-
-Check:
+## Doctor does not load
 
 ```bash
 grep -n "main.custom_plugins" /etc/pwnagotchi/config.toml
-ls -l /etc/pwnagotchi/custom-plugins/doctor.py
+ls -la /etc/pwnagotchi/custom-plugins/doctor.py
 grep -n "main.plugins.doctor" /etc/pwnagotchi/config.toml
 sudo systemctl status pwnagotchi --no-pager
-sudo tail -n 200 /etc/pwnagotchi/log/pwnagotchi.log | grep -i doctor
+sudo tail -n 250 /etc/pwnagotchi/log/pwnagotchi.log | grep -i doctor
 ```
 
-## Doctor loads but no bundled packs appear
+Start with `autofix = "observe"` and `dry_run = true`.
 
-Confirm `doctor_packs/` is beside `doctor.py` in the same custom-plugin directory.
+## Bundled packs missing
 
-## User pack is detected but does not auto-fix
+`doctor_packs/` must sit beside `doctor.py`. Re-run `install.sh` from the assembled package.
 
-That is the default security policy. External packs are explain-only unless `allow_pack_remedies = true`, and even then they may only use actions already compiled into Doctor.
+## External pack diagnoses but does not treat
 
-## Doctor says verification unknown
+Expected by default. `/etc/pwnagotchi/doctor.d/` is explain-only unless the owner explicitly
+sets `allow_pack_remedies = true`. Cached catalog packs remain explain-only regardless.
 
-This means the action ran but the evidence required to prove success/failure was unavailable. It is intentionally not reported as fixed.
+## Catalog pack does not load
 
-## Doctor repeatedly tries the same repair
+Check:
+- `enable_cached_catalog = true`;
+- file exists in `catalog_dir`;
+- JSON schema is `condition-pack/v1`;
+- applicability/version gates match;
+- Doctor page/logs for pack errors.
 
-The persistent circuit breaker should stop repeated attempts after its budget. If it does not, preserve the breaker file and logs for a support bundle; that is a release-blocking defect.
+Use the linter/simulator before deployment.
 
-## Device becomes unreachable after an action
+## Provider snapshot ignored
 
-Use local/USB access if possible, restore the prior plugin release/config backup, and capture the incident/breaker/Patient Chart files before deleting anything. Connectivity-affecting remedies should be placed behind confirm-required or stricter policy during RC testing.
+Provider JSON must:
+- use `pwndoctor/provider/v1`;
+- have a valid namespaced id;
+- have an `observed_at` timestamp within `provider_max_age_s`;
+- fit size/count bounds.
 
-## Read-only filesystem / SD errors
+Stale/future-dated providers are rejected intentionally.
 
-Do not repeatedly force writes. Preserve irreplaceable config/state to independent storage first and replace suspect media.
+## Action says awaiting confirmation unexpectedly
+
+Possible reasons include:
+- `confirm_required`;
+- reboot-class action gate;
+- recovery posture;
+- poor verified per-device remedy efficacy.
+
+Read the finding's treatment decision trace for the exact gate/reason.
+
+## Downstream finding remains but is not auto-treated
+
+Root-cause suppression may be active. Doctor still diagnoses the symptom but avoids redundant
+automatic treatment while a more fundamental active cause explains it.
+
+## Recovery mode is active
+
+Common triggers:
+- SD/media I/O errors;
+- root filesystem read-only;
+- invalid config plus crash/restart-loop evidence.
+
+Preserve data first. Mutations require explicit owner confirmation.
+
+## Verification unknown
+
+The action ran but Doctor could not prove success or failure. Unknown is deliberately not
+reported as fixed.
+
+## Patient Chart reports a newer schema
+
+Do not delete it merely to silence the warning. An older Doctor intentionally leaves a future
+chart read-only. Upgrade Doctor or restore the matching newer runtime.
+
+## Support request
+
+Generate the sanitized support bundle from the Doctor page and inspect it before sharing. Keep
+the exact release version, compatibility fingerprint and physical-validation record with reports.
