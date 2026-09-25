@@ -1,25 +1,34 @@
 # PwnDoctor RC Readiness
-## v0.6.0-pre4 collaboration checkpoint
+## v0.7.0-pre1 collaboration checkpoint
 
-Status: **code/release-structure ready for physical release-candidate validation**.
+Status: **implementation/release-structure ready for physical release-candidate validation**.
 
 This does **not** claim physical compatibility yet.
 
 ## Automated evidence
 
-- Doctor engine/pack tests green in CI.
-- Full test-plugins suite green.
-- Standalone package assembled by CI.
-- Release manifest + SHA256SUMS generated and verified.
-- 12 first-party bundled Condition Packs inventoried by id/version/hash.
+- Claude's v0.7-pre1 source head completed green collaboration CI.
+- 102 Doctor tests / 364 repository tests were green at the v0.7-pre1 handoff.
+- Standalone package assembles as `pwndoctor-0.7.0-pre1`.
+- Release manifest + SHA256SUMS are generated and verified.
+- 12 first-party bundled Condition Packs are inventoried by id/version/hash.
 - Duplicate/missing/hash-mismatched bundled packs fail package verification.
-- Compatibility matrix included and explicitly marks physical validation pending.
+- Compatibility matrix targets `0.7.0-pre1` and explicitly marks physical validation pending.
 - External/local user packs remain explain-only by default.
-- Reproducible installer backs up existing Doctor files and does not edit config.toml.
+- Reproducible installer backs up existing Doctor files and does not edit `config.toml`.
 
-## Feature surface frozen for this RC
+## Current RC feature surface
 
-v0.6-pre4 includes:
+v0.7.0-pre1 includes all v0.6-pre4 Doctor foundations plus:
+
+- plain-language Doctor narrative;
+- sanitized one-click support bundle;
+- redaction of MACs, IPv4 addresses, emails and secret/location/identity configuration values;
+- bounded support-log collection;
+- configurable `support_dir` and `support_log_lines`.
+
+Foundation retained:
+
 - Condition Pack v1 loader/schema;
 - bundled vs external trust classes;
 - tri-state detect/verify truth;
@@ -36,13 +45,15 @@ v0.6-pre4 includes:
 - WebUI Doctor surface;
 - reproducible release package.
 
-Do not add v0.7 support-bundle/narrative/ranking features to this RC unless a physical-validation defect requires a change.
+## Collaboration rule
+
+Claude and OpenAI retain separate implementation lanes. Release work integrates Claude's current green Doctor source without overwriting Claude's branch or silently changing runtime authority.
 
 ## Owner physical-validation gate
 
-The next required evidence must come from a real Jayofelony/Pwnagotchi device.
+The next required evidence must come from a real Jayofelony/Pwnagotchi device using the exact tested v0.7.0-pre1 artifact.
 
-Run the release checklist against the exact tested package artifact and record:
+Run `PHYSICAL_VALIDATION.md` / `RELEASE_CHECKLIST.md` and record:
 - Pi model;
 - Jayofelony/Pwnagotchi version/image identifier;
 - Python version;
@@ -67,23 +78,21 @@ At minimum validate:
 14. radio/monitor failure case;
 15. invalid config case;
 16. read-only/media guard case;
-17. missing verification evidence -> verification unknown.
+17. missing verification evidence -> verification unknown;
+18. narrative renders coherently;
+19. sanitized support bundle is created and does not leak configured secrets/identifiers.
 
 ## Promotion rule
 
 Only after those checks pass should `COMPATIBILITY_MATRIX.json` receive a `physical_validated` row for that exact hardware/image combination.
 
-Physical validation failure is not a reason to hide or soften the evidence label. Fix the defect, rebuild a new tested artifact, repeat the failed checks, and preserve the previous result.
+If a physical test fails, preserve the evidence, fix the defect in the appropriate collaborator lane, rebuild a new tested artifact, and repeat the failed checks.
 
-## Standalone repository move
+## Release order
 
-Do not move/publish the final standalone repo merely because the source looks complete.
-
-Recommended order:
-1. freeze the RC commit;
-2. CI assembles + verifies package;
-3. physical validation on the exact artifact;
-4. fix/rebuild/retest if needed;
-5. update compatibility matrix + known limitations;
-6. create the standalone repository from the frozen tested package/source;
-7. tag/release with published archive checksum.
+1. CI assembles + verifies the v0.7.0-pre1 package.
+2. Physical validation runs on that exact artifact.
+3. Any defect is fixed/rebuilt/retested.
+4. Compatibility matrix + known limitations are updated.
+5. Tag the validated source.
+6. Publish the standalone release/archive with its checksum.
