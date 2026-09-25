@@ -1,55 +1,54 @@
-# PwnDoctor dependencies and requirements
+# PwnDoctor v1 dependencies
 
-## Required
+## Runtime
 
-- A Jayofelony/Pwnagotchi installation with custom-plugin loading enabled.
-- Python runtime provided by the Pwnagotchi image.
-- No additional pip package is required by `doctor.py` itself.
+PwnDoctor itself requires only:
+- Jayofelony/Pwnagotchi custom-plugin support;
+- the image's Python runtime;
+- Python standard library.
 
-## System commands Doctor may use
+No pip package is required by `doctor.py`.
 
-Doctor probes/actions call system tools only when available. Missing tools should reduce diagnostic coverage rather than prevent the plugin from loading.
+## Optional system commands
 
-- `systemctl` — service state/restart counters/actions;
-- `iw` — monitor-interface evidence;
-- `rfkill` — wireless block evidence/remedy;
-- `vcgencmd` — Raspberry Pi power/throttle evidence when available;
-- `timedatectl` — clock/NTP evidence/remedy;
-- `journalctl` — journal usage and bounded vacuum action;
-- `dpkg` — known-good package fingerprint;
-- standard Linux `/proc`, `/sys`, filesystem and socket interfaces.
+Doctor probes/actions use commands only when present:
 
-On current Jayofelony images these are generally present as part of the OS/Pwnagotchi stack. PwnDoctor does not install missing packages automatically.
+- `systemctl`
+- `iw`
+- `rfkill`
+- `vcgencmd`
+- `timedatectl`
+- `journalctl`
+- `dpkg`
+- `uname`
+
+Missing optional commands reduce coverage; they should not prevent Doctor from loading.
 
 ## Privileges
 
-Pwnagotchi normally runs with privileges sufficient for its own service/radio management. Read-only diagnosis can function with less authority, but guarded effectors such as service restart, rfkill changes or journal vacuum require appropriate system privileges.
+Read-only diagnosis can work with partial authority. Effectors such as service restart, rfkill,
+journal vacuum or filesystem remediation require appropriate privileges. Pwnagotchi normally
+runs plugins with sufficient system authority; Doctor still applies its own policy gates.
 
 ## Network
 
-No network connection is required for core Doctor operation or first-party Condition Packs.
+Core Doctor operation is offline-first and requires no network.
 
-Some probes distinguish default-route/DNS state. Those probes are diagnostic; PwnDoctor does not require Internet connectivity to load.
-
-## Hardware
-
-No extra hardware is required for Doctor.
-
-Pi-specific evidence sources are optional. The plugin is designed to tolerate absent `vcgencmd`, missing display hardware, unavailable radio probes and similar partial coverage.
+`catalog_fetch.py` is an optional manual utility. When invoked it requires HTTPS and a caller-
+supplied SHA-256. Fetched packs enter the cached catalog trust class and remain explain-only.
 
 ## Storage
 
-Recommended writable locations:
-- custom plugin: `/etc/pwnagotchi/custom-plugins/doctor.py`;
-- first-party packs: `/etc/pwnagotchi/custom-plugins/doctor_packs/`;
-- user packs: `/etc/pwnagotchi/doctor.d/`;
-- Patient Chart: `/var/lib/pwnagotchi/doctor/patient.json`.
+Recommended locations:
+- runtime: custom-plugin directory;
+- bundled packs: beside `doctor.py`;
+- owner packs: `/etc/pwnagotchi/doctor.d/`;
+- Patient Chart/support/cache: `/var/lib/pwnagotchi/doctor/`;
+- provider snapshots: `/run/pwnagotchi/health.d/` (normally tmpfs).
 
-Patient Chart persistence is change-gated to avoid unnecessary SD writes.
+Persistent writes are bounded/change-gated where practical.
 
-## Development/test requirements
+## Development
 
-For off-Pi development in this repository:
-- Python 3.13 is the CI reference;
-- `pytest` and Pillow are installed from `pwnagotchi-plugins/requirements-dev.txt`;
-- the fake Pwnagotchi harness under `pwnagotchi-plugins/tests/` supplies the plugin API surface used by tests.
+CI reference: Python 3.13 with dependencies in
+`pwnagotchi-plugins/requirements-dev.txt`.
