@@ -42,3 +42,18 @@ jobs:
         run: python release/pwndoctor/build_release.py --output /tmp/pwndoctor-dist
       - name: Inspect assembled package
         run: find /tmp/pwndoctor-dist -maxdepth 3 -type f -print | sort
+      - name: Archive tested standalone package
+        run: |
+          PKG="$(find /tmp/pwndoctor-dist -mindepth 1 -maxdepth 1 -type d -name 'pwndoctor-*' | head -n1)"
+          test -n "$PKG"
+          tar -C "$(dirname "$PKG")" -czf /tmp/pwndoctor-release.tar.gz "$(basename "$PKG")"
+          sha256sum /tmp/pwndoctor-release.tar.gz > /tmp/pwndoctor-release.tar.gz.sha256
+      - name: Upload tested standalone package
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwndoctor-tested-release-package
+          path: |
+            /tmp/pwndoctor-release.tar.gz
+            /tmp/pwndoctor-release.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 30
