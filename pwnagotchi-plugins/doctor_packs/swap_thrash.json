@@ -1,0 +1,14 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "swap_thrash",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "warn",
+  "confidence": "medium",
+  "signals": ["system.swap.used_pct"],
+  "detect": {"key": "system.swap.used_pct", "ge": 60},
+  "symptom": "heavy swap usage",
+  "cause": "RAM pressure is spilling to the SD card (slow + SD wear)",
+  "howto": ["Reduce memory use; avoid large swap on SD."],
+  "causal_chain": []
+}

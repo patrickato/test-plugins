@@ -1,0 +1,19 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "config_invalid",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "high",
+  "confidence": "high",
+  "signals": ["pwnagotchi.config.valid"],
+  "detect": {"key": "pwnagotchi.config.valid", "is": false},
+  "symptom": "config.toml does not parse",
+  "cause": "a syntax error (a hand-edit or a plugin rewrite) — Pwnagotchi may not start",
+  "fix": {"action": "restore_config", "tier": "risky",
+          "verify": {"key": "pwnagotchi.config.valid", "is": true}},
+  "howto": [
+    "Fix the TOML syntax in /etc/pwnagotchi/config.toml.",
+    "Restore: cp /etc/pwnagotchi/config.toml.doctor.bak /etc/pwnagotchi/config.toml"
+  ],
+  "causal_chain": []
+}

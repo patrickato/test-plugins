@@ -1,0 +1,17 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "dns_broken",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "warn",
+  "confidence": "medium",
+  "signals": ["network.default_route.present", "network.dns.ok"],
+  "detect": {"all": [
+    {"key": "network.default_route.present", "is": true},
+    {"key": "network.dns.ok", "is": false}
+  ]},
+  "symptom": "DNS resolution is failing",
+  "cause": "a route exists but names don't resolve",
+  "howto": ["Check /etc/resolv.conf and your uplink's DNS."],
+  "causal_chain": []
+}

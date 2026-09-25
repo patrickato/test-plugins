@@ -1,0 +1,23 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "wpa_supplicant_hijack",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "high",
+  "confidence": "high",
+  "signals": ["wifi.wpa_supplicant.running", "wifi.monitor.present"],
+  "detect": {"all": [
+    {"key": "wifi.wpa_supplicant.running", "is": true},
+    {"key": "wifi.monitor.present", "is": false}
+  ]},
+  "symptom": "wpa_supplicant is holding the Wi-Fi adapter",
+  "cause": "wpa_supplicant grabbed the interface, so monitor mode / capture can't start (the #1 'monitor mode won't work' cause)",
+  "fix": {"action": "stop_wpa_supplicant", "tier": "safe", "guard": "not_uplink",
+          "verify": {"key": "wifi.monitor.present", "is": true}},
+  "howto": [
+    "sudo systemctl stop wpa_supplicant   (frees the adapter)",
+    "If that adapter is your own uplink, only stop it on the capture adapter.",
+    "Confirm: iw dev shows an interface of 'type monitor'."
+  ],
+  "causal_chain": ["no_monitor"]
+}

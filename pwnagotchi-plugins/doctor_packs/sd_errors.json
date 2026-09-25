@@ -1,0 +1,17 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "sd_errors",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "high",
+  "confidence": "medium",
+  "signals": ["storage.sd.io_error_count"],
+  "detect": {"key": "storage.sd.io_error_count", "ge": 1},
+  "symptom": "SD card I/O errors in the kernel log",
+  "cause": "the SD card is degrading",
+  "howto": [
+    "Back up now. Reflash to a fresh, reputable SD card.",
+    "See the sd_wear plugin to track write wear."
+  ],
+  "causal_chain": []
+}

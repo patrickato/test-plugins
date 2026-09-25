@@ -1,0 +1,14 @@
+{
+  "schema": "condition-pack/v1",
+  "id": "no_route",
+  "version": "1.0.0",
+  "applies_to": {"platform": ["pwnagotchi"]},
+  "severity": "warn",
+  "confidence": "high",
+  "signals": ["network.default_route.present"],
+  "detect": {"key": "network.default_route.present", "is": false},
+  "symptom": "no default network route",
+  "cause": "no uplink — uploads (wpa-sec, grid) can't reach the internet",
+  "howto": ["Check bt-tether/USB/Wi-Fi uplink is connected."],
+  "causal_chain": []
+}
