@@ -7,6 +7,7 @@ on:
       - "claude/happy-newton-60zxt8"
       - "openai/pwndoctor-v0.6-collab"
       - "openai/pwndoctor-v0.7-release"
+      - "openai/pwndoctor-v1-roadmap"
     tags:
       - "pwndoctor-v*"
   pull_request:
