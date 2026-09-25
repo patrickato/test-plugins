@@ -79,3 +79,39 @@ Open the Doctor page in the Pwnagotchi WebUI (the plugin's route, e.g. `http://<
 4. Then follow `RC_READINESS.md` → "Standalone repository move" to freeze/tag/publish.
 
 Restore your config when done: `sudo cp /etc/pwnagotchi/config.toml.premptest /etc/pwnagotchi/config.toml`
+
+
+## Guided evidence recorder
+
+The standalone package includes `physical_validation.py`, a standard-library-only recorder.
+It does not change services, interfaces, configuration, storage state or Doctor Standing Orders.
+
+Start a record from the extracted release directory:
+
+```bash
+python3 physical_validation.py --doctor doctor.py \
+  --output physical-validation.json \
+  --artifact-sha256 <sha256-of-the-exact-tested-archive>
+```
+
+Resume later with:
+
+```bash
+python3 physical_validation.py --doctor doctor.py \
+  --output physical-validation.json --resume
+```
+
+Show completion status:
+
+```bash
+python3 physical_validation.py --output physical-validation.json --resume --summary
+```
+
+After every required check is recorded as `pass`, generate the compatibility-matrix row:
+
+```bash
+python3 physical_validation.py --output physical-validation.json --resume --matrix-row
+```
+
+The tool refuses to emit a `physical_validated` row while any required check is pending,
+failed or skipped. Preserve the JSON record with the release evidence.
