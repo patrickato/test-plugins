@@ -496,6 +496,58 @@ def test_verification_unknown_when_recollect_raises():
 
 
 # ---- action registry integrity ---------------------------------------------------------
+def test_treatment_decision_trace_explains_blocked_and_success_paths():
+    no_fix = [{"id": "manual", "severity": "warn", "confidence": "high",
+               "fix": None, "outcome": "detected"}]
+    out = doc.apply_fixes(no_fix, {}, "conservative", lambda c: None,
+                          doc.CircuitBreaker(), {}, now=1)
+    assert out[0]["decision"]["reason"] == "no_remedy"
+    assert out[0]["decision"]["gates"][0] == {
+        "gate": "remedy", "result": "blocked", "reason": "no_remedy"
+    }
+
+    dry = _safe_finding()
+    out = doc.apply_fixes(dry, {"rfkill_blocked": True}, "conservative",
+                          lambda c: None, doc.CircuitBreaker(), {},
+                          recollect=lambda: {"rfkill_blocked": False},
+                          dry_run=True, now=1)
+    trace = out[0]["decision"]
+    assert out[0]["outcome"] == "would_fix"
+    assert trace["reason"] == "dry_run"
+    assert trace["standing_order"] == "conservative"
+    assert trace["action"] == "rfkill_unblock"
+    assert any(g["gate"] == "mutation" and g["result"] == "skipped"
+               for g in trace["gates"])
+
+    fixed = _safe_finding()
+    out = doc.apply_fixes(fixed, {"rfkill_blocked": True}, "conservative",
+                          lambda c: None, doc.CircuitBreaker(), {},
+                          recollect=lambda: {"rfkill_blocked": False}, now=1)
+    trace = out[0]["decision"]
+    assert out[0]["outcome"] == "fixed"
+    assert trace["reason"] in {"verified_fixed", "condition_cleared"}
+    assert trace["gates"][-1]["gate"] == "verification"
+    assert trace["gates"][-1]["result"] == "passed"
+
+
+def test_treatment_decision_trace_names_owner_and_safety_gates():
+    denied = _safe_finding()
+    out = doc.apply_fixes(denied, {}, "conservative", lambda c: None,
+                          doc.CircuitBreaker(), {}, denied_actions={"rfkill_unblock"})
+    assert out[0]["decision"]["reason"] == "owner_denied_action"
+
+    held = _confirm_finding()
+    out = doc.apply_fixes(held, {}, "conservative", lambda c: None,
+                          doc.CircuitBreaker(), {}, confirm={"bettercap_down"})
+    assert out[0]["decision"]["reason"] == "condition_requires_confirmation"
+
+    low = _safe_finding()
+    low[0]["confidence"] = "low"
+    out = doc.apply_fixes(low, {}, "assertive", lambda c: None,
+                          doc.CircuitBreaker(), {})
+    assert out[0]["decision"]["reason"] == "low_confidence"
+
+
 def test_actions_and_meta_in_sync():
     assert set(doc.ACTIONS) == set(doc.ACTION_META)
     for meta in doc.ACTION_META.values():
