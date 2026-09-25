@@ -859,6 +859,72 @@ def test_evidence_freshness_can_block_simulated_diagnosis_without_mutation():
     assert unknown["would_diagnose"] is False
 
 
+def test_health_provider_snapshot_is_bounded_fresh_and_explain_only(tmp_path):
+    provider = {
+        "schema": doc.PUBLIC_CONTRACTS["health_provider"],
+        "id": "specialist.sd_wear",
+        "observed_at": 100,
+        "signals": {"storage.root.free_mb": 321},
+        "findings": [{
+            "id": "specialist.sd_wear.warning",
+            "severity": "warn",
+            "confidence": "medium",
+            "symptom": "SD wear estimate is low",
+            "cause": "write endurance estimate",
+            "howto": ["Back up the card."],
+            "fix": {"action": "remount_rw"},
+        }],
+    }
+    (tmp_path / "sd.json").write_text(json.dumps(provider))
+    signals, findings, meta, providers, errors = doc.load_health_provider_snapshots(
+        str(tmp_path), now=110, max_age_s=30)
+    assert errors == []
+    assert signals["storage.root.free_mb"] == 321
+    assert meta["storage.root.free_mb"]["provider"] == "specialist.sd_wear"
+    assert providers[0]["id"] == "specialist.sd_wear"
+    assert findings[0]["id"] == "specialist.sd_wear.warning"
+    assert findings[0]["fix"] is None
+
+    # The same snapshot ages out instead of becoming silently authoritative.
+    signals, findings, meta, providers, errors = doc.load_health_provider_snapshots(
+        str(tmp_path), now=1000, max_age_s=30)
+    assert signals == {} and findings == [] and providers == []
+    assert errors and "stale" in errors[0]["error"]
+
+
+def test_provider_canonical_never_overrides_core_signal():
+    raw = {
+        "disk": {"free_mb": 999},
+        "_provider_canonical": {
+            "storage.root.free_mb": 1,
+            "network.dns.ok": True,
+        },
+    }
+    canonical = doc.canonicalize_signals(raw)
+    assert canonical["storage.root.free_mb"] == 999
+    assert canonical["network.dns.ok"] is True
+
+
+def test_cached_catalog_is_always_explain_only(load_plugin, tmp_path):
+    catalog = tmp_path / "catalog"; catalog.mkdir()
+    pack = _condition_pack(
+        id="wifi.catalog_rfkill",
+        signals=["wifi.rfkill.blocked"],
+        detect={"key": "wifi.rfkill.blocked", "is": True},
+        fix={"action": "wifi.rfkill_unblock", "tier": "safe",
+             "verify": {"key": "wifi.rfkill.blocked", "is": False}},
+    )
+    (catalog / "rfkill.json").write_text(json.dumps(pack))
+    p = _make(load_plugin, tmp_path,
+              enable_cached_catalog=True,
+              catalog_dir=str(catalog),
+              allow_pack_remedies=True)
+    hits = [x for x in p._catalog_conditions if x["id"] == "wifi.catalog_rfkill"]
+    assert len(hits) == 1
+    assert hits[0]["fix"] is None
+    assert hits[0]["provenance"]["source_class"] == "catalog"
+
+
 def test_local_condition_pack_loader_is_explain_only_by_default(tmp_path):
     pack = _condition_pack(fix={
         "action": "wifi.rfkill_unblock",
