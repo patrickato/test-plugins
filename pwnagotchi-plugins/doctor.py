@@ -2230,6 +2230,12 @@ class Doctor(plugins.Plugin):
         self._enable_cached_catalog = bool(self.options.get("enable_cached_catalog", False))
         self._provider_dir = self.options.get("provider_dir", "/run/pwnagotchi/health.d")
         self._provider_max_age_s = max(1, int(self.options.get("provider_max_age_s", 300)))
+        self._efficacy_min_verified = max(
+            1, int(self.options.get("efficacy_min_verified", 4))
+        )
+        self._efficacy_hold_below = max(
+            0.0, min(1.0, float(self.options.get("efficacy_hold_below", 0.25)))
+        )
         self._allow_pack_remedies = bool(self.options.get("allow_pack_remedies", False))
         self._min_free_mb = int(self.options.get("min_free_mb", 200))
         self._max_temp_c = float(self.options.get("max_temp_c", 80))
@@ -2497,7 +2503,11 @@ class Doctor(plugins.Plugin):
         findings = diagnose(signals, extra_conditions=self._pack_conditions)
         findings = merge_provider_findings(findings, signals.get("_provider_findings") or [])
         suppress_downstream_treatments(findings)
-        annotate_remedy_efficacy(findings, self._patient)
+        annotate_remedy_efficacy(
+            findings, self._patient,
+            min_verified=self._efficacy_min_verified,
+            poor_success_rate=self._efficacy_hold_below,
+        )
         recovery = recovery_posture(signals, findings)
         self._recovery = recovery
         acting = self._autofix not in ("off", "observe", "notify") and not self._dry_run
@@ -2665,6 +2675,38 @@ class Doctor(plugins.Plugin):
         """Current human-readable summary (also reusable by daily_digest etc.)."""
         return self._narrative
 
+    def self_test(self):
+        """Privacy-light capability/intake check; read-only and safe to call anytime."""
+        commands = {}
+        for name in ("systemctl", "iw", "rfkill", "vcgencmd", "timedatectl",
+                     "journalctl", "dpkg", "uname"):
+            commands[name] = bool(shutil.which(name))
+        paths = {
+            "config_readable": bool(self._config_path and os.path.isfile(self._config_path)
+                                    and os.access(self._config_path, os.R_OK)),
+            "condition_dir": bool(self._condition_dir and os.path.isdir(self._condition_dir)),
+            "catalog_dir": bool(self._catalog_dir and os.path.isdir(self._catalog_dir)),
+            "provider_dir": bool(self._provider_dir and os.path.isdir(self._provider_dir)),
+            "patient_chart_writable": bool(
+                self._patient is not None and getattr(self._patient, "_write_enabled", False)
+            ),
+        }
+        coverage = self._patient.summary().get("coverage", {}) if self._patient is not None else {}
+        return {
+            "schema": "pwndoctor/self-test/v1",
+            "doctor_version": self.__version__,
+            "commands": commands,
+            "paths": paths,
+            "condition_pack_errors": len(self._pack_errors),
+            "provider_errors": len(self._provider_errors),
+            "patient_chart_error": (
+                getattr(self._patient, "load_error", None) if self._patient is not None else "not_loaded"
+            ),
+            "coverage": dict(coverage or {}),
+            "ready": bool(paths["config_readable"] and paths["patient_chart_writable"]
+                          and not getattr(self._patient, "load_error", None)),
+        }
+
     def status_contract(self):
         """Stable privacy-light machine-readable Doctor status for local consumers."""
         patient = self._patient.summary() if self._patient is not None else {}
@@ -2709,6 +2751,7 @@ class Doctor(plugins.Plugin):
                 "current_saved_at": history[0].get("saved_at") if history else None,
             },
             "compatibility": compatibility_fingerprint(),
+            "self_test": self.self_test(),
         }
 
     def _support_report(self):
