@@ -564,6 +564,86 @@ def _lint_expr(expr, path="expr"):
     return errors, keys
 
 
+def inspect_pack_provenance(pack, *, actual_sha256=None, expected_sha256=None,
+                            signature_verified=None):
+    """Describe provenance evidence without granting treatment authority.
+
+    Cryptographic verification is intentionally supplied by a future catalog/verifier layer.
+    This function only normalizes identity/hash/signature evidence.
+    """
+    provenance = pack.get("provenance") if isinstance(pack, dict) else None
+    provenance = provenance if isinstance(provenance, dict) else {}
+    signature = provenance.get("signature")
+    if signature_verified is True:
+        signature_status = "verified"
+    elif signature_verified is False:
+        signature_status = "invalid"
+    elif signature:
+        signature_status = "unverified"
+    else:
+        signature_status = "absent"
+
+    hash_match = None
+    if expected_sha256 is not None and actual_sha256 is not None:
+        hash_match = str(expected_sha256).lower() == str(actual_sha256).lower()
+
+    return {
+        "publisher": provenance.get("publisher") or provenance.get("author"),
+        "key_id": provenance.get("key_id"),
+        "signature_algorithm": provenance.get("signature_algorithm") or provenance.get("alg"),
+        "signature_status": signature_status,
+        "content_sha256": actual_sha256,
+        "expected_sha256": expected_sha256,
+        "hash_match": hash_match,
+        "authority_delta": "none",
+    }
+
+
+def evaluate_evidence_freshness(pack, evidence_meta, *, now=None):
+    """Evaluate optional pack evidence-age requirements as true/false/unknown."""
+    rule = pack.get("evidence") if isinstance(pack, dict) else None
+    if not isinstance(rule, dict) or "max_age_s" not in rule:
+        return {
+            "required": False, "state": True, "fresh_keys": [],
+            "stale_keys": [], "unknown_keys": [],
+        }
+    try:
+        max_age = float(rule.get("max_age_s"))
+    except (TypeError, ValueError):
+        return {
+            "required": True, "state": None, "fresh_keys": [],
+            "stale_keys": [], "unknown_keys": ["<invalid-max-age>"],
+        }
+    now = float(time.time() if now is None else now)
+    keys = rule.get("required_fresh")
+    if not isinstance(keys, list) or not keys:
+        lint = lint_condition_pack(pack)
+        keys = lint.get("referenced_keys") or []
+    meta = evidence_meta if isinstance(evidence_meta, dict) else {}
+    fresh, stale, unknown = [], [], []
+    for key in keys:
+        row = meta.get(key)
+        observed_at = row.get("observed_at") if isinstance(row, dict) else None
+        try:
+            age = now - float(observed_at)
+        except (TypeError, ValueError):
+            unknown.append(key)
+            continue
+        if age < 0 or age > max_age:
+            stale.append(key)
+        else:
+            fresh.append(key)
+    state = False if stale else (None if unknown else True)
+    return {
+        "required": True,
+        "state": state,
+        "max_age_s": max_age,
+        "fresh_keys": sorted(fresh),
+        "stale_keys": sorted(stale),
+        "unknown_keys": sorted(unknown),
+    }
+
+
 def lint_condition_pack(pack):
     """Deep offline lint. Returns structured errors/warnings; never executes a remedy."""
     errors = list(validate_condition_pack(pack))
@@ -599,6 +679,35 @@ def lint_condition_pack(pack):
                 mapped_guard = _PACK_GUARD_ALIASES.get(raw_guard, raw_guard)
                 if mapped_guard not in globals().get("GUARDS", {}):
                     warnings.append("fix guard is unknown to this Doctor: %s" % raw_guard)
+
+        provenance = pack.get("provenance")
+        if provenance is not None and not isinstance(provenance, dict):
+            errors.append("provenance must be an object when present")
+        elif isinstance(provenance, dict) and provenance.get("signature"):
+            if not (provenance.get("publisher") or provenance.get("author")):
+                warnings.append("signed provenance has no publisher/author identity")
+            if not provenance.get("key_id"):
+                warnings.append("signed provenance has no key_id")
+            if not (provenance.get("signature_algorithm") or provenance.get("alg")):
+                warnings.append("signed provenance has no signature_algorithm")
+
+        evidence = pack.get("evidence")
+        if evidence is not None:
+            if not isinstance(evidence, dict):
+                errors.append("evidence must be an object when present")
+            else:
+                try:
+                    max_age = float(evidence.get("max_age_s"))
+                    if max_age <= 0:
+                        raise ValueError()
+                except (TypeError, ValueError):
+                    errors.append("evidence.max_age_s must be a positive number")
+                required_fresh = evidence.get("required_fresh", [])
+                if required_fresh is not None and (
+                    not isinstance(required_fresh, list) or
+                    any(not isinstance(x, str) for x in required_fresh)
+                ):
+                    errors.append("evidence.required_fresh must be a list of canonical-key strings")
 
         declared = pack.get("signals", [])
         if declared is None:
@@ -636,7 +745,7 @@ def lint_condition_pack(pack):
 
 
 def simulate_condition_pack(pack, canonical_signals, *, platform_name="pwnagotchi",
-                            version=None):
+                            version=None, evidence_meta=None, now=None):
     """Pure/dry Condition Pack replay against canonical signals.
 
     This intentionally has no runner/action parameter and cannot mutate the device.
@@ -659,6 +768,9 @@ def simulate_condition_pack(pack, canonical_signals, *, platform_name="pwnagotch
             "guard": None,
             "guard_known": True,
         },
+        "freshness": {"required": False, "state": True, "fresh_keys": [],
+                      "stale_keys": [], "unknown_keys": []},
+        "provenance": inspect_pack_provenance(pack),
         "mutation_possible": False,
     }
     if not lint["valid"]:
@@ -671,8 +783,13 @@ def simulate_condition_pack(pack, canonical_signals, *, platform_name="pwnagotch
         return result
 
     canonical = dict(canonical_signals or {})
+    freshness = evaluate_evidence_freshness(pack, evidence_meta, now=now)
+    result["freshness"] = freshness
     result["detect_state"] = eval_condition_expr_state(pack.get("detect"), canonical)
-    result["would_diagnose"] = result["detect_state"] is True
+    result["would_diagnose"] = (
+        result["detect_state"] is True and
+        (not freshness.get("required") or freshness.get("state") is True)
+    )
 
     fix = pack.get("fix")
     if isinstance(fix, dict):
