@@ -6,6 +6,9 @@ on:
       - "main"
       - "claude/happy-newton-60zxt8"
       - "openai/pwndoctor-v0.6-collab"
+      - "openai/pwndoctor-v0.7-release"
+    tags:
+      - "pwndoctor-v*"
   pull_request:
     paths:
       - "pwnagotchi-plugins/doctor.py"
