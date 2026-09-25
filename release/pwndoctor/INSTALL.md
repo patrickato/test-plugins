@@ -1,36 +1,28 @@
-# Installing PwnDoctor
+# Installing PwnDoctor v1
 
-## Before you start
+## Recommended install
 
-Back up `/etc/pwnagotchi/config.toml` before enabling any new plugin.
-
-Current Jayofelony images use `/etc/pwnagotchi/custom-plugins/` as the canonical custom-plugin path, while the actual path is controlled by `main.custom_plugins` in `/etc/pwnagotchi/config.toml`.
-
-## Manual install
-
-1. Copy `doctor.py` into your configured custom-plugin directory.
+1. Back up your Pwnagotchi config:
 
 ```bash
-sudo mkdir -p /etc/pwnagotchi/custom-plugins
-sudo cp doctor.py /etc/pwnagotchi/custom-plugins/doctor.py
+sudo cp -a /etc/pwnagotchi/config.toml /etc/pwnagotchi/config.toml.before-pwndoctor
 ```
 
-2. Copy first-party bundled Condition Packs next to the plugin:
+2. Extract the exact PwnDoctor release archive.
+
+3. Run the conservative installer from the extracted directory:
 
 ```bash
-sudo rm -rf /etc/pwnagotchi/custom-plugins/doctor_packs
-sudo cp -a doctor_packs /etc/pwnagotchi/custom-plugins/doctor_packs
+sudo ./install.sh
 ```
 
-3. Create the optional local user-pack directory:
+The installer:
+- installs `doctor.py` and bundled `doctor_packs/`;
+- backs up an existing Doctor runtime/packs with a timestamp;
+- creates required Doctor state directories;
+- **does not edit** `/etc/pwnagotchi/config.toml`.
 
-```bash
-sudo mkdir -p /etc/pwnagotchi/doctor.d
-```
-
-4. Copy the example Doctor configuration into `/etc/pwnagotchi/config.toml` and review the autonomy settings before restart.
-
-Start conservatively:
+4. Review `examples/doctor.config.toml`. For a first run, add at least:
 
 ```toml
 main.plugins.doctor.enabled = true
@@ -38,46 +30,64 @@ main.plugins.doctor.autofix = "observe"
 main.plugins.doctor.dry_run = true
 ```
 
-After you have reviewed findings and confirmed expected behavior, move to `conservative` and disable dry-run if desired.
-
 5. Restart Pwnagotchi:
 
 ```bash
 sudo systemctl restart pwnagotchi
 ```
 
-6. Watch the log:
+6. Verify load:
 
 ```bash
-sudo tail -f /etc/pwnagotchi/log/pwnagotchi.log | grep -i doctor
+sudo systemctl status pwnagotchi --no-pager
+sudo tail -n 250 /etc/pwnagotchi/log/pwnagotchi.log | grep -i doctor
 ```
 
-7. Open the plugin page in the Pwnagotchi WebUI under the Doctor plugin route.
+7. Open the Doctor WebUI page and review status, findings and self-test.
+
+## Install paths
+
+Default Jayofelony custom-plugin path:
+
+`/etc/pwnagotchi/custom-plugins/`
+
+The actual path is controlled by `main.custom_plugins`. To override the installer destination:
+
+```bash
+sudo PWN_CUSTOM_PLUGINS=/your/custom/path ./install.sh
+```
+
+Runtime state defaults:
+
+- Patient Chart: `/var/lib/pwnagotchi/doctor/patient.json`
+- support bundles/catalog cache: `/var/lib/pwnagotchi/doctor/`
+- owner Condition Packs: `/etc/pwnagotchi/doctor.d/`
+- provider snapshots: `/run/pwnagotchi/health.d/`
+- incidents/breaker/known-good state: configured paths in `doctor.config.toml`
 
 ## Upgrade
 
-Before replacing an existing Doctor:
+Run the newer release's `install.sh`. Existing runtime and first-party pack files are backed up.
+Patient Chart v1 migrates to v2 automatically. A Doctor that encounters a Patient Chart schema
+newer than it understands leaves that chart read-only instead of overwriting it.
 
-```bash
-sudo cp -a /etc/pwnagotchi/custom-plugins/doctor.py /etc/pwnagotchi/custom-plugins/doctor.py.bak
-sudo cp -a /etc/pwnagotchi/custom-plugins/doctor_packs /etc/pwnagotchi/custom-plugins/doctor_packs.bak 2>/dev/null || true
-```
+## Rollback
 
-Then copy the new release files and restart Pwnagotchi.
+Restore the timestamped `doctor.py.bak-*` and matching `doctor_packs.bak-*` together, then
+restart Pwnagotchi.
 
-Patient Chart, incidents, breaker state and known-good state are runtime data and should not be deleted during a normal upgrade.
-
-## Roll back
-
-Restore the previous `doctor.py` and matching `doctor_packs/` together. Do not mix a new runtime with an older first-party Medical Library unless the release notes explicitly say it is compatible.
+Do not intentionally downgrade Patient Chart data. If rollback encounters a newer chart schema,
+the older runtime should refuse to overwrite it.
 
 ## Uninstall
 
 1. Set `main.plugins.doctor.enabled = false`.
 2. Restart Pwnagotchi.
-3. Remove `doctor.py` and `doctor_packs/` from the custom-plugin directory if desired.
-4. Keep `/var/lib/pwnagotchi/doctor/` and `/etc/pwnagotchi/doctor*.json` if you may reinstall and want to retain Patient Chart/incident history; delete them only if you intentionally want a clean slate.
+3. Remove `doctor.py` and `doctor_packs/` if desired.
+4. Keep Doctor state if you may reinstall. Delete it only when you intentionally want a fresh
+   patient/history.
 
-## Important
+## After install
 
-The RC package will include an installer helper, but it will **not** silently edit your main `config.toml`. Configuration remains an explicit owner action.
+Keep `observe + dry_run` until you have reviewed the device. Then follow
+`docs/PHYSICAL_VALIDATION.md` before promoting the exact RC artifact to stable v1.
