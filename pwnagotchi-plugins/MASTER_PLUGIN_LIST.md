@@ -68,6 +68,11 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 14 - duplicate cluster 2 (aggressive/instant-attack mode):** no
+changes - `hulk.py`, `instattack.py`, `probenpwn.py` all kept, despite a
+source review finding `hulk.py` has zero target scoping (unconditional
+`wifi.deauth *` every 5s, ignores `main.whitelist` entirely).
+
 **Group 13 - duplicate cluster 1 (dictionary-crack speed variants):** removed
 `quickdic.py`, `better_quickdic.py`, `pwnagotchi_fast_dictionary` (3) - all
 three do the same job, and source review found real defects in each
