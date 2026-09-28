@@ -116,5 +116,18 @@ it never actually renders a QR code on-device.
 |---|---|---|
 | [`shared missing-imports fix`](cluster-07-cracked-password-display/NOTES.md) | `display-password.py`, `display-password-qr.py`, `mycracked_pw.py` | KEPT AS-IS - documented fix, low priority |
 
+### Cluster 8 - GPS/location status plugins (partial)
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 21. 3 of 10
+confirmed keep so far: `gps-plus.py` (fits user's actual USB GPS
+hardware, has a `.pcap`/`.gps.json` filename-mangling bug on this
+image's `.pcapng` captures), `gps_error.py` and `gps_sat.py`
+(lightweight status add-ons, no bugs found). Remaining 7 still under
+review.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`GPS status cluster notes`](cluster-08-gps-status/NOTES.md) | `gps-plus.py`, `gps_error.py`, `gps_sat.py`, `gps_fix.py`, `gps_grid.py`, `gps_led.py`, `gps_live.py`, `gpsdeasy.py`, `gsmfake.py`, `mygps.py` | 3 KEPT AS-IS - documented fix, low priority; 7 PENDING |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

@@ -68,6 +68,26 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 21 - duplicate cluster 8 (GPS/location status plugins), partial
+pass - 3 confirmed keeps:** `gps_error.py`, `gps_sat.py`, `gps-plus.py`
+confirmed as keeps (source-verified, none are duplicates of each
+other or of the remaining 7 in this cluster - each does a distinct
+job). `gps-plus.py` fits the user's actual GPS hardware (owns a u-blox
+7 USB dongle, a second puck-style USB GPS receiver, and another GPS
+sensor) but has a filename bug: `filename.replace(".pcap",
+".gps.json")` isn't extension-aware, so on this image's real
+`.pcapng` captures it produces a mangled `net.gps.jsonng` instead of
+`net.gps.json` - fix is a one-line extension-strip before appending
+`.gps.json`. `gps_error.py`/`gps_sat.py` are lightweight status
+add-ons that read a plugin registered under the exact name `"gps"` -
+harmless to leave enabled even before that dependency is wired up,
+just inert until it is. Remaining 7 in this cluster
+(`gps_fix.py`, `gps_grid.py`, `gps_led.py`, `gps_live.py`,
+`gpsdeasy.py`, `gsmfake.py`, `mygps.py`) still under review - decision
+pending. See
+`plugin-upgrade-proposals/cluster-08-gps-status/NOTES.md` for the full
+writeup of all 10.
+
 **Group 20 - duplicate cluster 7 (cracked-password display/export):** kept
 all 3 - `mycracked_pw.py`, `display-password.py`, `display-password-qr.py`.
 Source review: `display-password.py` and `display-password-qr.py` are
