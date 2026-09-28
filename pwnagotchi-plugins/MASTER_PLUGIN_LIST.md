@@ -68,6 +68,22 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 18 - duplicate cluster 5 (pcap->hash conversion):** kept all 3 -
+`hashie-hcxpcapngtool.py`, `hashieclean.py`, and a new find,
+`hashie_ng.py` (co-authored by jayofelony himself, not on any prior
+list - added here). Source review found all three share the same bug:
+their live `on_handshake` conversion path works correctly on `.pcapng`
+files, but their startup backlog/catch-up scan (`_process_stale_pcaps`)
+filters with `.endswith('.pcap')`, so it silently finds nothing on this
+image - same bug pattern as the already-removed `hashie.py`, just
+limited to the backlog path rather than the live path this time.
+Notably, even jayofelony's own touched version (`hashie_ng.py`) carries
+this forward - it looks like a lineage-wide oversight from before the
+fork switched to `.pcapng`, not one author's mistake. `hashieclean.py`
+additionally deletes "lonely" pcaps that can't be converted (currently
+unreachable via the same broken batch path). Fix/upgrade notes saved
+to `plugin-upgrade-proposals/cluster-05-pcap-hash-conversion/`.
+
 **Group 17 - duplicate cluster 4 (deauth counting):** no changes -
 `deauth.py` and `counter.py` both kept. Source-verified clean (real,
 simple, no compatibility issues found in either). They share the deauth
@@ -146,6 +162,7 @@ repo).
 - **hashbot.py** - Discord bot companion to DiscoHash; dumps hashes for N APs on request
 - **hashespwnagotchi.py** - Uploads handshakes to hashes.pw
 - **hashie-hcxpcapngtool.py** - Converts pcaps to crackable hash formats via hcxpcapngtool, updated for modern hcxtools/hashcat formats
+- **hashie_ng.py** - Cleaned-up hashie variant co-authored by jayofelony himself; same live pcap->hash conversion, no delete-lonely-pcaps behavior
 - **hashieclean.py** - hashie variant that also purges pcaps that can't be converted to a hash
 - **hulk.py** - Puts pwnagotchi into an "always aggressive" attack mode
 - **instattack.py** - Launches an immediate associate/deauth attack the instant a device is spotted

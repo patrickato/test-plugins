@@ -74,5 +74,19 @@ all four plugins in this cluster.
 | [`educational-purposes-exclusively-notes`](cluster-03-auto-authenticate-recon/educational-purposes-exclusively-notes/NOTES.md) | `educational-purposes-exclusively.py` | KEPT AS-IS - notes only |
 | [`hp_educational-purposes-removed`](cluster-03-auto-authenticate-recon/hp_educational-purposes-removed/NOTES.md) | `hp_educational-purposes.py` | REMOVED - record only |
 
+### Cluster 5 - pcap→hash conversion
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 18. A fourth
+plugin (`hashie_ng.py`, co-authored by jayofelony himself) was found
+during this cluster's review and added to the master list. All three
+plugins in this cluster share one bug (documented once, applies to
+all): their live conversion path works fine, but their startup
+backlog-scan filters for `.pcap` only and never matches this image's
+`.pcapng` files.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`shared batch-scan pcapng fix`](cluster-05-pcap-hash-conversion/NOTES.md) | `hashie-hcxpcapngtool.py`, `hashieclean.py`, `hashie_ng.py` | KEPT AS-IS - documented fix, low priority |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
