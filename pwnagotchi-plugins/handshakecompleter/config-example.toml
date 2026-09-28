@@ -1,0 +1,50 @@
+# HandshakeCompleter - example config block
+#
+# Same deal as ClaudeCrackAuto: this is NOT a standalone file the plugin
+# reads. Copy this block into /etc/pwnagotchi/config.toml, edit the
+# values, and restart pwnagotchi:
+#
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.HandshakeCompleter.enabled = true
+
+# Your own SSIDs that you want pwnagotchi to keep actively working on.
+# IMPORTANT: these must NOT already be in your main.whitelist below (or
+# anywhere else in your config) - if an SSID is already whitelisted,
+# pwnagotchi won't attack it in the first place, so there's nothing for
+# this plugin to "complete." List only the ones you want pwnagotchi
+# currently targeting as part of this test.
+main.plugins.HandshakeCompleter.targets = [
+    "YourHomeNetwork",
+    "YourHomeNetwork-5G",
+    "YourGuestNetwork"
+]
+
+# If true, a PMKID capture alone counts as "done" for a target (PMKID
+# attacks don't need a connected client and are often faster/easier to
+# get than a full 4-way). If false (default), only a full 4-way EAPOL
+# handshake counts as complete for that target.
+main.plugins.HandshakeCompleter.accept_pmkid_as_complete = false
+
+# Where progress is tracked between restarts.
+main.plugins.HandshakeCompleter.state_file = "/home/pi/handshakecompleter/state.json"
+
+# Plain-text log of every classification and completion event.
+main.plugins.HandshakeCompleter.log_file = "/home/pi/handshakecompleter/results.log"
+
+# Optional push notifications when a target completes.
+main.plugins.HandshakeCompleter.notify_enabled = false
+main.plugins.HandshakeCompleter.notify_method = "ntfy"   # "ntfy" or "discord"
+main.plugins.HandshakeCompleter.ntfy_url = "https://ntfy.sh/your-topic-here"
+main.plugins.HandshakeCompleter.discord_webhook = ""
+
+# -----------------------------------------------------------------
+# Reminder: this is pwnagotchi's own, already-existing setting. This
+# plugin ADDS entries to it automatically as your targets complete - you
+# don't need to hand-edit it yourself for that. It's shown here just so
+# you can see where completed targets end up and confirm none of your
+# `targets` above are already sitting in it.
+# -----------------------------------------------------------------
+# main.whitelist = [
+#     "SomeNetworkYouNeverWantAttacked"
+# ]
