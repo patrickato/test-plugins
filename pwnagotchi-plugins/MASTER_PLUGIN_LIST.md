@@ -68,6 +68,24 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 24 - duplicate cluster 11 (clock/time-sync plugins):** removed
+`clock_wav_v3.py` (1) - genuinely the same LoganMD-authored clock
+plugin as `clock.py`, but only builds its UI element when
+`ui.is_waveshare_v3()` is true (user is on an MPI3501 TFT, not
+Waveshare), so on this hardware it creates nothing yet still calls
+`ui.set('clock', ...)` every cycle - same class of screen-lock bug as
+`wardrive.py` (Cluster 9). `clock.py` does the same job with a
+hardcoded fixed position that works on any screen, no screen check at
+all. Kept `clock.py`, `rtc_grid.py` (needs a physical I2C RTC module
+at 0x68 the user doesn't have; safe to leave dormant, every hook is
+try/excepted), and `RaspiSyncedTime.py` (not a real plugin - a
+standalone utility class with no `plugins.Plugin` subclass, meant to
+be imported by other code - but unlike `gsmfake.py`/
+`Pwnagotchi-JSON-to-Wigle-CSV.py` it has no risky top-level code, so
+importing it accidentally is harmless, not a crash risk). See
+`plugin-upgrade-proposals/cluster-11-clock-timesync/NOTES.md` for the
+full writeup.
+
 **Group 23 - duplicate cluster 10 (aircraft tracking):** kept all 3 -
 `adsbsniffer.py`, `pwnaware.py`, `skyhigh.py`. Not duplicates -
 `skyhigh.py` needs no hardware (OpenSky Network API over internet),
@@ -311,7 +329,7 @@ repo).
 
 ## Display / UI
 
-- **clock.py** / **clock_wav_v3.py** - Clock/calendar display
+- **clock.py** - Clock/calendar display
 - **crack_house.py** (+ a "-dev" variant) - Displays the closest cracked network and its password
 - **darkmode.py** - Dark theme
 - **dashboard.py** / **dashboard2.py** - Consolidated status display (clock, deauth counter, memtemp, cracked-handshake counter, internet status)

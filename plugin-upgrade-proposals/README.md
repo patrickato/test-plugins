@@ -168,5 +168,19 @@ documented (user owns multiple RTL-SDR dongles, so directly relevant).
 |---|---|---|
 | [`aircraft tracking cluster notes`](cluster-10-aircraft-tracking/NOTES.md) | `adsbsniffer.py`, `pwnaware.py`, `skyhigh.py` | ALL 3 KEPT AS-IS - documented fixes for 2, clean for 1 |
 
+### Cluster 11 - clock / time-sync plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 24. Removed
+`clock_wav_v3.py` (redundant with `clock.py`, and only builds its UI
+on Waveshare v3 screens - broken/erroring on the user's MPI3501 TFT).
+Kept `clock.py` (clean, works on any screen), `rtc_grid.py` (needs a
+physical I2C RTC module the user doesn't have, safe dormant), and
+`RaspiSyncedTime.py` (not a real plugin, but unlike other misfiled
+scripts in this project it has no risky top-level code - harmless).
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`clock/time-sync cluster notes`](cluster-11-clock-timesync/NOTES.md) | `clock.py`, `clock_wav_v3.py` (removed), `rtc_grid.py`, `RaspiSyncedTime.py` | 3 KEPT AS-IS, 1 REMOVED (redundant + broken on user's hardware) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
