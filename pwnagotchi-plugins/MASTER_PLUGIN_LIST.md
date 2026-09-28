@@ -68,6 +68,33 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 28 - duplicate cluster 15 (backup plugins):** removed
+`auto_backup_ng.py` (1) - diffed against its unmodified original
+(dadav's `auto_backup.py`) and confirmed to be a cosmetic
+rename/relabel only (class name, log tags, f-strings, two added
+no-op hooks) with **no retention or garbage-collection logic at
+all**, despite the master list's prior description claiming
+otherwise - it always overwrites a single fixed `.tar.gz` filename.
+`AutoBackup v2.0` (wpa-2, file itself declares `__version__ = "2.4"`)
+does the identical job (local tar backup of config/SSH keys/
+handshakes) strictly better: timestamped archives, real retention
+(`max_backups_to_keep`, auto-pruned), disk-full self-healing,
+include/exclude lists, a proper background scheduler thread, and a
+manual-trigger webhook page. Kept `AutoBackup v2.0` and
+`GitHub_Backups` (wpa-2's `git_backup.py`) - the latter is
+complementary rather than redundant, since it's the only one of the
+three that pushes a copy off-device (force-pushed to a GitHub/Gitea
+remote over SSH, one-way, no push history retained by design) rather
+than storing locally. `GitHub_Backups` has one architecture note
+worth flagging: its backup routine runs synchronously inside
+`on_internet_available` rather than in a spawned thread (`AutoBackup
+v2.0` does spawn a thread), so a slow/stalled SSH push could block
+that hook - same pattern class as Cluster 14's blocking-hook finding,
+though less severe since this one is a finite operation rather than
+an infinite loop. See
+`plugin-upgrade-proposals/cluster-15-backup/NOTES.md` for the full
+writeup.
+
 **Group 27 - duplicate cluster 14 (fake-AP plugins):** removed
 `apfaker.py` (1) - exact functional duplicate of `better_apfaker.py`
 (same author, diffed line-for-line: only differences are the class
@@ -471,7 +498,6 @@ repo).
 ## Maintenance / Backup / Auto-update / Connectivity
 
 - **auto-hotspot.py** - Automatically creates a WiFi hotspot when in manual mode
-- **auto_backup_ng.py** - Backs up files when internet is available, with retention/garbage collection
 - **AutoBackup v2.0** - Local backup with a retention policy
 - **away_base.py** / **home_base.py** - Watches for known networks and connects when available; `home_base` targets your home network specifically
 - **ext_wifi.py** / **extWifi.py** - Disables the onboard WiFi chipset to free it for an external adapter

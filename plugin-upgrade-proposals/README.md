@@ -230,5 +230,31 @@ thread - likely blocks the whole agent main loop while active. Fix
 |---|---|---|
 | [`fake-AP cluster notes`](cluster-14-fake-ap/NOTES.md) | `apfaker.py` (removed), `better_apfaker.py` | 1 REMOVED (exact duplicate), 1 KEPT AS-IS - documented fix for blocking main-loop risk |
 
+### Cluster 15 - backup plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 28. Removed
+`auto_backup_ng.py` - diffed against its unmodified original
+(dadav's `auto_backup.py`) and confirmed to be a cosmetic rename with
+no retention/garbage-collection logic at all (corrects a prior
+master-list description inaccuracy), always overwriting a single
+fixed archive filename. `AutoBackup v2.0` (wpa-2) does the identical
+local-tar job strictly better - timestamped archives, real retention
+with auto-pruning, disk-full self-healing, include/exclude lists, a
+background scheduler thread, a manual-trigger webhook page - so it
+was kept and `auto_backup_ng.py` removed as a strictly-inferior
+duplicate. `GitHub_Backups` (wpa-2) was also kept - the only one of
+the three that pushes a copy off-device (force-pushed to GitHub/
+Gitea over SSH), so it's complementary rather than redundant. One
+architecture note flagged for `GitHub_Backups`: its backup routine
+runs synchronously inside `on_internet_available` rather than in a
+spawned thread, so a slow SSH push could briefly block that hook -
+documented, not fixed, and less severe than Cluster 14's finding
+since it's a bounded, cooldown-gated operation rather than an
+unbounded loop.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`backup cluster notes`](cluster-15-backup/NOTES.md) | `auto_backup_ng.py` (removed), `AutoBackup v2.0`, `GitHub_Backups` | 1 REMOVED (strictly-inferior duplicate), 2 KEPT (both clean, 1 documented threading note) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
