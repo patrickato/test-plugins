@@ -88,5 +88,17 @@ backlog-scan filters for `.pcap` only and never matches this image's
 |---|---|---|
 | [`shared batch-scan pcapng fix`](cluster-05-pcap-hash-conversion/NOTES.md) | `hashie-hcxpcapngtool.py`, `hashieclean.py`, `hashie_ng.py` | KEPT AS-IS - documented fix, low priority |
 
+### Cluster 6 - cloud-crack-upload destinations
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 19. 7 of 8
+plugins in this cluster are completely non-functional on this image -
+same `.pcap`-only filter bug as Cluster 5, but here it's the plugin's
+only trigger, not a secondary path. All share one fix. One plugin
+(`pwn2crack.py`) already works correctly and needs nothing.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`shared upload-trigger pcapng fix`](cluster-06-cloud-crack-upload/NOTES.md) | `banthex.py`, `banthex-de.py`, `better_onlinehashcrack.py`, `dropbox_ul.py`, `hashespwnagotchi.py`, `nextcloud.py`, `wpa-cracking-project-with-pwnagotchi` | KEPT AS-IS - documented fix, low priority (+ extra whitelist flag on hashespwnagotchi.py) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

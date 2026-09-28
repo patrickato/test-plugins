@@ -68,6 +68,28 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 19 - duplicate cluster 6 (cloud-crack-upload destinations):** kept
+all 8 - `banthex.py`/`banthex-de.py`, `better_onlinehashcrack.py`,
+`dropbox_ul.py`, `hashespwnagotchi.py`, `nextcloud.py`,
+`wpa-cracking-project-with-pwnagotchi`, `pwn2crack.py`. Source review
+found 7 of 8 completely non-functional on this image, not just
+partially like Cluster 5 - all seven trigger exclusively from
+`on_internet_available` and filter the handshake directory with
+`filename.endswith('.pcap')`, which never matches this image's
+`.pcapng` output. All seven share the same underlying wpa-sec-clone
+template (confirmed by `banthex.py`'s own header comment). Only
+`pwn2crack.py` works correctly - it converts live via `on_handshake`
+(no extension assumption) and uploads the `.22000` files it creates
+itself. `wpa-cracking-project-with-pwnagotchi` verified to genuinely
+exist (a university thesis project with a self-hosted Docker backend,
+not a third-party service) after an initial doubt about it, same bug
+as the other six. All fixable with the identical one-line change.
+Extra flag: `hashespwnagotchi.py` has its whitelist-exclusion call
+commented out, unlike all its siblings - worth fixing alongside the
+main bug if this one is ever touched, or it would upload everything
+indiscriminately once working. Full notes saved to
+`plugin-upgrade-proposals/cluster-06-cloud-crack-upload/`.
+
 **Group 18 - duplicate cluster 5 (pcap->hash conversion):** kept all 3 -
 `hashie-hcxpcapngtool.py`, `hashieclean.py`, and a new find,
 `hashie_ng.py` (co-authored by jayofelony himself, not on any prior
