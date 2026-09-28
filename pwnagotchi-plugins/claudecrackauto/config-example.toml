@@ -1,0 +1,57 @@
+# ClaudeCrackAuto - example config block
+#
+# This is NOT a standalone file the plugin reads. Pwnagotchi has ONE
+# config file on the Pi: /etc/pwnagotchi/config.toml
+# Every plugin (including this one) gets its own section inside that
+# same file. Copy the block below into /etc/pwnagotchi/config.toml,
+# edit the values for your setup, then restart pwnagotchi:
+#
+#   sudo systemctl restart pwnagotchi
+#
+# (If you don't already have a config.toml, the stock pwnagotchi image
+# ships a default one at /etc/pwnagotchi/config.toml - just add this
+# block to the end of it. Don't replace the whole file.)
+
+main.plugins.ClaudeCrackAuto.enabled = true
+
+# ONLY these SSIDs will ever be touched by this plugin. Anything else
+# pwnagotchi captures is left completely alone - not converted, not
+# cracked, not logged by this plugin at all. Case-insensitive.
+main.plugins.ClaudeCrackAuto.whitelist = [
+    "YourHomeNetwork",
+    "YourHomeNetwork-5G",
+    "YourGuestNetwork"
+]
+
+# true  = run hashcat directly on the Pi 4 (slow, CPU-only - fine for
+#         testing weak/dictionary passwords, not fast for strong ones)
+# false = just validate + convert to .hc22000 and export it for you to
+#         crack on a PC/GPU later
+# You said you want both available - leave this as you like and flip
+# it any time; it takes effect on next handshake after a restart.
+main.plugins.ClaudeCrackAuto.run_local = true
+
+# Wordlist used when run_local = true. Point this at wherever you keep
+# your wordlist on the Pi. rockyou.txt is NOT included on the stock
+# pwnagotchi image - you'll need to supply your own (many stock Kali
+# wordlist collections are downloadable, or you can build a custom one
+# with something like `crunch` targeted at your own known password
+# patterns for testing).
+main.plugins.ClaudeCrackAuto.wordlist = "/home/pi/wordlists/rockyou.txt"
+
+# Where converted .hc22000 files go (used in both modes - always kept
+# as a record, and it's what you'd grab for offline cracking).
+main.plugins.ClaudeCrackAuto.export_dir = "/home/pi/claudecrackauto/exports"
+
+# Plain text log of everything this plugin does.
+main.plugins.ClaudeCrackAuto.log_file = "/home/pi/claudecrackauto/results.log"
+
+# Max seconds to let a local hashcat run go before giving up (only
+# matters when run_local = true).
+main.plugins.ClaudeCrackAuto.hashcat_timeout_secs = 900
+
+# Optional push notifications when a result comes in.
+main.plugins.ClaudeCrackAuto.notify_enabled = false
+main.plugins.ClaudeCrackAuto.notify_method = "ntfy"   # "ntfy" or "discord"
+main.plugins.ClaudeCrackAuto.ntfy_url = "https://ntfy.sh/your-topic-here"
+main.plugins.ClaudeCrackAuto.discord_webhook = ""
