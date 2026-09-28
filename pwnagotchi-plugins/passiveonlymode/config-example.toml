@@ -1,0 +1,22 @@
+# PassiveOnlyMode - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+#
+# IMPORTANT: personality.deauth / personality.associate are read once
+# at pwnagotchi startup, before plugins load - so THESE LINES are what
+# actually enforce the mode. The plugin itself only verifies/logs; set
+# these correctly for the mode you want.
+
+# --- mode = "quiet" (PMKID collection, zero deauth) ---
+personality.associate = true
+personality.deauth = false
+
+# --- mode = "silent" (fully passive, zero active frames at all) ---
+# personality.associate = false
+# personality.deauth = false
+
+main.plugins.PassiveOnlyMode.enabled = true
+
+# "quiet" or "silent" - must match the personality.* lines above.
+main.plugins.PassiveOnlyMode.mode = "quiet"
