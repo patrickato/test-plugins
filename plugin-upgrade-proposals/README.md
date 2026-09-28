@@ -454,5 +454,23 @@ from an unrelated plugin.
 |---|---|---|
 | [`Bluetooth tethering cluster notes`](cluster-23-bluetooth-tethering/NOTES.md) | `bt-tether.py` (kept), `bt-tether_ng.py` (removed) | 1 REMOVED (exact duplicate), 1 KEPT (no bugs found, cosmetic __help__ typo only) |
 
+### Cluster 24 - remote/server control
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 39. Removed
+`fancyserver.py` - two real bugs (a `NameError` on its error-logging path
+from an unused `traceback` import, and an `UnboundLocalError` risk on
+`name`/`state` in its "plugin" command branch). Kept `cmd_server.py`
+(two real bugs - a `NameError` on a narrow cleanup-failure path, and a
+reply-misdirection bug when multiple clients are connected
+simultaneously), `console.py` (one cosmetic bug - a broken diagnostic
+log line that silently drops its content rather than crashing -
+otherwise clean), and `webcfg_ng.py` (no bugs found; its `save-config`
+webhook path fully overwrites `config.toml` with no merge safety net,
+unlike its own `merge-save-config` path).
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`remote/server control cluster notes`](cluster-24-remote-server-control/NOTES.md) | `fancyserver.py` (removed), `cmd_server.py`, `console.py`, `webcfg_ng.py` (all kept) | 1 REMOVED (2 real bugs), 3 KEPT (cmd_server.py has 2 real bugs, console.py has 1 cosmetic bug, webcfg_ng.py clean with a design note) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

@@ -68,6 +68,21 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 39 - cluster 24 (remote/server control):** removed `fancyserver.py`
+- two real bugs (a `NameError` on its error-logging path from an unused
+`traceback` import, and an `UnboundLocalError` risk on `name`/`state`
+in its "plugin" command branch). Kept `cmd_server.py` (two real bugs -
+a `NameError` on a narrow cleanup-failure path, and a reply-misdirection
+bug when multiple clients are connected simultaneously; both plugins
+share an unauthenticated-local-socket design worth knowing about),
+`console.py` (one cosmetic bug - a broken diagnostic log line that
+silently drops its content rather than crashing - otherwise a clean,
+well-defended plugin), and `webcfg_ng.py` (no bugs found; its
+`save-config` webhook path fully overwrites `config.toml` with no merge
+safety net, unlike its own `merge-save-config` path). See
+`plugin-upgrade-proposals/cluster-24-remote-server-control/NOTES.md` for
+the full writeup and fixes.
+
 **Group 38 - cluster 23 (Bluetooth tethering):** removed `bt-tether_ng.py`
 - confirmed via direct diff to be byte-for-byte identical to
 `bt-tether.py` apart from a renamed class and `__name__` attribute (2
@@ -639,7 +654,7 @@ repo).
 ## Display / UI
 
 - **clock.py** - Clock/calendar display
-- **console.py** - Scrolling status-update console display (pending review - Cluster 24)
+- **console.py** - Scrolling status-update console display (one cosmetic bug: a broken diagnostic log line that silently drops its intended content, no functional impact; see Cluster 24 notes)
 - **crack_house.py** (+ a "-dev" variant) - Displays the closest cracked network and its password
 - **darkmode.py** - Dark theme
 - **display-aircrack.py** - Shows whether aircrack is currently running
@@ -792,8 +807,7 @@ repo).
 
 ## Web UI / API / Remote control
 
-- **cmd_server.py** - Command-control plugin for pwnagotchi (pending review - Cluster 24)
-- **fancyserver.py** - A server to receive extra commands to control your pwnagotchi (pending review - Cluster 24)
+- **cmd_server.py** - Command-control plugin for pwnagotchi (a Unix-socket command shell; two real bugs - a NameError on a narrow cleanup-failure path, and a reply-misdirection bug with multiple simultaneous clients; unauthenticated local socket; see Cluster 24 notes)
 - **handshaker.py** - Access key pwnagotchi info over an alternate channel when SSH is down
 - **httpserver.py** - Simple HTTP server for serving files
 - **pwmenu** - Mobile-first field console for captures/cracking/exports/whitelists
@@ -805,7 +819,7 @@ repo).
 - **Pwny-WG** - WireGuard VPN + handshake sync over SSH
 - **state-api.py** - JSON state API - a backend building block for menu/dashboard tools
 - **web2ssh** - Lightweight web shell-command executor
-- **webcfg_ng.py** - Allows the user to make runtime configuration changes (pending review - Cluster 24)
+- **webcfg_ng.py** - Allows the user to make runtime configuration changes (full web-based config.toml editor via webhook; no bugs found, but its `save-config` path fully overwrites the config file with no merge safety net, unlike its own `merge-save-config` path; see Cluster 24 notes)
 - **wpa-sec-list.py** / **wpa-sec_ng.py** - Lists cracked passwords from wpa-sec on a web page (pending review - Cluster 26)
 
 ---
