@@ -1,0 +1,23 @@
+# SpeedAdaptiveScan - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.SpeedAdaptiveScan.enabled = true
+
+# Channel dwell time (milliseconds) while GPS shows you're stationary -
+# longer means more thorough per-channel scanning.
+main.plugins.SpeedAdaptiveScan.stationary_dwell_ms = 500
+
+# Channel dwell time while moving - shorter means faster hopping so a
+# walking/driving loop doesn't miss APs by lingering too long anywhere.
+main.plugins.SpeedAdaptiveScan.moving_dwell_ms = 150
+
+# Speed (meters/second) above which you're considered "moving".
+# 1.0 m/s is roughly a slow walk.
+main.plugins.SpeedAdaptiveScan.speed_threshold_mps = 1.0
+
+main.plugins.SpeedAdaptiveScan.check_interval_secs = 15
+main.plugins.SpeedAdaptiveScan.gpsd_host = "localhost"
+main.plugins.SpeedAdaptiveScan.gpsd_port = 2947
+main.plugins.SpeedAdaptiveScan.log_file = "/home/pi/speedadaptivescan/results.log"
