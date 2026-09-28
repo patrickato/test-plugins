@@ -10,6 +10,14 @@ A few plugins are genuinely the same file re-hosted by several people
 (this ecosystem re-mirrors constantly) - those are one bullet with the
 aliases noted, not one bullet per mirror.
 
+**Status tags:** a bullet with no tag is untouched/kept. **IN PROGRESS,
+moved to `plugins-wip`** means the plugin has been pulled into the
+separate `patrickato/plugins-wip` repo to be fixed, tested against real
+hardware, and fully packaged (plugin + config.toml + README + setup
+instructions) - once that's done it graduates to `patrickato/complete-plugins`
+and is removed from this list entirely. See `plugins-wip` for
+work-in-progress rebuilds and `complete-plugins` for finished ones.
+
 ## Elimination log
 
 **Group 1 - hardware you don't own:** partial pass. Removed the Waveshare
@@ -67,6 +75,28 @@ silently processes nothing - dead on arrival, superseded by
 file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
+
+**Group 43 - cluster 28 (Discord hash-dump ecosystem): moved to
+`plugins-wip` for a full rebuild, not removed or kept as-is.** New
+workflow starting here: rather than a binary keep/remove, a plugin can
+now be marked **in progress** - moved into the separate `plugins-wip`
+repo to be fixed, tested, documented, and packaged (plugin + config.toml
++ README + setup instructions) before graduating to `complete-plugins`
+and being removed from this list entirely. `DiscoHash` (broken - wrong
+hardcoded handshake directory plus the recurring `.pcap`/`.pcapng` bug)
+and `hashbot.py` (not actually a pwnagotchi plugin - a standalone off-pi
+script) were both already on this list; `discoBoss.py` (hardcoded
+Discord token/channel placeholders, channel-only reboot/poweroff
+authorization, duplicates `hashbot.py`'s hash-retrieval logic) was pulled
+into scope for its direct overlap with `hashbot.py`, though it was never
+formally on this master list. All three are consolidated into two pieces
+in the new "DiscoHash Suite" (`plugins-wip` repo, `discohash-suite/`):
+`discohash_ng.py` (pi-side) and a rebuilt `hashbot.py` (off-pi, now also
+owns discoBoss's former reboot/poweroff/status commands, removing a
+redundant always-on Discord bot from the pwnagotchi itself). Full
+research writeup and every design decision in
+`plugins-wip:discohash-suite/NOTES.md`; setup walkthrough in
+`plugins-wip:discohash-suite/SETUP.md`. Not yet tested on real hardware.
 
 **Group 42 - cluster 27 (attack-mode toggles & AP restriction):** removed
 all 3 (`cuffs.py`, `enable_assoc.py`, `enable_deauth.py`). This is the
@@ -679,13 +709,13 @@ repo).
 - **better_quickdic.py** - Quick dictionary scan; optionally sends found passwords as QR code/text to a Telegram bot
 - **deauth.py** - Counts successful deauth attacks for the session
 - **discoBoss.py** - Configurable rule engine for managing deauth ("disco") behavior
-- **DiscoHash** - Converts pcaps to hashcat 22000 format, analyzes them, grabs GPS, posts results to Discord
+- **DiscoHash** - **IN PROGRESS, moved to `plugins-wip`** - broken as shipped (wrong hardcoded handshake directory plus the recurring `.pcap`/`.pcapng` bug); being rebuilt as `discohash_ng.py`, consolidated with `discoBoss.py` and `hashbot.py` into the DiscoHash Suite; see `plugins-wip` repo, `discohash-suite/`
 - **dropbox_ul.py** - Auto-uploads handshakes to a Dropbox app
 - **educational-purposes-exclusively.py** / **educational-purposes-only.py** - Auto-authenticates to known networks and performs internal network recon (no target scoping)
 - **enterprise.py** - Attempts to obtain credentials from enterprise networks when bored
 - **handshakes-dl-hashie.py** - Downloads handshake captures from the web UI and converts them in one step
 - **handshakes-dl.py** - Downloads handshake captures from the web UI (also distributed as jayofelony's official installer plugin)
-- **hashbot.py** - Discord bot companion to DiscoHash; dumps hashes for N APs on request
+- **hashbot.py** - **IN PROGRESS, moved to `plugins-wip`** - not actually a pwnagotchi plugin (standalone script meant to run off-pi); consolidated into the DiscoHash Suite as the sole Discord-command bot (absorbing `discoBoss.py`'s control functions too); see `plugins-wip` repo, `discohash-suite/`
 - **hashespwnagotchi.py** - Uploads handshakes to hashes.pw
 - **hashie-hcxpcapngtool.py** - Converts pcaps to crackable hash formats via hcxpcapngtool, updated for modern hcxtools/hashcat formats
 - **hashie_ng.py** - Cleaned-up hashie variant co-authored by jayofelony himself; same live pcap->hash conversion, no delete-lonely-pcaps behavior

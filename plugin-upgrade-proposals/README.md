@@ -535,5 +535,25 @@ enabler as their descriptions imply).
 |---|---|---|
 | [`attack-mode toggles cluster notes`](cluster-27-attack-toggles/NOTES.md) | `cuffs.py`, `enable_assoc.py`, `enable_deauth.py` | 3 REMOVED |
 
+### Cluster 28 - Discord hash-dump ecosystem (moved to `plugins-wip`, not kept/removed)
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 43. New
+workflow: instead of keep/remove, a plugin can now be marked in progress
+and moved into the separate `patrickato/plugins-wip` repo for a full
+rebuild (fix, test on real hardware, package with config.toml + README +
+setup docs) before graduating to `patrickato/complete-plugins`.
+`DiscoHash` and `hashbot.py` (both already on the master list) plus
+`discoBoss.py` (pulled in for its direct overlap with `hashbot.py`,
+though never formally listed here) are consolidated into two pieces in
+the new "DiscoHash Suite": `discohash_ng.py` (pi-side) and a rebuilt
+`hashbot.py` (off-pi, now also owns discoBoss's former reboot/poweroff/
+status commands). Full research and design-decision writeup in
+`plugins-wip:discohash-suite/NOTES.md`; setup walkthrough in
+`plugins-wip:discohash-suite/SETUP.md`.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`plugins-wip: discohash-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/discohash-suite/NOTES.md) | `DiscoHash`, `discoBoss.py`, `hashbot.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
