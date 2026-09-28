@@ -1,0 +1,16 @@
+# DefaultCredCheck - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.DefaultCredCheck.enabled = true
+
+# Optional. Your own SSIDs - matches get flagged more prominently in
+# the log ("OWN NETWORK - ...") since that's directly actionable for
+# you. Every AP still gets checked regardless of this list.
+main.plugins.DefaultCredCheck.my_networks = [
+    "YourHomeNetwork"
+]
+
+main.plugins.DefaultCredCheck.log_file = "/home/pi/defaultcredcheck/results.log"
+main.plugins.DefaultCredCheck.state_file = "/home/pi/defaultcredcheck/seen.json"
