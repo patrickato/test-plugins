@@ -79,6 +79,32 @@ pwnagotchi does to anything.
     property and track which waypoints were actually covered in a
     session, to confirm a perimeter test was complete.
 
+## GPS / Location Logging
+
+User-picked favorites from this category — consider building as one
+combined location-logging plugin with a few tracked data streams,
+rather than four separate plugins, since they naturally share the same
+underlying GPS read and reinforce each other (fix-quality context makes
+the heatmap and AP-location data trustworthy; the GPX track ties a
+session together spatially).
+
+14. **Handshake Heatmap Log** — logs GPS position + signal strength for
+    every capture over time, building a cumulative heatmap of where on
+    the property captures actually succeed (vs. the stock GPS plugin's
+    one-off per-handshake tag).
+
+15. **GPX Session Track Recorder** — records the physical path walked
+    each session as a standard GPX file, importable into Google Earth
+    or any mapping tool.
+
+16. **AP First-Seen Location Log** — records the exact GPS point and
+    timestamp where each new AP was first detected, for a discovery
+    timeline that can be plotted on a map.
+
+17. **GPS Fix-Quality Log** — logs HDOP/satellite count/fix quality
+    alongside each tagged position, so it's clear how trustworthy a
+    given GPS-tagged location actually is.
+
 ---
 
 *Last updated: 2026-09-28*
