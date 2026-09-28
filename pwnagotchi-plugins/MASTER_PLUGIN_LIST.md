@@ -68,6 +68,30 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 29 - duplicate cluster 16 (XP/leveling plugins):** removed
+`exp.py` (1) - diffed line-for-line against `Experience-Plugin-Pwnagotchi`
+(GaelicThunder's original, unmirrored source) and confirmed an exact
+functional duplicate (only whitespace/f-string formatting and author-
+credit differences). Removed `Experience-Plugin-Pwnagotchi` (1) as the
+same duplicate pair, same reasoning as the Discord/Telegram/fake-AP
+mirror removals earlier in this project. `expv2.py` is `exp.py` plus
+one added derived stat (a "Strength" value, `exp * level * 0.05`) -
+otherwise character-for-character the same class, so kept as the
+strict superset covering everything the other two did. Both `exp.py`
+and `expv2.py` share a missing-`__defaults__` gap for their UI-position
+options (same recurring pattern as `adsbsniffer.py`/`dashboard.py`)
+and a real `==`-vs-`=` typo bug in their legacy-save-migration code
+that silently drops saved level/total-XP on migration from the old
+`.txt` format - documented for `expv2.py` (the one kept) since it's
+inherited unchanged. Kept `xp.py` and `xp_grid.py` (2) - a separate,
+more developed leveling system (20 weighted events, 21 named ranks
+that change on-screen face glyphs, a live webhook dashboard, peer
+level-sharing via `xp_grid.py`) with its own missing-`__defaults__`
+gap and a permanent 4x XP-rate penalty baked in by a dead `on_ai_ready`
+dependency on this fork (never fatal, just reduced XP gains forever).
+See `plugin-upgrade-proposals/cluster-16-xp-leveling/NOTES.md` for the
+full writeup.
+
 **Group 28 - duplicate cluster 15 (backup plugins):** removed
 `auto_backup_ng.py` (1) - diffed against its unmodified original
 (dadav's `auto_backup.py`) and confirmed to be a cosmetic
@@ -551,8 +575,7 @@ repo).
 - **christmas.py** - Holiday countdown theme
 - **counter.py** - Tallies assoc/deauth attempts
 - **envtune** - Environment-aware personality tuner (EMA smoothing, best-settings memory)
-- **exp.py** / **expv2.py** - Awards XP for each captured handshake
-- **Experience-Plugin-Pwnagotchi** - XP/experience system
+- **expv2.py** - Awards XP for each captured handshake
 - **fortune_cookie.py** - Displays random fortune-cookie messages
 - **IPDisplay.py** - Displays the device's IP address
 - **miyagi.py** - "Training module" novelty plugin, manages brain backups

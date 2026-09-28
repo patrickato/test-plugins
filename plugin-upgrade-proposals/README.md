@@ -256,5 +256,26 @@ unbounded loop.
 |---|---|---|
 | [`backup cluster notes`](cluster-15-backup/NOTES.md) | `auto_backup_ng.py` (removed), `AutoBackup v2.0`, `GitHub_Backups` | 1 REMOVED (strictly-inferior duplicate), 2 KEPT (both clean, 1 documented threading note) |
 
+### Cluster 16 - XP/leveling plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 29. Removed
+`exp.py` - diffed line-for-line against `Experience-Plugin-Pwnagotchi`
+(the unmirrored upstream) and confirmed an exact functional duplicate.
+Removed `Experience-Plugin-Pwnagotchi` too, same duplicate-mirror
+reasoning as earlier Discord/Telegram/fake-AP removals. Kept
+`expv2.py` (a strict superset of `exp.py`, adding a Strength stat) -
+documented two inherited bugs: a missing-`__defaults__` gap for its
+UI-position options, and an `==`-vs-`=` typo in legacy-save migration
+that silently drops saved level/total-XP. Kept `xp.py` and
+`xp_grid.py` - a separate, more developed leveling system (ranks,
+face-glyph changes, a webhook dashboard, peer level-sharing);
+documented its own missing-`__defaults__` gap plus a permanent 4x
+XP-rate penalty baked in by a dead `on_ai_ready` dependency on this
+fork.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`XP/leveling cluster notes`](cluster-16-xp-leveling/NOTES.md) | `exp.py` (removed), `Experience-Plugin-Pwnagotchi` (removed), `expv2.py`, `xp.py`, `xp_grid.py` | 2 REMOVED (exact duplicates), 3 KEPT (2 documented gaps on expv2.py, 2 on xp.py, 0 on xp_grid.py) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
