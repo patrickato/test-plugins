@@ -195,5 +195,25 @@ of the box on this build.
 |---|---|---|
 | [`dashboard cluster notes`](cluster-12-dashboard/NOTES.md) | `dashboard.py`, `dashboard2.py` | REMOVED - record only |
 
+### Cluster 13 - TTS / voice plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 26. Removed
+`pwnassistant.py` (not a real plugin - module-level infinite
+microphone-listening loop, would hang the whole agent forever if ever
+imported) and `voice_gamer.py` (downloads and `sudo cp`s an
+unvalidated URL over pwnagotchi's own core `voice.py` module - a real
+security anti-pattern, plus missing `import logging` and a broken
+`on_unload` signature). Kept `pwnspeaker.py` (comprehensively broken
+as shipped - nearly every hook concatenates a string with a
+non-string value, plus points at a 32-bit-only `pico2wave` package -
+needs a real rewrite but the underlying approach is sound), `rss_voice.py`
+(works correctly - not actually audio, replaces on-screen status text;
+one documented default-shape gap), and `speak_to_me.py` (clean,
+modern `espeak-ng`-based, best-built of the five).
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`TTS/voice cluster notes`](cluster-13-tts-voice/NOTES.md) | `pwnassistant.py` (removed), `pwnspeaker.py`, `rss_voice.py`, `speak_to_me.py`, `voice_gamer.py` (removed) | 2 REMOVED, 3 KEPT (1 documented as needing a real rewrite, 2 clean) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

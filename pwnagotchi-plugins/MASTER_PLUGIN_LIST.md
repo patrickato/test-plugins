@@ -68,6 +68,34 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 26 - duplicate cluster 13 (TTS/voice plugins):** removed
+`pwnassistant.py` and `voice_gamer.py` (2). `pwnassistant.py` isn't a
+real plugin at all - no `plugins.Plugin` subclass, and its module-
+level code calls an interactive Google OAuth flow followed by an
+infinite `while True:` microphone-listening loop, both of which run
+the instant the file is imported - would hang the entire pwnagotchi
+process forever at plugin-load time if ever placed where the loader
+scans it. `voice_gamer.py` downloads a file from a configurable URL
+and `sudo cp`s it over pwnagotchi's own core `voice.py` system module
+with zero content validation - a real remote-code-injection design,
+not just a bug - plus it never imports `logging` (NameError on its
+very first log call) and its `on_unload` is missing the `ui` param
+the framework passes. Kept `pwnspeaker.py` (comprehensively broken as
+shipped - nearly every event hook concatenates a string with a
+non-string value via `+`, throwing `TypeError`; also its own setup
+instructions point at an armhf/32-bit-only `pico2wave` .deb package,
+incompatible with this 64-bit image - needs a real rewrite, not a
+one-line fix, but kept per broad-scope philosophy since `pyttsx3`
+(the TTS engine it also uses) works fine once the string-building is
+fixed), `rss_voice.py` (works correctly - not actually audio TTS
+despite the "voice" name, replaces on-screen status text from RSS
+feeds; one default-shape gap documented), and `speak_to_me.py` (clean
+- modern `espeak-ng` engine, threaded queue avoids overlapping
+speech, curated event set, no bugs found - the best-built plugin of
+the five). See
+`plugin-upgrade-proposals/cluster-13-tts-voice/NOTES.md` for the full
+writeup.
+
 **Group 25 - duplicate cluster 12 (dashboard plugins):** removed
 `dashboard.py` and `dashboard2.py` (2), per user decision - not
 needed. Both consolidate clock/RAM/CPU/temp/deauth-counter/handshake-
@@ -460,7 +488,6 @@ repo).
 - **mqtt_plugin.py** - Sends pwnagotchi info to an MQTT broker
 - **ntfy_msg.py** - Sends push notifications via ntfy
 - **PwnSpotify** / **spotify_now_playing.py** - Displays the currently-playing Spotify track
-- **pwnassistant.py** - Voice control commands via a connected microphone
 - **pwnspeaker.py** - Text-to-speech announcements of pwning events
 - **rss_voice.py** - Replaces canned voice lines with RSS feed content
 - **Showerthoughts** - Displays random r/Showerthoughts headlines while idle
@@ -488,7 +515,6 @@ repo).
 - **miyagi.py** - "Training module" novelty plugin, manages brain backups
 - **partymode.py** - Novelty party mode
 - **spam_peers.py** - Auto-messages newly discovered grid peers
-- **voice_gamer.py** - Downloads and replaces voice.py with a custom version
 - **Weather.py** - Displays the weather forecast
 - **wifi_adventures.py** - Achievement system themed around "WiFi adventures"
 - **xp.py** / **xp_grid.py** - XP/leveling system with peer level-sharing (separate implementation from exp.py)
