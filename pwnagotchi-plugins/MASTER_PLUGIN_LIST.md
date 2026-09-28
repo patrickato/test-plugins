@@ -68,6 +68,28 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 30 - cluster 17 (age/strength plugins):** findings-only, all 3
+kept. `age.py` and `agev2.py` (itsdarklikehell/Kaska) are near-
+identical four-stat counters (Age/Strength/Access Points/Deauths);
+both share a missing-`__defaults__` gap for their UI-position options,
+and both update Strength/APs/Deauths only via the dead `on_ai_training_step`
+hook (removed on this fork), so those three stats are permanently
+frozen at 0 - only Age (wall-clock based, not epoch-based despite the
+description) actually works. `agev2.py` additionally has a real bug of
+its own: its Age UI element is added under the key `"AgeV2"` but
+`on_ui_update` calls `ui.set("Age", ...)` - the wrong key - so
+`agev2.py`'s Age display is broken as shipped, worse off than `age.py`
+in that respect. The third entry, `age.py` (AlienMajik variant), is a
+confirmed-unrelated plugin (filename collision only) - a much larger
+prestige/lore RPG system that avoids the dead-AI-hook trap via a
+passive-accrual fallback in `on_epoch`, correctly handles the
+`.pcapng` extension, and reads as the most carefully engineered plugin
+found in this entire project to date (self-documented bugfix history,
+thread-safe locking, throttled atomic saves). No changes made to any
+of the three. See
+`plugin-upgrade-proposals/cluster-17-age-strength/NOTES.md` for the
+full writeup and fixes.
+
 **Group 29 - duplicate cluster 16 (XP/leveling plugins):** removed
 `exp.py` (1) - diffed line-for-line against `Experience-Plugin-Pwnagotchi`
 (GaelicThunder's original, unmirrored source) and confirmed an exact

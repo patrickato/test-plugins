@@ -277,5 +277,28 @@ fork.
 |---|---|---|
 | [`XP/leveling cluster notes`](cluster-16-xp-leveling/NOTES.md) | `exp.py` (removed), `Experience-Plugin-Pwnagotchi` (removed), `expv2.py`, `xp.py`, `xp_grid.py` | 2 REMOVED (exact duplicates), 3 KEPT (2 documented gaps on expv2.py, 2 on xp.py, 0 on xp_grid.py) |
 
+### Cluster 17 - age/strength plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 30.
+Findings-only, all 3 kept. `age.py` and `agev2.py` (itsdarklikehell/
+Kaska) are near-identical four-stat counters (Age/Strength/Access
+Points/Deauths); both share a missing-`__defaults__` gap for their
+UI-position options, and both update Strength/APs/Deauths only via
+the dead `on_ai_training_step` hook, so those three stats are
+permanently frozen at 0 on this fork - only Age (wall-clock based)
+actually works. `agev2.py` additionally has its own real bug: its Age
+UI element is added under the key `"AgeV2"` but `on_ui_update` calls
+`ui.set("Age", ...)` - the wrong key - so its Age display is broken
+as shipped. The third entry, `age.py` (AlienMajik variant), is a
+confirmed-unrelated plugin (filename collision only) - a full
+prestige/lore RPG system that avoids the dead-AI-hook trap via a
+passive-accrual fallback, correctly handles the `.pcapng` extension,
+and reads as the most carefully engineered plugin found in this
+project to date.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`age/strength cluster notes`](cluster-17-age-strength/NOTES.md) | `age.py`, `agev2.py`, `age.py` (AlienMajik variant) | 3 KEPT (2 documented gaps shared, 1 additional real bug on agev2.py, AlienMajik variant clean) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
