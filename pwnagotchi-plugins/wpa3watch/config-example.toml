@@ -1,0 +1,26 @@
+# WPA3Watch - example config block
+#
+# Copy this into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.WPA3Watch.enabled = true
+
+# Optional. Your own SSIDs - only used for the auto-whitelist behavior
+# below. Every AP pwnagotchi sees still gets classified and logged
+# regardless of this list; this only controls the one active behavior
+# (touching main.whitelist).
+main.plugins.WPA3Watch.my_networks = [
+    "YourHomeNetwork",
+    "YourHomeNetwork-5G"
+]
+
+# If true, and one of your `my_networks` SSIDs classifies as WPA3-SAE-
+# only, this plugin adds it to pwnagotchi's real main.whitelist (since
+# handshake-capture attacks can't work against pure SAE) so pwnagotchi
+# stops deauthing/associating with it. Default false - classification
+# still happens and gets logged either way, this just controls whether
+# the plugin is allowed to edit your whitelist for you.
+main.plugins.WPA3Watch.auto_whitelist_wpa3 = false
+
+main.plugins.WPA3Watch.log_file = "/home/pi/wpa3watch/results.log"
+main.plugins.WPA3Watch.state_file = "/home/pi/wpa3watch/seen_aps.json"

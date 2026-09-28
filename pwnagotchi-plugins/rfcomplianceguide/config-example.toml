@@ -1,0 +1,25 @@
+# RFComplianceGuide - example config block
+#
+# Copy this into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.RFComplianceGuide.enabled = true
+
+# REQUIRED. Two-letter code for where this Pi is actually physically
+# operating (not where you'd like more channels from - your real
+# location). Examples: "US", "CA", "GB", "DE", "FR", "JP", "AU".
+main.plugins.RFComplianceGuide.real_country_code = "US"
+
+# If true, and the Pi's current regulatory domain doesn't match
+# real_country_code above, the plugin runs `iw reg set` to correct it
+# to your real location. Default false - it will only log the mismatch
+# until you opt in.
+main.plugins.RFComplianceGuide.auto_correct = false
+
+# If true (and auto_correct also succeeded), writes the legal 2.4GHz
+# channel list for your real_country_code into config.toml's
+# personality.channels, so pwnagotchi's own channel hopping stays
+# inside what's actually permitted where you are. Default false.
+main.plugins.RFComplianceGuide.write_channels_to_config = false
+
+main.plugins.RFComplianceGuide.log_file = "/home/pi/rfcomplianceguide/results.log"
