@@ -45,6 +45,15 @@ read from `self.options["<name>_x_pos"/"_y_pos"]`), same counters.
   class-level defaults - `on_ui_setup()` would `KeyError` unless every
   single one of them is set explicitly in `config.toml`. Same pattern
   found in `adsbsniffer.py`/`pwnaware.py` (Cluster 10).
+  **Correction (see Cluster 18's project-wide `__defaults__`
+  correction):** declaring `__defaults__` would not actually have
+  fixed this even had these plugins been kept - this jayofelony fork's
+  loader never reads `__defaults__` at all. The real fix would have
+  been setting every position option explicitly in `config.toml`, or
+  patching `on_ui_setup()` to use `self.options.get(key, fallback)`
+  instead of indexing `self.options[key]` directly. Moot either way
+  since both plugins were removed for unrelated hard-blocking bugs
+  above, but corrected here for accuracy.
 
 Neither plugin would have worked out of the box on this build even
 before the "not needed" decision - `dashboard.py` needed hardware not

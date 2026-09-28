@@ -67,22 +67,36 @@ explicitly in `config.toml`. Same recurring pattern as
 `adsbsniffer.py` and `dashboard.py`/`dashboard2.py` from earlier
 clusters.
 
-**Fix:**
-```python
-__defaults__ = {
-    "enabled": False,
-    "lvl_x_coord": 5,
-    "lvl_y_coord": 95,
-    "exp_x_coord": 25,
-    "exp_y_coord": 95,
-    "str_x_coord": 80,
-    "str_y_coord": 95,
-    "bar_symbols_count": 10,
-}
+**CORRECTED FIX (see Cluster 18's project-wide `__defaults__`
+correction):** this originally recommended adding a class-level
+`__defaults__` block. That would not actually fix anything on this
+jayofelony fork - I later confirmed its plugin loader never reads
+`__defaults__` at all, on any plugin. The two fixes that actually
+work here:
+
+```toml
+# Option A - config.toml, no code change:
+[main.plugins.expv2]
+enabled = true
+lvl_x_coord = 5
+lvl_y_coord = 95
+exp_x_coord = 25
+exp_y_coord = 95
+str_x_coord = 80
+str_y_coord = 95
+bar_symbols_count = 10
 ```
+
+```python
+# Option B - patch on_ui_setup/on_ui_update to use .get() fallbacks:
+int(self.options.get("lvl_x_coord", 5))
+int(self.options.get("lvl_y_coord", 95))
+# ...and so on for the remaining five keys
+```
+
 (coordinates illustrative - pick values that don't collide with other
-on-screen elements.) Not applied, documented for whenever this plugin
-is actually enabled.
+on-screen elements.) Neither applied, documented for whenever this
+plugin is actually enabled.
 
 **Bug 2 - `==` instead of `=` in legacy-save migration.**
 `loadFromTxtFile` (only used once, during migration from the old
@@ -131,8 +145,13 @@ choice.
 reads `opts["level_position"]`, `opts["rank_position"]`,
 `opts["progressbar_position"]`, and `on_ready` reads
 `self.options["load_initial_xp"]` - none declared in `__defaults__`
-(`{"enabled": False}` only). Fix is the same shape as `expv2.py`'s
-Bug 1 above - add class-level defaults for all four keys.
+(`{"enabled": False}` only). **Corrected fix (see Cluster 18's
+project-wide `__defaults__` correction):** adding class-level
+defaults would not actually work on this fork - its loader never
+reads `__defaults__` at all. The real fix is the same shape as
+`expv2.py`'s corrected Bug 1 fix above: set all four keys explicitly
+in `config.toml`, or patch these two hooks to use
+`self.options.get(key, fallback)` instead of direct indexing.
 
 **Gap 2 - permanent 4x XP-rate penalty from a dead AI hook.** Every
 XP award runs through:
@@ -181,7 +200,12 @@ else in this cluster: instead of declaring `__defaults__` for its
 `position`/`name_position` options, it defensively sets sane fallback
 values directly into `self.options` inside its own `on_loaded()` if
 they're absent - a better pattern than most plugins reviewed in this
-project use. Requires `xp.py` to be enabled (listens for the custom
+project use. **Update (see Cluster 18's project-wide `__defaults__`
+correction):** this pattern isn't just "better," it's the *only*
+approach that actually works on this fork - `__defaults__` is never
+read by this fork's loader at all, so `xp_grid.py`'s self-populating
+`on_loaded()` is a correct, necessary workaround rather than a nice-
+to-have. Requires `xp.py` to be enabled (listens for the custom
 `level_update`/`rank_update` events `xp.py` emits) - not functional
 on its own.
 

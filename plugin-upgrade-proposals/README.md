@@ -41,6 +41,30 @@ plugin-upgrade-proposals/
 | `BUILT` | Code exists - see `pwnagotchi-plugins/<name>/` for the real plugin |
 | `ABANDONED` | Decided against, kept for the record |
 
+## Standing correction: `__defaults__` is never read on this fork
+
+While researching Cluster 18 (Bluetooth plugins), I read this
+jayofelony fork's actual plugin loader
+(`pwnagotchi/plugins/__init__.py`, `load()`) directly and confirmed it
+never merges a plugin's class-level `__defaults__` attribute - it
+assigns `plugin.options` straight from `config['main']['plugins'][name]`
+(the user's own `config.toml` section, or `{}` if none exists). A
+grep of this fork's entire core source turns up zero references to
+`__defaults__` anywhere. Every earlier cluster's "missing
+`__defaults__`" finding (Cluster 10's `adsbsniffer.py`, Cluster 12's
+removed `dashboard.py`/`dashboard2.py`, Cluster 13's `rss_voice.py`,
+Cluster 16's `expv2.py`/`xp.py`, Cluster 17's `age.py`/`agev2.py`)
+recommended "add a `__defaults__` block" as the fix - that
+recommendation does not actually work on this fork and has been
+corrected in each cluster's own NOTES.md (look for "CORRECTED FIX" or
+"Correction" callouts). The real fix on this build is either setting
+every option explicitly in `config.toml`, or patching the plugin to
+use `self.options.get(key, fallback)` instead of indexing
+`self.options[key]` directly - the pattern `xp_grid.py` (Cluster 16)
+and `git_backup.py` (Cluster 15) already happen to use. No plugin's
+keep/remove status changes because of this correction, only the fix
+text.
+
 ## Index
 
 ### Cluster 2 - aggressive/instant-attack mode

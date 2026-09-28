@@ -49,38 +49,47 @@ def __init__(self):
     }
 ```
 
-pwnagotchi's plugin loader merges user config against a **class-level**
-`__defaults__` attribute, then assigns the merged result to
-`self.options` - overwriting whatever was set in `__init__` entirely.
-Since this plugin never declares `__defaults__` as a class attribute,
-the merged `self.options` after loading is effectively just whatever
-the user put in `config.toml` for this plugin (likely just
-`enabled = true` for most users). `on_loaded()` immediately does
-`self.options['aircraft_file']` - which would `KeyError` unless every
-one of those four keys is explicitly set in config.
+pwnagotchi's plugin loader assigns `self.options` from
+`config['main']['plugins'][name]` (the user's `config.toml` section
+for this plugin, or `{}` if none exists) **after** `__init__()` runs -
+overwriting whatever was set here entirely. `on_loaded()` immediately
+does `self.options['aircraft_file']` - which would `KeyError` unless
+every one of those four keys is explicitly set in config.
 
-**Fix:** move the defaults to a class attribute:
+**CORRECTED FIX (see Cluster 18's project-wide `__defaults__`
+correction):** this NOTES.md originally recommended moving these
+defaults into a class-level `__defaults__` attribute. That
+recommendation was wrong for this fork - I later confirmed by reading
+this jayofelony fork's actual plugin loader
+(`pwnagotchi/plugins/__init__.py`) that it **never reads
+`__defaults__` at all**, on any plugin, regardless of whether it's
+declared. Adding `__defaults__` here would not have fixed anything.
+The two fixes that actually work on this fork:
 
 ```python
-class ADSBSniffer(plugins.Plugin):
-    __author__ = '4li3nMaJ1k'
-    __version__ = '0.1.0'
-    __license__ = 'GPL3'
-    __description__ = 'A plugin that captures ADS-B data from aircraft using RTL-SDR and logs it.'
-    __defaults__ = {
-        'timer': 60,
-        'aircraft_file': '/root/handshakes/adsb_aircraft.json',
-        'adsb_x_coord': 160,
-        'adsb_y_coord': 80,
-    }
-
-    def __init__(self):
-        self.last_scan_time = 0
-        self.data = {}
+# Option A - configure every key explicitly in config.toml (no code change):
+[main.plugins.adsbsniffer]
+enabled = true
+timer = 60
+aircraft_file = "/root/handshakes/adsb_aircraft.json"
+adsb_x_coord = 160
+adsb_y_coord = 80
 ```
 
-Otherwise straightforward once fixed - it's a simple polling loop
-around a subprocess call, nothing structurally wrong beyond this.
+```python
+# Option B - patch the plugin to fall back with .get() instead of
+# indexing self.options directly, so it works even with a bare
+# `enabled = true` in config.toml:
+def on_loaded(self):
+    self.timer = self.options.get('timer', 60)
+    self.aircraft_file = self.options.get('aircraft_file', '/root/handshakes/adsb_aircraft.json')
+    self.adsb_x_coord = self.options.get('adsb_x_coord', 160)
+    self.adsb_y_coord = self.options.get('adsb_y_coord', 80)
+```
+
+Neither applied to the source. Otherwise straightforward once fixed -
+it's a simple polling loop around a subprocess call, nothing
+structurally wrong beyond this.
 
 ## `pwnaware.py` (evilsocket-derived, edited by itsdarklikehell) - broken (fatal) + smaller bugs
 

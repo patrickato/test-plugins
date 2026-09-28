@@ -47,22 +47,36 @@ explicitly in `config.toml`. Same recurring pattern as
 `adsbsniffer.py`, `dashboard.py`/`dashboard2.py`, `exp.py`/`expv2.py`,
 and `xp.py` from earlier clusters.
 
-**Fix:**
-```python
-__defaults__ = {
-    "enabled": False,
-    "age_x_coord": 5,
-    "age_y_coord": 80,
-    "str_x_coord": 80,
-    "str_y_coord": 80,
-    "ap_x_coord": 5,
-    "ap_y_coord": 90,
-    "deauth_x_coord": 80,
-    "deauth_y_coord": 90,
-}
+**CORRECTED FIX (see Cluster 18's project-wide `__defaults__`
+correction):** this originally recommended adding a class-level
+`__defaults__` block. That would not actually fix anything on this
+jayofelony fork - I later confirmed its plugin loader never reads
+`__defaults__` at all, on any plugin. The two fixes that actually
+work here:
+
+```toml
+# Option A - config.toml, no code change:
+[main.plugins.age]
+enabled = true
+age_x_coord = 5
+age_y_coord = 80
+str_x_coord = 80
+str_y_coord = 80
+ap_x_coord = 5
+ap_y_coord = 90
+deauth_x_coord = 80
+deauth_y_coord = 90
 ```
+
+```python
+# Option B - patch on_ui_setup to use .get() fallbacks:
+int(self.options.get("age_x_coord", 5))
+int(self.options.get("age_y_coord", 80))
+# ...and so on for the remaining six keys
+```
+
 (coordinates illustrative - pick values that don't collide with other
-on-screen elements.) Not applied, documented for whenever either
+on-screen elements.) Neither applied, documented for whenever either
 plugin is actually enabled.
 
 **Gap 2 - three of four stats are permanently frozen on this fork.**

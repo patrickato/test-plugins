@@ -106,6 +106,15 @@ on a class-level `__defaults__` dict - `on_loaded()` also validates
 (`self.ready = False`) rather than crashing later if either is
 missing.
 
+**Update (see Cluster 18's project-wide `__defaults__` correction):**
+this plugin's `.get(key, default)` pattern turns out to be not just a
+good habit but the *only* pattern that actually works on this
+jayofelony fork - I later confirmed the fork's loader never reads a
+class-level `__defaults__` at all, on any plugin. `git_backup.py`
+avoided a bug here by luck of style choice as much as by design, but
+the result is the same: it's correctly resilient on this build where
+many other plugins in this project are not.
+
 **Architecture note:** `on_internet_available` calls
 `self._perform_backup()` directly - synchronously, not in a spawned
 thread. `_perform_backup()` does file copying plus three git

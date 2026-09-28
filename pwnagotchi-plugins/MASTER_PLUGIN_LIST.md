@@ -68,6 +68,30 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 31 - project-wide correction: `__defaults__` is never read on
+this fork.** While researching Cluster 18 (Bluetooth plugins), I read
+this jayofelony fork's actual plugin loader
+(`pwnagotchi/plugins/__init__.py`, `load()`) directly and confirmed it
+never merges a plugin's class-level `__defaults__` attribute at all -
+it assigns `plugin.options` straight from `config['main']['plugins'][name]`
+(the user's own `config.toml` section, or `{}` if none exists). A
+project-wide grep of this fork's entire core source turns up zero
+references to `__defaults__` anywhere. Every earlier cluster's
+"missing `__defaults__`" finding (Cluster 10's `adsbsniffer.py`,
+Cluster 12's removed `dashboard.py`/`dashboard2.py`, Cluster 13's
+`rss_voice.py`, Cluster 16's `expv2.py`/`xp.py`, Cluster 17's
+`age.py`/`agev2.py`) recommended "add a `__defaults__` block" as the
+fix - that recommendation does not actually work on this fork and has
+been corrected in each cluster's own NOTES.md. The real fix on this
+build is either setting every option explicitly in `config.toml`, or
+patching the plugin to use `self.options.get(key, fallback)` instead
+of indexing `self.options[key]` directly - the pattern `xp_grid.py`
+(Cluster 16) and `git_backup.py` (Cluster 15) already happen to use,
+which makes them correctly resilient on this fork independent of
+whether that was the original author's intent. No plugin's keep/
+remove status changes because of this correction - it only affects
+which fix text is accurate.
+
 **Group 30 - cluster 17 (age/strength plugins):** findings-only, all 3
 kept. `age.py` and `agev2.py` (itsdarklikehell/Kaska) are near-
 identical four-stat counters (Age/Strength/Access Points/Deauths);

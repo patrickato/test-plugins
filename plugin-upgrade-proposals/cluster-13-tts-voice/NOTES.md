@@ -150,6 +150,14 @@ real nested dicts - it's only the plugin's own fallback defaults that
 are shaped wrong. Not fatal, just means feeds must be configured
 explicitly rather than relying on the shipped defaults.
 
+**Correction (see Cluster 18's project-wide `__defaults__`
+correction):** this shape-mismatch is actually moot regardless of the
+flat-vs-nested key issue - this jayofelony fork's loader never reads
+`__defaults__` at all, correctly-shaped or not. Every feed must be
+configured explicitly in `config.toml` either way; the flat/nested
+mismatch above would only matter on an upstream fork that actually
+merges `__defaults__` in the first place.
+
 ## 5. `voice_gamer.py` - REMOVED, security anti-pattern + real bugs
 
 Downloads arbitrary content from a configured URL and overwrites
