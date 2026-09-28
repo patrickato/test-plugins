@@ -68,6 +68,30 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 35 - cluster 20 (cracking-pipeline "_ng" rewrites):** findings-only,
+all 6 kept (`aircrackonly.py`, `aircrackonly_ng.py`, `better_onlinehashcrack.py`,
+`onlinehashcrack_ng.py`, `quick_rides_to_jail.py`, `quick_rides_to_jail_ng.py`).
+`aircrackonly_ng.py` is a clean improvement over `aircrackonly.py` (adds an
+on-screen delete-notice, no new bugs). `onlinehashcrack_ng.py` shares
+`better_onlinehashcrack.py`'s already-documented `.pcap`-only backlog-scan
+bug, but uses a possibly-more-current download endpoint
+(`/wpa-exportcsv` vs. the older `/exportcsv`) and reads the device's real
+global whitelist (`config['main']['whitelist']`) instead of a
+plugin-scoped copy. Major finding: neither form of `quick_rides_to_jail`
+actually works. `quick_rides_to_jail.py` has no `class X(plugins.Plugin):`
+wrapper at all - confirmed via this fork's own loader source
+(`Plugin.__init_subclass__` is the only registration path) that it
+silently never registers as a plugin and none of its code ever runs.
+`quick_rides_to_jail_ng.py` fixes the registration by wrapping everything
+in a proper class, but both files share a second, independent bug - a
+module-level `OPTIONS = dict()` that's declared but never populated from
+`self.options` anywhere - so the `_ng` version registers correctly and
+then raises `KeyError` the moment any real code path runs. The existing
+master-list description for `quick_rides_to_jail.py` was corrected in
+place to reflect this (previously implied it worked, with no caveat).
+See `plugin-upgrade-proposals/cluster-20-cracking-pipeline-ng/NOTES.md`
+for the full writeup and fixes.
+
 **Group 34 - newly discovered plugins added to the list (23 files, 13
 bullets).** A user-requested audit cross-checked every plugin filename in
 `itsdarklikehell/pwnagotchi-plugins` (198 files), `sniffleupagus/pwnagotchi_plugins`
@@ -527,7 +551,7 @@ repo).
 
 ## Attack / Capture behavior
 
-- **aircrackonly.py** / **aircrackonly_ng.py** - Verifies a pcap actually contains a handshake/PMKID; deletes it if not (pending review - Cluster 20)
+- **aircrackonly.py** / **aircrackonly_ng.py** - Verifies a pcap actually contains a handshake/PMKID; deletes it if not (`_ng` also shows an on-screen status message when it deletes a pcap)
 - **auto_tune.py** - Adjusts AUTO mode parameters (pending review - Cluster 26)
 - **banthex.py** / **banthex-de.py** - Auto-uploads handshakes to banthex.de
 - **better_apfaker.py** - Creates fake APs
@@ -554,12 +578,12 @@ repo).
 - **mycracked_pw.py** - Grabs all cracked passwords, generates WiFi QR codes and a wordlist
 - **neurolyzer.py** - MAC randomization, WIDS/WIPS evasion
 - **nextcloud.py** - Auto-uploads handshakes to a Nextcloud WebDAV endpoint
-- **onlinehashcrack_ng.py** - Uploads handshakes to onlinehashcrack.com (another alternate implementation, alongside better_onlinehashcrack.py) (pending review - Cluster 20)
+- **onlinehashcrack_ng.py** - Uploads handshakes to onlinehashcrack.com (another alternate implementation, alongside better_onlinehashcrack.py; shares the same `.pcap`-only backlog-scan bug, but uses a possibly-more-current download endpoint and the device's real global whitelist)
 - **potfilesorter.py** - Sorts a hashcat potfile into a usable wpa_supplicant.conf
 - **privacy-nightmare.py** - Passive metadata "eavesdropping" plugin - provocatively named, read the source before trusting
 - **probenpwn.py** - Aggressive handshake/PMKID capture, quiet assoc attacks, WPS PIN extraction, adaptive rate limiting
 - **pwn2crack.py** (aka pwnagotchi-to-hashtopolis-plugin) - Converts handshakes to Hashcat 22000 and creates a hashlist in Hashtopolis
-- **quick_rides_to_jail.py** / **quick_rides_to_jail_ng.py** - Dictionary-cracks handshakes, then auto-updates wpa_supplicant with results (pending review - Cluster 20)
+- **quick_rides_to_jail.py** / **quick_rides_to_jail_ng.py** - Dictionary-cracks handshakes, then auto-updates wpa_supplicant with results, **but neither form is functional as shipped**: `quick_rides_to_jail.py` has no `class X(plugins.Plugin):` wrapper at all, so it never registers as a plugin and silently never runs; `quick_rides_to_jail_ng.py` fixes that registration but has a second, independent bug (a module-level `OPTIONS` dict that's declared but never populated), so it registers and then `KeyError`s on first real use. See Cluster 20 notes for both fixes.
 - **wd_honey_Pot.py** - Honeypot that detects OTHER pwnagotchis performing deauths nearby (defensive, not an attack tool)
 - **woop_woop.py** - Auto-authenticates to known networks, performs internal recon, saves wifi info to wpa_supplicant
 - **wpa-cracking-project-with-pwnagotchi** - Uploads handshakes to a companion university-thesis Hashcat web app

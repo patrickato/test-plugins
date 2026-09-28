@@ -370,5 +370,35 @@ as fixable with mechanical patches, no full rewrite needed.
 |---|---|---|
 | [`auto-hotspot/connect cluster notes`](cluster-19-auto-hotspot/NOTES.md) | `auto-hotspot.py`, `away_base.py`, `home_base.py`, `ext_wifi.py`, `extWifi.py` | 5 KEPT (2 fatal-but-fixable bugs on auto-hotspot.py, shared fatal-but-fixable bug + 1 more on away_base.py/home_base.py, 1 active reboot-loop hazard on extWifi.py, 1 minor gap on ext_wifi.py) |
 
+## Newly discovered plugins (Group 34 audit)
+
+A user-requested audit cross-checked every plugin filename in
+`itsdarklikehell`, `sniffleupagus`, and `pwnagotchi-unofficial`'s archive
+against the master list and found 42 plugins never added at all - see
+Group 34 in the master list's elimination log. 23 were selected and
+added as new bullets, split into Clusters 20-26 below, reviewed the same
+way as everything else.
+
+### Cluster 20 - cracking-pipeline "_ng" rewrites
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 35. Findings-only,
+all 6 kept. `aircrackonly_ng.py` is a clean improvement over
+`aircrackonly.py` (adds an on-screen delete-notice). `onlinehashcrack_ng.py`
+shares `better_onlinehashcrack.py`'s already-documented `.pcap`-only
+backlog-scan bug, but uses a possibly-more-current download endpoint and
+reads the device's real global whitelist instead of a plugin-scoped
+copy. Major finding: neither form of `quick_rides_to_jail` works -
+`quick_rides_to_jail.py` has no `class X(plugins.Plugin):` wrapper at
+all, so it silently never registers as a plugin (confirmed against this
+fork's loader source); `quick_rides_to_jail_ng.py` fixes that
+registration but shares a second bug with the original - a module-level
+`OPTIONS` dict that's declared but never populated - so it registers and
+then `KeyError`s on first real use. The master list's `quick_rides_to_jail.py`
+description was corrected in place to reflect this.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`cracking-pipeline _ng cluster notes`](cluster-20-cracking-pipeline-ng/NOTES.md) | `aircrackonly.py`, `aircrackonly_ng.py`, `better_onlinehashcrack.py`, `onlinehashcrack_ng.py`, `quick_rides_to_jail.py`, `quick_rides_to_jail_ng.py` | 6 KEPT (aircrackonly pair clean, onlinehashcrack pair shares a known bug with 2 differences, quick_rides_to_jail pair both non-functional for independent reasons - description corrected) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
