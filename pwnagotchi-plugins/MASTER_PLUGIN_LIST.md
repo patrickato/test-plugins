@@ -52,6 +52,10 @@ in for now.
 **Group 9 - trust/provenance tier:** kept everything, including the
 ~130-plugin Tier 3 (individual one-off repos) - no changes.
 
+**Group 10 - unclear-purpose flags:** removed `deauthenticator.py`
+(name/description mismatch, likely a mislabeled duplicate of
+`display_version.py`).
+
 ---
 
 ## Attack / Capture behavior
@@ -101,7 +105,6 @@ in for now.
 - **crack_house.py** (+ a "-dev" variant) - Displays the closest cracked network and its password
 - **darkmode.py** - Dark theme
 - **dashboard.py** / **dashboard2.py** - Consolidated status display (clock, deauth counter, memtemp, cracked-handshake counter, internet status)
-- **deauthenticator.py** - Adds the pwnagotchi version next to the current mode (name is misleading - verify before trusting)
 - **display-aircrack.py** - Shows whether aircrack is currently running
 - **display-password.py** / **display-password-qr.py** - Displays recently cracked passwords (QR variant adds a QR code)
 - **display-text.py** - Displays custom text on a Waveshare 1.44" LCD screen
