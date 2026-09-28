@@ -1,9 +1,10 @@
 # Notes: GPS/location status plugin cluster
 
-**Status: 3 of 10 CONFIRMED KEEP** (`gps_error.py`, `gps_sat.py`,
-`gps-plus.py`). Remaining 7 (`gps_fix.py`, `gps_grid.py`,
-`gps_led.py`, `gps_live.py`, `gpsdeasy.py`, `gsmfake.py`, `mygps.py`)
-still under review - decision pending, see "Open items" below.
+**Status: all 10 KEPT on the master list**, per explicit user
+decision. Below: 3 plugins the review flagged as confirmed-useful
+with no real downside, plus notes/open questions on the remaining 7,
+which were kept anyway (broad-scope-first philosophy) rather than
+narrowed on this pass.
 
 This is the GPS-hardware/status sub-group split out of the larger
 GPS/wardriving pile flagged (but not resolved) back in Group 2.
@@ -15,7 +16,7 @@ second puck-style USB GPS receiver, and another GPS sensor - so any
 plugin expecting a real serial/USB GPS device is directly usable, not
 theoretical.
 
-## Confirmed keeps
+## Standout keeps (flagged as clearly useful, no real downside)
 
 ### `gps-plus.py` - KEEP, needs a fix
 
@@ -70,7 +71,12 @@ Same author/template as `gps_error.py`. Displays satellite count from
 `plugins.loaded["gps"].coordinates["NumSatellites"]`. Cheap diagnostic
 value once a `"gps"`-named plugin is active, harmless before then.
 
-## Open items - not yet decided
+## The rest - kept, notes/open questions below
+
+All 7 remaining plugins were kept on the master list per user
+decision (broad-scope-first: nothing here is broken enough to justify
+narrowing yet, per user's stated project philosophy). Open questions
+below are for a *future* pass, not blockers to being on the list.
 
 ### The `"gps"` name-dependency catch
 
@@ -88,16 +94,15 @@ doesn't register as `"gps"`, either patch its `__name__`/registration
 to match, or these four stay inert no matter what GPS plugin is
 running.
 
-### `gps_fix.py`, `gps_grid.py`, `gps_live.py` - pending
+### `gps_fix.py`, `gps_grid.py`, `gps_live.py` - kept
 
-Same author/template as the two confirmed keeps above (`gps_error.py`,
-`gps_sat.py`) - fix-quality readout, grid-peer coordinate sharing, and
-per-epoch coordinate refresh, respectively. Same `"gps"`-name
-dependency caveat above applies to all three. No bugs found in any of
-the three beyond that dependency question. Pending decision alongside
-resolving the naming question.
+Same author/template as `gps_error.py`/`gps_sat.py` - fix-quality
+readout, grid-peer coordinate sharing, and per-epoch coordinate
+refresh, respectively. Same `"gps"`-name dependency caveat above
+applies to all three. No bugs found in any of the three beyond that
+dependency question.
 
-### `gpsdeasy.py` - pending
+### `gpsdeasy.py` - kept
 
 Talks to a `gpsd` daemon over a local socket rather than driving
 bettercap's GPS module directly - heavier setup (installs/configures
@@ -112,23 +117,25 @@ rather than a companion to it - likely redundant if `gps-plus.py` is
 the chosen GPS source, since both talk to the same class of USB/serial
 hardware.
 
-### `gps_led.py` - pending
+### `gps_led.py` - kept
 
 Flashes a physical LED wired to GPIO 26 whenever `on_ui_update` fires.
 Manages its own bettercap GPS on/off independently (doesn't depend on
 a `"gps"`-named plugin, similar to `gps-plus.py`). Purely a hardware
-question - depends on whether an LED gets wired to GPIO 26, unrelated
-to which GPS software plugin is running.
+question - inert unless an LED gets wired to GPIO 26, unrelated to
+which GPS software plugin is running.
 
-### `mygps.py` - pending, leaning drop
+### `mygps.py` - kept
 
 GPS via a phone's GPSLogger app over HTTP webhook - built specifically
 for the no-GPS-hardware case. Given the user has three actual GPS
-devices on hand, this solves a problem that doesn't apply here. Same
-`.pcap`→`.gps.json` filename-mangling bug as `gps-plus.py`/
-`gpsdeasy.py` (same fix, if ever used). Functionally solid otherwise.
+devices on hand this is redundant as a primary source, but useful as
+a fallback (e.g. a dongle failing mid-outing while a phone is still
+on hand). Same `.pcap`→`.gps.json` filename-mangling bug as
+`gps-plus.py`/`gpsdeasy.py` (same fix, if ever used). Functionally
+solid otherwise.
 
-### `gsmfake.py` - pending, leaning drop
+### `gsmfake.py` - kept, flagged as a real (not just unused) cost
 
 Not a real pwnagotchi plugin - no `plugins.Plugin` subclass, no
 `on_*` hooks, no `pwnagotchi.plugins` import. It's a standalone
@@ -136,7 +143,14 @@ Python 2/3 CLI test-harness script for `gpsd` (`python gsmfake.py -P
 2948 /root/fakegps.data`, run by hand), requiring a specific Waveshare
 GSM/GPRS/GNSS hat and companion files (`prime_gsm_hat.py`, a patched
 `gps/fake.py`) not present in this repo. Author's own description
-calls it "real shitty hacks." Misfiled as a plugin.
+calls it "real shitty hacks." Misfiled as a plugin - kept on the list
+per user decision, but worth flagging that this isn't just inert
+dead weight like the hardware-dependent entries above: its top-level
+`import gps_ng` / `import gps.fake` will throw when pwnagotchi's
+plugin loader scans the file (neither module is present on this
+image or installed by anything in this repo), which will likely log
+an ImportError on every boot for a file that was never a functioning
+plugin to begin with.
 
 ## Dependencies (confirmed keeps)
 

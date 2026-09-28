@@ -68,23 +68,29 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
-**Group 21 - duplicate cluster 8 (GPS/location status plugins), partial
-pass - 3 confirmed keeps:** `gps_error.py`, `gps_sat.py`, `gps-plus.py`
-confirmed as keeps (source-verified, none are duplicates of each
-other or of the remaining 7 in this cluster - each does a distinct
-job). `gps-plus.py` fits the user's actual GPS hardware (owns a u-blox
-7 USB dongle, a second puck-style USB GPS receiver, and another GPS
-sensor) but has a filename bug: `filename.replace(".pcap",
-".gps.json")` isn't extension-aware, so on this image's real
+**Group 21 - duplicate cluster 8 (GPS/location status plugins):** kept
+all 10 - `gps-plus.py`, `gps_error.py`, `gps_fix.py`, `gps_grid.py`,
+`gps_led.py`, `gps_live.py`, `gpsdeasy.py`, `gps_sat.py`,
+`gsmfake.py`, `mygps.py`. None are duplicates of each other - each
+does a distinct job (different GPS sources, different status readouts,
+one LED indicator, one non-plugin test script). `gps-plus.py` fits the
+user's actual GPS hardware (owns a u-blox 7 USB dongle, a second
+puck-style USB GPS receiver, and another GPS sensor) but shares a
+filename bug with `gpsdeasy.py` and `mygps.py`: `filename.replace(
+".pcap", ".gps.json")` isn't extension-aware, so on this image's real
 `.pcapng` captures it produces a mangled `net.gps.jsonng` instead of
 `net.gps.json` - fix is a one-line extension-strip before appending
-`.gps.json`. `gps_error.py`/`gps_sat.py` are lightweight status
+`.gps.json`, documented for all three. `gps_error.py`/`gps_fix.py`/
+`gps_grid.py`/`gps_live.py`/`gps_sat.py` are lightweight status
 add-ons that read a plugin registered under the exact name `"gps"` -
-harmless to leave enabled even before that dependency is wired up,
-just inert until it is. Remaining 7 in this cluster
-(`gps_fix.py`, `gps_grid.py`, `gps_led.py`, `gps_live.py`,
-`gpsdeasy.py`, `gsmfake.py`, `mygps.py`) still under review - decision
-pending. See
+harmless to leave enabled even before that dependency is confirmed
+wired up (open question: does `gps-plus.py` register as `"gps"`?),
+just inert until it is. `gps_led.py` needs an LED wired to GPIO 26 to
+do anything, otherwise inert. `gsmfake.py` is flagged as not actually
+a loadable plugin (no `plugins.Plugin` subclass, top-level imports of
+`gps_ng`/`gps.fake` modules not present on this image) - kept on the
+list per user decision, but will likely log an ImportError on every
+boot when the plugin loader scans it. See
 `plugin-upgrade-proposals/cluster-08-gps-status/NOTES.md` for the full
 writeup of all 10.
 
