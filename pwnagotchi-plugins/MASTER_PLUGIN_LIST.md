@@ -68,6 +68,25 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 36 - cluster 21 (LED/wardriving "_ng" rewrites):** removed
+`led.py`, `led-ng.py`, `morse_code.py`, `morse_code-ng.py` (4). Kept
+`wardriver-pwnagotchi-plugin`, `wardriver_ng.py`, `f0xtr0t`,
+`webgpsmap_ng.py` (4, findings-only, documented for later fixing).
+`led-ng.py` has a real regression bug (dropped the "led" prefix from its
+sysfs LED path format string, pointing at a device name that doesn't
+exist on real Raspberry Pi hardware). `morse_code-ng.py` is a purely
+cosmetic rewrite of `morse_code.py`, no functional difference either
+way. `wardriver_ng.py` is a real regression against itsdarklikehell's
+own `wardriver.py` mirror - drops the on-screen UI and session-merging
+entirely, and its directory cleanup lost the file-type filter the
+original had (a real bug, not just a missing feature). `webgpsmap_ng.py`
+filters `.pcap` throughout its core map-building logic instead of
+`.pcapng`, so it never finds this device's real captures - this fork's
+own bundled `webgpsmap.py` default already does this correctly - but it
+does add `.paw-gps.json` GPS-source support nothing else on the list
+has. See `plugin-upgrade-proposals/cluster-21-led-wardriving-ng/NOTES.md`
+for the full writeup and fixes.
+
 **Group 35 - cluster 20 (cracking-pipeline "_ng" rewrites):** findings-only,
 all 6 kept (`aircrackonly.py`, `aircrackonly_ng.py`, `better_onlinehashcrack.py`,
 `onlinehashcrack_ng.py`, `quick_rides_to_jail.py`, `quick_rides_to_jail_ng.py`).
@@ -637,9 +656,9 @@ repo).
 - **theylive.py** - GPS wardriving with per-handshake location logging
 - **tracker.py** - Tracks seen APs/clients, with position if GPS is enabled
 - **wardrive.py** - Wardriving log plugin
-- **wardriver-pwnagotchi-plugin** / **wardriver_ng.py** - Logs all seen networks, uploads to WiGLE (pending review - Cluster 21)
+- **wardriver-pwnagotchi-plugin** / **wardriver_ng.py** - Logs all seen networks, uploads to WiGLE (`wardriver_ng.py` is a real regression vs. itsdarklikehell's own `wardriver.py` mirror - drops the on-screen network-count UI and session-merging entirely, and its directory cleanup lost its file-type filter, a real bug; see Cluster 21 notes for fixes)
 - **warwalking_trails_kml.py** / **warwalking_trails_kml_single.py** - Generates KML trail files from wardriving data, for Google Earth
-- **webgpsmap_ng.py** - "_ng" rewrite of the webgpsmap concept (f0xtr0t is the enhanced wardriving fork already on the list) (pending review - Cluster 21)
+- **webgpsmap_ng.py** - "_ng" rewrite of the webgpsmap concept (f0xtr0t is the enhanced wardriving fork already on the list); **broken as shipped on this fork** - filters `.pcap` throughout its core map-building logic instead of `.pcapng`, so it never finds any of this device's real captures (this fork's own bundled `webgpsmap.py` default already handles `.pcapng` correctly); does add `.paw-gps.json` GPS-source support neither the bundled default nor f0xtr0t has; see Cluster 21 notes for the fix
 - **wigle_ng.py** - Automatically uploads collected WiFi to wigle.net (pending review - Cluster 26)
 - **WigleLocator** - Queries WiGLE for AP coordinates, live maps
 
@@ -654,10 +673,8 @@ repo).
 - **gpio_shutdown.py** - GPIO-triggered clean shutdown
 - **gsmfake.py** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable
 - **img2xbm.py** - Converts images to XBM format for a Flipper Zero display
-- **led-ng.py** - Blinks the PWR LED in different patterns depending on the event (pending review - Cluster 21)
 - **mad_hatter.py** - Universal UPS battery monitor with auto-shutdown
 - **memtemp-plus.py** / **memtemp_adv.py** / **memtemp_ng.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin); memtemp_adv.py adds disk usage, memtemp_ng.py is a separate variant (pending review - Cluster 25)
-- **morse_code.py** / **morse_code-ng.py** - Flashes the status LED in Morse code (pending review - Cluster 21)
 - **pibat.py** - Voltage indicator for the PiBat I2C UPS/battery hat
 - **pisugar2.py** / **pisugar3.py** - Voltage/percentage indicator for PiSugar 2 / PiSugar 3
 - **pivoyager.py** - PiVoyager UPS hat support
@@ -742,7 +759,6 @@ repo).
 
 ## Original evilsocket bundled (remainder - not superseded by anything jayofelony bundles)
 
-- **led.py** - Status LED control
 - **net-pos.py** - Network-position (AP-based) geolocation lookup
 
 ## Web UI / API / Remote control

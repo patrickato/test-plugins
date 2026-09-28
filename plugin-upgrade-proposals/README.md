@@ -400,5 +400,27 @@ description was corrected in place to reflect this.
 |---|---|---|
 | [`cracking-pipeline _ng cluster notes`](cluster-20-cracking-pipeline-ng/NOTES.md) | `aircrackonly.py`, `aircrackonly_ng.py`, `better_onlinehashcrack.py`, `onlinehashcrack_ng.py`, `quick_rides_to_jail.py`, `quick_rides_to_jail_ng.py` | 6 KEPT (aircrackonly pair clean, onlinehashcrack pair shares a known bug with 2 differences, quick_rides_to_jail pair both non-functional for independent reasons - description corrected) |
 
+### Cluster 21 - LED/wardriving "_ng" rewrites
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 36. Removed
+`led.py`, `led-ng.py`, `morse_code.py`, `morse_code-ng.py` (4) - the
+`led-ng.py` rewrite had a real regression bug (dropped the "led" prefix
+from its sysfs LED path, pointing at a nonexistent device name), and
+`morse_code-ng.py` was purely cosmetic with no functional difference
+either way. Kept `wardriver-pwnagotchi-plugin`, `wardriver_ng.py`,
+`f0xtr0t`, `webgpsmap_ng.py` (4, findings-only). `wardriver_ng.py` is a
+real regression against itsdarklikehell's own `wardriver.py` mirror -
+drops the on-screen UI and session-merging entirely, and its directory
+cleanup lost the file-type filter the original had (a real bug).
+`webgpsmap_ng.py` filters `.pcap` throughout its core map-building logic
+instead of `.pcapng`, so it never finds this device's real captures -
+this fork's own bundled `webgpsmap.py` default already handles this
+correctly - but it does add `.paw-gps.json` GPS-source support nothing
+else on the list has.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`LED/wardriving _ng cluster notes`](cluster-21-led-wardriving-ng/NOTES.md) | `led.py`/`led-ng.py` (removed), `morse_code.py`/`morse_code-ng.py` (removed), `wardriver-pwnagotchi-plugin`/`wardriver_ng.py` (kept), `f0xtr0t`/`webgpsmap_ng.py` (kept) | 4 REMOVED, 4 KEPT (wardriver_ng.py and webgpsmap_ng.py both real regressions vs. their references, fixes documented) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
