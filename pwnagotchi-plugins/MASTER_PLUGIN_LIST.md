@@ -21,6 +21,15 @@ HAT Mini/LCD HAT family (6: `buttonshim.py`, `bshim.py`, `display_settings.py`,
 UPS/battery-hat group, the RTL-SDR/LoRa/GSM-hat group, the BLE group, the
 Flipper Zero group, and the GPIO-button/LED group.
 
+**Group 2 - duplicate/overlapping function:** partial pass. Discord group -
+kept `Discord v3.0.1` (wpa-2), dropped `discord.py`, `discord_notify.py`,
+`pwng2discord`, `pwnagotchi-discord-plugin` (4). Telegram group - kept
+`TelePwn v2.0` (wpa-2), dropped `telegram.py`, `neonbot.py` (2). All other
+duplicate groups (GPS, wardriving, TTS/voice, crack pipeline, fake-AP,
+cloud-crack-upload, password display, backup, clock, dashboard, XP/leveling,
+age/strength, Bluetooth scanning, aircraft tracking, auto-hotspot/connect)
+left in for now.
+
 ---
 
 ## Attack / Capture behavior
@@ -182,15 +191,10 @@ Flipper Zero group, and the GPIO-button/LED group.
 ## Notifications / Social / Webhooks
 
 - **apprise-notify.py** - Multi-service notification plugin, covers dozens of destinations via Apprise
-- **discord.py** - Posts recent activity to a Discord channel via webhook
 - **Discord v3.0.1** - Uploads pcaps, maps locations, tracks sessions, posts to Discord
-- **discord_notify.py** - Sends notifications to a Discord channel via webhook (simpler alternative)
 - **mastodon.py** - Periodically posts status updates to Mastodon
 - **mqtt_plugin.py** - Sends pwnagotchi info to an MQTT broker
-- **neonbot.py** - Telegram QR-code and control bot
 - **ntfy_msg.py** - Sends push notifications via ntfy
-- **pwnagotchi-discord-plugin** - Discord notifications (has an open, unresolved README issue from its own maintainer)
-- **pwng2discord** - Discord notifications
 - **PwnSpotify** / **spotify_now_playing.py** - Displays the currently-playing Spotify track
 - **pwnassistant.py** - Voice control commands via a connected microphone
 - **pwnspeaker.py** - Text-to-speech announcements of pwning events
@@ -199,7 +203,6 @@ Flipper Zero group, and the GPIO-button/LED group.
 - **slack.py** - Posts recent activity to a Slack channel via webhook
 - **sound.py** (+ **sound/shutdown_button.py**) - Plays a WAV file on events, plus a shutdown-button companion
 - **speak_to_me.py** - Text-to-speech announcements of pwning events
-- **telegram.py** - Periodically sends Telegram messages about recent activity (also a separate "simple interactive" standalone variant)
 - **TelePwn v2.0** - Advanced Telegram control and notifications
 - **terminal2.py** - Browser-based terminal access (WebSSH2)
 - **twitter.py** - Posts tweets about recent activity
