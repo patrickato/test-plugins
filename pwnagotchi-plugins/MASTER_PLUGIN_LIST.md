@@ -68,6 +68,14 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 13 - duplicate cluster 1 (dictionary-crack speed variants):** removed
+`quickdic.py`, `better_quickdic.py`, `pwnagotchi_fast_dictionary` (3) - all
+three do the same job, and source review found real defects in each
+(main-loop-blocking with no timeout; a live `os.listdir()` bug that reads
+the wrong directory). Replaced by a custom-built `best_quickdic` plugin
+(not part of this list - lives alongside the other custom plugins in this
+repo).
+
 ---
 
 ## Attack / Capture behavior
@@ -103,9 +111,7 @@ compatible.
 - **privacy-nightmare.py** - Passive metadata "eavesdropping" plugin - provocatively named, read the source before trusting
 - **probenpwn.py** - Aggressive handshake/PMKID capture, quiet assoc attacks, WPS PIN extraction, adaptive rate limiting
 - **pwn2crack.py** (aka pwnagotchi-to-hashtopolis-plugin) - Converts handshakes to Hashcat 22000 and creates a hashlist in Hashtopolis
-- **pwnagotchi_fast_dictionary** - Improved version of quickdic.py, per its own README
 - **quick_rides_to_jail.py** - Dictionary-cracks handshakes, then auto-updates wpa_supplicant with results
-- **quickdic.py** - Runs a quick dictionary scan against captured handshakes
 - **wd_honey_Pot.py** - Honeypot that detects OTHER pwnagotchis performing deauths nearby (defensive, not an attack tool)
 - **woop_woop.py** - Auto-authenticates to known networks, performs internal recon, saves wifi info to wpa_supplicant
 - **wpa-cracking-project-with-pwnagotchi** - Uploads handshakes to a companion university-thesis Hashcat web app
