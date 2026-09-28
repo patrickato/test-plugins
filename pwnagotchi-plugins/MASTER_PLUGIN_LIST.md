@@ -68,6 +68,28 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 15 - duplicate cluster 3 (auto-authenticate + recon on known
+networks) verification pass:** no removals yet, findings only - real
+source pulled directly from itsdarklikehell/pwnagotchi-plugins (all four
+files confirmed to genuinely exist, contrary to an initial failed
+verification attempt that searched web/API indexes instead of the actual
+repo tree). `educational-purposes-only.py` AND `woop_woop.py` both contain
+a top-level `from pwnagotchi.ai.reward import RewardFunction` import -
+that module was fully removed from this fork's AI/RL layer, so **both
+plugins fail to load at all** on this image (a real Group-12-category
+compatibility break that slipped through the original pass since these
+files weren't individually opened at the time). `woop_woop.py` also
+targets any SSID found in the wpa-sec cracked-potfile, not a single
+configured home network - broader scope than described, worth flagging
+before any keep decision. `hp_educational-purposes.py` is functionally
+inert on both its honeypot half (never transmits real beacon frames,
+purely simulated in a Python set) and its auto-connect half (hardcoded
+`home_network="test-net"`, never reads `self.options`; RSSI check is
+backwards for real dBm values). `educational-purposes-exclusively.py` is
+the one that works roughly as described - config-driven, no AI-module
+import - though it carries a dead, never-called `_port_scan()` method.
+No list changes made pending a decision.
+
 **Group 14 - duplicate cluster 2 (aggressive/instant-attack mode):** no
 changes - `hulk.py`, `instattack.py`, `probenpwn.py` all kept, despite a
 source review finding `hulk.py` has zero target scoping (unconditional

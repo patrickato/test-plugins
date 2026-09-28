@@ -55,5 +55,18 @@ alongside that decision, not replacements pulled from the list).
 | [`instattack-upgrade`](cluster-02-aggressive-attack-mode/instattack-upgrade/PLAN.md) | `instattack.py` | PROPOSED |
 | [`probenpwn-upgrade`](cluster-02-aggressive-attack-mode/probenpwn-upgrade/PLAN.md) | `probenpwn.py` | PROPOSED |
 
+### Cluster 3 - auto-authenticate + recon on known networks
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 15. A
+verification pass on this cluster found `educational-purposes-only.py`
+and `woop_woop.py` both fail to load on this image outright (dead
+top-level import of a module removed from this fork's AI/RL layer) -
+see Group 15 in the master list's elimination log for full findings
+on all four plugins in this cluster.
+
+| Proposal | Target plugin | Status |
+|---|---|---|
+| [`educational-purposes-only-upgrade`](cluster-03-auto-authenticate-recon/educational-purposes-only-upgrade/PLAN.md) | `educational-purposes-only.py` | PROPOSED |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

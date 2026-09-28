@@ -1,0 +1,32 @@
+# PROPOSED config for educational_purposes_only_plus - NOT YET
+# IMPLEMENTED. This shape is a planning reference for whoever builds
+# this, not a working config for any plugin that currently exists in
+# this repo.
+
+main.plugins.educational_purposes_only_plus.enabled = true
+
+# Single operator-named SSID - unchanged scoping model from the
+# original. This plugin only ever connects here, nowhere else.
+main.plugins.educational_purposes_only_plus.home_network = "YourHomeNetwork"
+main.plugins.educational_purposes_only_plus.home_password = "your-actual-wifi-password"
+
+main.plugins.educational_purposes_only_plus.minimum_signal_strength = -75
+
+# Off by default - no adversary to hide from on your own LAN. Turn on
+# only if you have a specific reason to obscure the device's MAC/
+# hostname from your own router.
+main.plugins.educational_purposes_only_plus.randomize_mac = false
+main.plugins.educational_purposes_only_plus.randomize_hostname = false
+
+# See PLAN.md "Open design questions" - whether recon gets built at
+# all is not yet decided. If it is, it stays scoped to the subnet of
+# the ONE configured home_network, never anywhere else.
+main.plugins.educational_purposes_only_plus.enable_recon = false
+# main.plugins.educational_purposes_only_plus.recon_method = "nmap"  # or "scapy_arp"
+
+# Poll wpa_cli status instead of fixed sleeps, per PLAN.md open
+# question - default to the safer/slower fixed-sleep behavior until
+# wpa_cli polling is verified reliable on this hardware.
+main.plugins.educational_purposes_only_plus.use_state_polling = false
+
+main.plugins.educational_purposes_only_plus.log_file = "/home/pi/educational_purposes_only_plus/results.log"
