@@ -1,0 +1,30 @@
+# GPSModeSwitch - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.GPSModeSwitch.enabled = true
+
+# --- Option A: simple radius boundary (easiest to set up) ---
+main.plugins.GPSModeSwitch.center_lat = 40.0000
+main.plugins.GPSModeSwitch.center_lon = -75.0000
+main.plugins.GPSModeSwitch.radius_meters = 200
+
+# --- Option B: polygon boundary (more precise for an irregular
+# property shape) - if set, this takes priority over the radius option
+# above. List of [lat, lon] pairs forming a closed shape.
+# main.plugins.GPSModeSwitch.boundary_polygon = [
+#     [40.0010, -75.0010],
+#     [40.0010, -74.9990],
+#     [39.9990, -74.9990],
+#     [39.9990, -75.0010]
+# ]
+
+# How often (seconds) to check current position against the boundary.
+main.plugins.GPSModeSwitch.check_interval_secs = 30
+
+# gpsd connection - default is correct for almost all setups.
+main.plugins.GPSModeSwitch.gpsd_host = "localhost"
+main.plugins.GPSModeSwitch.gpsd_port = 2947
+
+main.plugins.GPSModeSwitch.log_file = "/home/pi/gpsmodeswitch/results.log"
