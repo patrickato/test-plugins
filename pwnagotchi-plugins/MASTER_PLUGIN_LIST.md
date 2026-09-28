@@ -30,6 +30,15 @@ cloud-crack-upload, password display, backup, clock, dashboard, XP/leveling,
 age/strength, Bluetooth scanning, aircraft tracking, auto-hotspot/connect)
 left in for now.
 
+**Group 3 - ethical/legal scope (unscoped active plugins):** no changes -
+left in for now (`educational-purposes-exclusively.py`, `educational-purposes-only.py`,
+`hp_educational-purposes.py`, `woop_woop.py`, `enterprise.py`, `wifi_jammer.py`,
+`wifi_password_cracker.py`, `instattack.py`, `hulk.py`).
+
+**Group 4 - maintenance/activity status:** removed all 7 flagged
+(`pwnagotchi-postinstall`, `dontuse.py`, `pwna-template-testing.py`,
+`Fancygotchi`, `monstart`/`monstop` counted as one entry, `phwn_hwm.py`).
+
 ---
 
 ## Attack / Capture behavior
@@ -84,7 +93,6 @@ left in for now.
 - **display-password.py** / **display-password-qr.py** - Displays recently cracked passwords (QR variant adds a QR code)
 - **display-text.py** - Displays custom text on a Waveshare 1.44" LCD screen
 - **display_version.py** - Adds the pwnagotchi software version to the display
-- **Fancygotchi** - Theme manager/GUI framework ("in development" per its own author)
 - **internet-connection.py** - Displays internet connectivity status (also distributed as `wanmon.py` / `internet-conection.py`)
 - **more_uptime.py** - Cycling uptime stats display
 - **printp.py** - Minimal example plugin that prints to the pwnagotchi screen
@@ -166,10 +174,8 @@ left in for now.
 - **ext_wifi.py** / **extWifi.py** - Disables the onboard WiFi chipset to free it for an external adapter
 - **fix_brcmfmac.py** - Reloads the brcmfmac WiFi driver module on a hang instead of a full reboot
 - **GitHub_Backups** - Syncs config to GitHub/Gitea
-- **monstart** / **monstop** - Start/stop monitor-mode scripts (hardcoded interface names, needs editing before use)
 - **powerutils.py** / **powerutilscmd.py** - Remote shutdown/restart server, plus a CLI client
 - **pwnaget.py** - SFTP-based script that auto-downloads captured handshakes off the pwnagotchi
-- **pwnagotchi-postinstall** - Post-install shell scripts (SSH patch, package freeze, screen-settings enforcement, etc.)
 
 ## Network / Security analysis
 
@@ -216,7 +222,6 @@ left in for now.
 - **bitcoin.py** - Displays the current bitcoin price
 - **christmas.py** - Holiday countdown theme
 - **counter.py** - Tallies assoc/deauth attempts
-- **dontuse.py** - Marked "you probably should not use this" by its own author
 - **envtune** - Environment-aware personality tuner (EMA smoothing, best-settings memory)
 - **exp.py** / **expv2.py** - Awards XP for each captured handshake
 - **Experience-Plugin-Pwnagotchi** - XP/experience system
@@ -224,8 +229,6 @@ left in for now.
 - **IPDisplay.py** - Displays the device's IP address
 - **miyagi.py** - "Training module" novelty plugin, manages brain backups
 - **partymode.py** - Novelty party mode
-- **phwn_hwm.py** - Purpose unclear from name/description - flagged, not confirmed
-- **pwna-template-testing.py** - Activates an "egirl-pwnagotchi" visual theme (lives in a `BROKEN_WIP` folder in its source repo)
 - **spam_peers.py** - Auto-messages newly discovered grid peers
 - **voice_gamer.py** - Downloads and replaces voice.py with a custom version
 - **Weather.py** - Displays the weather forecast
