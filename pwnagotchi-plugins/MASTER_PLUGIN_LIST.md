@@ -68,6 +68,15 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 17 - duplicate cluster 4 (deauth counting):** no changes -
+`deauth.py` and `counter.py` both kept. Source-verified clean (real,
+simple, no compatibility issues found in either). They share the deauth
+counter (genuinely redundant on-screen display) but each also tracks a
+different second metric - `deauth.py` also counts handshakes,
+`counter.py` also counts associations - so this isn't a true duplicate,
+just a partial overlap. Noted as a possible future merge candidate
+rather than forcing a pick now.
+
 **Group 16 - duplicate cluster 3 decision:** removed `hp_educational-purposes.py`
 (1) - functionally inert on both its honeypot half (never transmits real
 beacon frames) and its auto-connect half (hardcoded SSID, never reads
