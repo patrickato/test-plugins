@@ -324,5 +324,28 @@ project to date.
 |---|---|---|
 | [`age/strength cluster notes`](cluster-17-age-strength/NOTES.md) | `age.py`, `agev2.py`, `age.py` (AlienMajik variant) | 3 KEPT (2 documented gaps shared, 1 additional real bug on agev2.py, AlienMajik variant clean) |
 
+### Cluster 18 - Bluetooth scanning plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 32. Removed
+`bluetooth_scanner.py` - confirmed non-functional by construction, not
+merely buggy: imports a `BasePlugin` class that doesn't exist in this
+or any pwnagotchi version, calls `self.log` (no such attribute),
+defines `on_periodic` (not a real hook), and calls
+`agent.display_text(...)` (not a real method) - built against an
+imagined API. Would need a full rewrite, not a patch. Kept
+`blemon_plugin.py` (correctly built BLE monitor integrated with
+bettercap's real event stream, one small wrong-UI-key bug) and
+`bluetoothsniffer.py` (also correctly framed classic-Bluetooth
+scanner, but with three real bugs: a wrong UI-key on unload, a
+genuine `UnboundLocalError` risk that can drop a scan's results, and
+instance-dict defaults discarded by the loader per the project-wide
+`__defaults__` correction below - plus an unconfirmed `hcitool`-
+availability compatibility risk on newer Debian Bookworm-based
+images).
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`Bluetooth cluster notes`](cluster-18-bluetooth/NOTES.md) | `bluetooth_scanner.py` (removed), `blemon_plugin.py`, `bluetoothsniffer.py` | 1 REMOVED (non-functional by construction), 2 KEPT (1 small bug each on blemon_plugin.py, 3 bugs + 1 open question on bluetoothsniffer.py) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

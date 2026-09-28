@@ -68,6 +68,27 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 32 - duplicate/broken cluster 18 (Bluetooth scanning plugins):**
+removed `bluetooth_scanner.py` (1) - confirmed non-functional by
+construction, not merely buggy: imports `BasePlugin` from
+`pwnagotchi.plugins`, a class that does not exist in this or any
+pwnagotchi version (only `Plugin` does), so the file fails to even
+import (`ImportError`) before any of its own code runs. Also calls
+`self.log` (no such attribute on the real base class), defines
+`on_periodic` (not a real hook - the framework never calls it), and
+calls `agent.display_text(...)` (not a real method) - built against
+an imagined API, not this framework. Would need a full rewrite from
+scratch, not a patch - removed rather than documented-as-fixable.
+Kept `blemon_plugin.py` (correctly built, deeply integrated with
+bettercap's real BLE event stream, one small wrong-UI-key bug) and
+`bluetoothsniffer.py` (also correctly framed, but carries three real
+bugs: a wrong UI-key on unload, a genuine `UnboundLocalError` risk in
+its scan loop, and instance-dict defaults discarded by the loader per
+Group 31's correction - plus an unconfirmed `hcitool`-availability
+compatibility risk on newer Debian Bookworm-based images). See
+`plugin-upgrade-proposals/cluster-18-bluetooth/NOTES.md` for the full
+writeup and fixes.
+
 **Group 31 - project-wide correction: `__defaults__` is never read on
 this fork.** While researching Cluster 18 (Bluetooth plugins), I read
 this jayofelony fork's actual plugin loader
@@ -541,7 +562,6 @@ repo).
 
 - **basiclight.py** - GPIO traffic-light-style signal lights
 - **blemon_plugin.py** - Counts/tracks max simultaneous BLE devices
-- **bluetooth_scanner.py** - Scans for and logs nearby Bluetooth devices
 - **bluetoothsniffer.py** - Logs nearby Bluetooth MACs/names/counts to a JSON file
 - **fix_region.py** - Changes the iw region to unlock additional channels
 - **flipperLink.py** - Connects pwnagotchi to a Flipper Zero
