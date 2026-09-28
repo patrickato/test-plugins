@@ -57,16 +57,22 @@ alongside that decision, not replacements pulled from the list).
 
 ### Cluster 3 - auto-authenticate + recon on known networks
 
-Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 15. A
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Groups 15-16. A
 verification pass on this cluster found `educational-purposes-only.py`
 and `woop_woop.py` both fail to load on this image outright (dead
-top-level import of a module removed from this fork's AI/RL layer) -
-see Group 15 in the master list's elimination log for full findings
-on all four plugins in this cluster.
+top-level import of a module removed from this fork's AI/RL layer);
+`hp_educational-purposes.py` was removed from the master list entirely
+(functionally inert on both its claimed features, needs a rebuild not
+a tweak); `educational-purposes-exclusively.py` already works. See
+Group 15/16 in the master list's elimination log for full findings on
+all four plugins in this cluster.
 
 | Proposal | Target plugin | Status |
 |---|---|---|
 | [`educational-purposes-only-upgrade`](cluster-03-auto-authenticate-recon/educational-purposes-only-upgrade/PLAN.md) | `educational-purposes-only.py` | PROPOSED |
+| [`woop-woop-upgrade`](cluster-03-auto-authenticate-recon/woop-woop-upgrade/PLAN.md) | `woop_woop.py` | PROPOSED |
+| [`educational-purposes-exclusively-notes`](cluster-03-auto-authenticate-recon/educational-purposes-exclusively-notes/NOTES.md) | `educational-purposes-exclusively.py` | KEPT AS-IS - notes only |
+| [`hp_educational-purposes-removed`](cluster-03-auto-authenticate-recon/hp_educational-purposes-removed/NOTES.md) | `hp_educational-purposes.py` | REMOVED - record only |
 
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

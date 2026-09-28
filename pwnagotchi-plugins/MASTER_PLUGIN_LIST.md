@@ -68,6 +68,17 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 16 - duplicate cluster 3 decision:** removed `hp_educational-purposes.py`
+(1) - functionally inert on both its honeypot half (never transmits real
+beacon frames) and its auto-connect half (hardcoded SSID, never reads
+config, RSSI check backwards for real dBm values) - would need a rewrite,
+not a tweak, to do either thing it claims. Kept the other 3:
+`educational-purposes-only.py` and `woop_woop.py` both need only the same
+one-line fix (removing the dead `pwnagotchi.ai.reward` import) to load at
+all; `educational-purposes-exclusively.py` already works close to as
+described. Upgrade/fix notes for all 4 (including the removed one, for
+the record) saved under `plugin-upgrade-proposals/cluster-03-auto-authenticate-recon/`.
+
 **Group 15 - duplicate cluster 3 (auto-authenticate + recon on known
 networks) verification pass:** no removals yet, findings only - real
 source pulled directly from itsdarklikehell/pwnagotchi-plugins (all four
@@ -127,7 +138,6 @@ repo).
 - **hashespwnagotchi.py** - Uploads handshakes to hashes.pw
 - **hashie-hcxpcapngtool.py** - Converts pcaps to crackable hash formats via hcxpcapngtool, updated for modern hcxtools/hashcat formats
 - **hashieclean.py** - hashie variant that also purges pcaps that can't be converted to a hash
-- **hp_educational-purposes.py** - Combined honeypot + auto network-authentication plugin
 - **hulk.py** - Puts pwnagotchi into an "always aggressive" attack mode
 - **instattack.py** - Launches an immediate associate/deauth attack the instant a device is spotted
 - **meshpwnstic.py** - Remote deauth/assoc/status control over a Meshtastic LoRa radio

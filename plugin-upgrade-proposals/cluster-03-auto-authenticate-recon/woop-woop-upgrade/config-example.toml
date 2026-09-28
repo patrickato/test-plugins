@@ -1,0 +1,27 @@
+# PROPOSED config for woop_woop_plus - NOT YET IMPLEMENTED.
+# This shape is a planning reference for whoever builds this, not a
+# working config for any plugin that currently exists in this repo.
+
+main.plugins.woop_woop_plus.enabled = true
+
+# Gate on the potfile-based auto-connect: a cracked network only gets
+# auto-joined if its SSID is ALSO in this list. Empty = nothing ever
+# auto-connects, even if it shows up cracked. This is the main change
+# from the original, which had no allowlist at all.
+main.plugins.woop_woop_plus.targets = [
+    "YourTestNetwork",
+]
+
+main.plugins.woop_woop_plus.potfile_path = "/root/handshakes/wpa-sec.cracked.potfile"
+
+# Original used -95 (functionally no floor). Tightened default here -
+# raise or lower per your own testing.
+main.plugins.woop_woop_plus.minimum_signal_strength = -75
+
+main.plugins.woop_woop_plus.randomize_mac = false
+main.plugins.woop_woop_plus.randomize_hostname = false
+
+# See PLAN.md - recon implementation not yet decided.
+main.plugins.woop_woop_plus.enable_recon = false
+
+main.plugins.woop_woop_plus.log_file = "/home/pi/woop_woop_plus/results.log"
