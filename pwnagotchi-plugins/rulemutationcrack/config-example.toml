@@ -1,0 +1,27 @@
+# RuleMutationCrack - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.RuleMutationCrack.enabled = true
+
+# ONLY these SSIDs get acted on - same scoping as ClaudeCrackAuto.
+main.plugins.RuleMutationCrack.targets = [
+    "YourHomeNetwork"
+]
+
+main.plugins.RuleMutationCrack.wordlist = "/home/pi/wordlists/rockyou.txt"
+
+# A hashcat rule file. best64.rule (usually shipped with hashcat under
+# /usr/share/hashcat/rules/) is a fast, solid default. dive.rule is
+# much more thorough but far slower - only worth it if you have time.
+main.plugins.RuleMutationCrack.rules_file = "/usr/share/hashcat/rules/best64.rule"
+
+main.plugins.RuleMutationCrack.export_dir = "/home/pi/rulemutationcrack/exports"
+main.plugins.RuleMutationCrack.log_file = "/home/pi/rulemutationcrack/results.log"
+
+# Timeout for the fast plain-wordlist pass before falling back to rules.
+main.plugins.RuleMutationCrack.plain_pass_timeout_secs = 300
+
+# Timeout for the slower rule-based pass.
+main.plugins.RuleMutationCrack.rule_pass_timeout_secs = 1800
