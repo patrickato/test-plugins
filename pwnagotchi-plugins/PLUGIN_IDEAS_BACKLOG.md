@@ -105,6 +105,13 @@ session together spatially).
     alongside each tagged position, so it's clear how trustworthy a
     given GPS-tagged location actually is.
 
+## Deauth / PMKID / PCAP mechanism
+
+18. **Zero-Byte / Failed-Attempt Cleanup** — detects when an attack
+    attempt produced an empty or junk `.pcap` (silent failure) and
+    cleans it up immediately, instead of letting dead files pile up
+    per AP.
+
 ---
 
 *Last updated: 2026-09-28*
