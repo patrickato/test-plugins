@@ -1,0 +1,15 @@
+# HandshakeMerge - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.HandshakeMerge.enabled = true
+
+# Where timestamped snapshots of every capture are archived, one
+# subfolder per AP (by BSSID).
+main.plugins.HandshakeMerge.archive_dir = "/home/pi/handshakemerge/archive"
+
+# Where the merged, combined pcap per AP is written.
+main.plugins.HandshakeMerge.merged_dir = "/home/pi/handshakemerge/merged"
+
+main.plugins.HandshakeMerge.log_file = "/home/pi/handshakemerge/results.log"
