@@ -68,6 +68,36 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 34 - newly discovered plugins added to the list (23 files, 13
+bullets).** A user-requested audit cross-checked every plugin filename in
+`itsdarklikehell/pwnagotchi-plugins` (198 files), `sniffleupagus/pwnagotchi_plugins`
+(23 files), and `pwnagotchi-unofficial`'s full archive (213 unique
+filenames) against this master list. Confirmed 42 plugins across those
+repos had never been added to the list at all - most concentrated in
+`itsdarklikehell`'s repo, largely "_ng" (next-gen) rewrites of plugins
+already on the list, plus a handful of standalone utilities. Of those 42,
+23 were selected this round and added as new bullets above, marked
+"pending review" with their upcoming cluster number:
+- Cluster 20 (cracking-pipeline "_ng" rewrites): `aircrackonly_ng.py`,
+  `onlinehashcrack_ng.py`, `quick_rides_to_jail_ng.py`
+- Cluster 21 (LED/wardriving "_ng" rewrites): `led-ng.py`,
+  `morse_code-ng.py`, `wardriver_ng.py`, `webgpsmap_ng.py`
+- Cluster 22 (cracked-password display mirrors): `show_password.py`,
+  `show_pwd.py`
+- Cluster 23 (Bluetooth tethering): `bt-tether.py`, `bt-tether_ng.py`
+- Cluster 24 (remote/server control): `fancyserver.py`, `cmd_server.py`,
+  `console.py`, `webcfg_ng.py`
+- Cluster 25 (memtemp variants): `memtemp_adv.py`, `memtemp_ng.py`
+- Cluster 26 (misc grab-bag): `wigle_ng.py`, `wpa-sec-list.py`,
+  `wpa-sec_ng.py`, `auto-update_ng.py`, `prime_gsm_hat.py`, `auto_tune.py`
+
+This is a discovery/addition pass only - no keep/remove decisions made
+yet, all 23 are now on the list pending the same cluster-by-cluster
+review as everything else. The remaining 19 of the 42 found (mostly
+watchdog/blindbug-recovery plugins and the UPS-Lite hardware family)
+were not selected this round and remain undocumented for a future pass
+if wanted.
+
 **Group 33 - cluster 19 (auto-hotspot/connect plugins):** findings-only,
 all 5 kept (`auto-hotspot.py`, `away_base.py`, `home_base.py`,
 `ext_wifi.py`, `extWifi.py`), no bullets changed. This cluster turned up
@@ -497,7 +527,8 @@ repo).
 
 ## Attack / Capture behavior
 
-- **aircrackonly.py** - Verifies a pcap actually contains a handshake/PMKID; deletes it if not
+- **aircrackonly.py** / **aircrackonly_ng.py** - Verifies a pcap actually contains a handshake/PMKID; deletes it if not (pending review - Cluster 20)
+- **auto_tune.py** - Adjusts AUTO mode parameters (pending review - Cluster 26)
 - **banthex.py** / **banthex-de.py** - Auto-uploads handshakes to banthex.de
 - **better_apfaker.py** - Creates fake APs
 - **better_onlinehashcrack.py** - Uploads handshakes to onlinehashcrack.com (alternate implementation)
@@ -523,11 +554,12 @@ repo).
 - **mycracked_pw.py** - Grabs all cracked passwords, generates WiFi QR codes and a wordlist
 - **neurolyzer.py** - MAC randomization, WIDS/WIPS evasion
 - **nextcloud.py** - Auto-uploads handshakes to a Nextcloud WebDAV endpoint
+- **onlinehashcrack_ng.py** - Uploads handshakes to onlinehashcrack.com (another alternate implementation, alongside better_onlinehashcrack.py) (pending review - Cluster 20)
 - **potfilesorter.py** - Sorts a hashcat potfile into a usable wpa_supplicant.conf
 - **privacy-nightmare.py** - Passive metadata "eavesdropping" plugin - provocatively named, read the source before trusting
 - **probenpwn.py** - Aggressive handshake/PMKID capture, quiet assoc attacks, WPS PIN extraction, adaptive rate limiting
 - **pwn2crack.py** (aka pwnagotchi-to-hashtopolis-plugin) - Converts handshakes to Hashcat 22000 and creates a hashlist in Hashtopolis
-- **quick_rides_to_jail.py** - Dictionary-cracks handshakes, then auto-updates wpa_supplicant with results
+- **quick_rides_to_jail.py** / **quick_rides_to_jail_ng.py** - Dictionary-cracks handshakes, then auto-updates wpa_supplicant with results (pending review - Cluster 20)
 - **wd_honey_Pot.py** - Honeypot that detects OTHER pwnagotchis performing deauths nearby (defensive, not an attack tool)
 - **woop_woop.py** - Auto-authenticates to known networks, performs internal recon, saves wifi info to wpa_supplicant
 - **wpa-cracking-project-with-pwnagotchi** - Uploads handshakes to a companion university-thesis Hashcat web app
@@ -535,10 +567,11 @@ repo).
 ## Display / UI
 
 - **clock.py** - Clock/calendar display
+- **console.py** - Scrolling status-update console display (pending review - Cluster 24)
 - **crack_house.py** (+ a "-dev" variant) - Displays the closest cracked network and its password
 - **darkmode.py** - Dark theme
 - **display-aircrack.py** - Shows whether aircrack is currently running
-- **display-password.py** / **display-password-qr.py** - Displays recently cracked passwords (QR variant adds a QR code)
+- **display-password.py** / **display-password-qr.py** / **show_password.py** / **show_pwd.py** - Displays recently cracked passwords (QR variant adds a QR code; show_password.py/show_pwd.py are separate mirrors of the same idea) (pending review - Cluster 22)
 - **display-text.py** - Displays custom text on a Waveshare 1.44" LCD screen
 - **display_version.py** - Adds the pwnagotchi software version to the display
 - **internet-connection.py** - Displays internet connectivity status (also distributed as `wanmon.py` / `internet-conection.py`)
@@ -580,8 +613,10 @@ repo).
 - **theylive.py** - GPS wardriving with per-handshake location logging
 - **tracker.py** - Tracks seen APs/clients, with position if GPS is enabled
 - **wardrive.py** - Wardriving log plugin
-- **wardriver-pwnagotchi-plugin** - Logs all seen networks, uploads to WiGLE
+- **wardriver-pwnagotchi-plugin** / **wardriver_ng.py** - Logs all seen networks, uploads to WiGLE (pending review - Cluster 21)
 - **warwalking_trails_kml.py** / **warwalking_trails_kml_single.py** - Generates KML trail files from wardriving data, for Google Earth
+- **webgpsmap_ng.py** - "_ng" rewrite of the webgpsmap concept (f0xtr0t is the enhanced wardriving fork already on the list) (pending review - Cluster 21)
+- **wigle_ng.py** - Automatically uploads collected WiFi to wigle.net (pending review - Cluster 26)
 - **WigleLocator** - Queries WiGLE for AP coordinates, live maps
 
 ## Hardware-specific
@@ -595,12 +630,14 @@ repo).
 - **gpio_shutdown.py** - GPIO-triggered clean shutdown
 - **gsmfake.py** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable
 - **img2xbm.py** - Converts images to XBM format for a Flipper Zero display
+- **led-ng.py** - Blinks the PWR LED in different patterns depending on the event (pending review - Cluster 21)
 - **mad_hatter.py** - Universal UPS battery monitor with auto-shutdown
-- **memtemp-plus.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin)
-- **morse_code.py** - Flashes the status LED in Morse code
+- **memtemp-plus.py** / **memtemp_adv.py** / **memtemp_ng.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin); memtemp_adv.py adds disk usage, memtemp_ng.py is a separate variant (pending review - Cluster 25)
+- **morse_code.py** / **morse_code-ng.py** - Flashes the status LED in Morse code (pending review - Cluster 21)
 - **pibat.py** - Voltage indicator for the PiBat I2C UPS/battery hat
 - **pisugar2.py** / **pisugar3.py** - Voltage/percentage indicator for PiSugar 2 / PiSugar 3
 - **pivoyager.py** - PiVoyager UPS hat support
+- **prime_gsm_hat.py** - Feeds bettercap fake GPS coordinates from a GSM hat's fake serial device (companion to gsmfake.py's approach) (pending review - Cluster 26)
 - **pwnagotchi-18650** - Case design for an 18650 battery (hardware, not software)
 - **pwnagotchi-plugin-pisugar2** - I2C battery data from PiSugar 2
 - **pwnagotchi-plugin-pisugar3** - PiSugar 3 support (community "improved" fork)
@@ -614,8 +651,10 @@ repo).
 ## Maintenance / Backup / Auto-update / Connectivity
 
 - **auto-hotspot.py** - Automatically creates a WiFi hotspot when in manual mode
+- **auto-update_ng.py** - Checks for and applies updates when internet is available (pending review - Cluster 26)
 - **AutoBackup v2.0** - Local backup with a retention policy
 - **away_base.py** / **home_base.py** - Watches for known networks and connects when available; `home_base` targets your home network specifically
+- **bt-tether.py** / **bt-tether_ng.py** - Makes the display reachable over Bluetooth tethering (pending review - Cluster 23)
 - **ext_wifi.py** / **extWifi.py** - Disables the onboard WiFi chipset to free it for an external adapter
 - **fix_brcmfmac.py** - Reloads the brcmfmac WiFi driver module on a hang instead of a full reboot
 - **GitHub_Backups** - Syncs config to GitHub/Gitea
@@ -684,6 +723,8 @@ repo).
 
 ## Web UI / API / Remote control
 
+- **cmd_server.py** - Command-control plugin for pwnagotchi (pending review - Cluster 24)
+- **fancyserver.py** - A server to receive extra commands to control your pwnagotchi (pending review - Cluster 24)
 - **handshaker.py** - Access key pwnagotchi info over an alternate channel when SSH is down
 - **httpserver.py** - Simple HTTP server for serving files
 - **pwmenu** - Mobile-first field console for captures/cracking/exports/whitelists
@@ -695,6 +736,8 @@ repo).
 - **Pwny-WG** - WireGuard VPN + handshake sync over SSH
 - **state-api.py** - JSON state API - a backend building block for menu/dashboard tools
 - **web2ssh** - Lightweight web shell-command executor
+- **webcfg_ng.py** - Allows the user to make runtime configuration changes (pending review - Cluster 24)
+- **wpa-sec-list.py** / **wpa-sec_ng.py** - Lists cracked passwords from wpa-sec on a web page (pending review - Cluster 26)
 
 ---
 *Compiled by Claude · 2026-09-28*
