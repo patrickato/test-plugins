@@ -1,0 +1,24 @@
+# LocationLogSuite - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.LocationLogSuite.enabled = true
+
+# Base folder - all output files (heatmap CSV, AP first-seen CSV,
+# fix-quality CSV, GPX track, known-BSSID state) live under here.
+main.plugins.LocationLogSuite.base_dir = "/home/pi/locationlogsuite"
+
+main.plugins.LocationLogSuite.gpsd_host = "localhost"
+main.plugins.LocationLogSuite.gpsd_port = 2947
+
+# How often (seconds) to add a point to the GPX track.
+main.plugins.LocationLogSuite.track_interval_secs = 20
+
+# How often (seconds) to write the GPX file to disk (it also always
+# writes on unload/shutdown).
+main.plugins.LocationLogSuite.gpx_flush_interval_secs = 300
+
+# How often (seconds) to append a standalone fix-quality log entry,
+# independent of any handshake or AP-discovery event.
+main.plugins.LocationLogSuite.fix_quality_log_interval_secs = 60
