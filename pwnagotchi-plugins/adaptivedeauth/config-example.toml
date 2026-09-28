@@ -1,0 +1,17 @@
+# AdaptiveDeauth - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.AdaptiveDeauth.enabled = true
+
+# How many deauth attempts against an AP with no handshake result
+# before backing off. Default 3.
+main.plugins.AdaptiveDeauth.initial_attempts = 3
+
+# First backoff window length in seconds. Doubles each time the AP
+# keeps failing, up to max_backoff_secs. Default 300 (5 minutes).
+main.plugins.AdaptiveDeauth.base_backoff_secs = 300
+
+# Ceiling on how long a backoff window can grow to. Default 3600 (1 hour).
+main.plugins.AdaptiveDeauth.max_backoff_secs = 3600
