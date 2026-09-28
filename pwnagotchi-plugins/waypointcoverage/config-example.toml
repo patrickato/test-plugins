@@ -1,0 +1,21 @@
+# WaypointCoverage - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.WaypointCoverage.enabled = true
+
+# Your patrol route as a list of named waypoints. radius_meters is how
+# close you need to get for that waypoint to count as "reached"
+# (default 15m if omitted).
+main.plugins.WaypointCoverage.waypoints = [
+    { name = "Front yard corner", lat = 40.0001, lon = -75.0001, radius_meters = 15 },
+    { name = "Garage exterior",   lat = 40.0002, lon = -75.0003, radius_meters = 15 },
+    { name = "Back fence line",   lat = 39.9998, lon = -75.0002, radius_meters = 15 },
+    { name = "Barn (if applicable)", lat = 39.9995, lon = -75.0005, radius_meters = 20 }
+]
+
+main.plugins.WaypointCoverage.check_interval_secs = 10
+main.plugins.WaypointCoverage.gpsd_host = "localhost"
+main.plugins.WaypointCoverage.gpsd_port = 2947
+main.plugins.WaypointCoverage.log_file = "/home/pi/waypointcoverage/results.log"
