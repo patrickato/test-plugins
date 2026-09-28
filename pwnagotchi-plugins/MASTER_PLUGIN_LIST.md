@@ -68,6 +68,32 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 33 - cluster 19 (auto-hotspot/connect plugins):** findings-only,
+all 5 kept (`auto-hotspot.py`, `away_base.py`, `home_base.py`,
+`ext_wifi.py`, `extWifi.py`), no bullets changed. This cluster turned up
+some of the most severe bugs found in the project to date. `auto-hotspot.py`
+cannot even import on this fork (`ModuleNotFoundError` on
+`pwnagotchi.ai.reward` - confirmed no `pwnagotchi/ai/` module exists
+anywhere in this fork's source) and separately has an infinite-loop bug
+in `on_ui_update` (`while STATUS == "rssi_low":` and three similar
+`while` blocks instead of `if`, with nothing inside the loop ever
+changing `STATUS`) that would permanently hang the UI thread if the
+import were ever fixed. `away_base.py` and `home_base.py` share a fatal
+`NameError`: a module-level `_log()` helper references `self` outside
+any method scope, breaking nearly all real functionality starting with
+`on_loaded()`'s first line, plus a second, independent bug - both call
+`agent.next_epoch(self)` with an extra argument the real method (confirmed
+via `pwnagotchi/automata.py`) doesn't accept. `extWifi.py` (A1buS variant)
+has an unconditional reboot loop: both branches of `on_loaded()` fall
+through to the same `self.restart_pi()` call regardless of whether the
+config line already existed, so the device would never stay booted once
+enabled. `ext_wifi.py` (itsdarklikehell variant) is milder - missing
+interface validation and no restart call after its `sed` edit, so it
+silently does nothing until a manual reboot. All 5 assessed as fixable
+with mechanical patches (no full rewrite needed) - see
+`plugin-upgrade-proposals/cluster-19-auto-hotspot/NOTES.md` for the full
+writeup, bug-by-bug fixes, and fixability assessment.
+
 **Group 32 - duplicate/broken cluster 18 (Bluetooth scanning plugins):**
 removed `bluetooth_scanner.py` (1) - confirmed non-functional by
 construction, not merely buggy: imports `BasePlugin` from

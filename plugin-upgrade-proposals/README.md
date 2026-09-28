@@ -347,5 +347,28 @@ images).
 |---|---|---|
 | [`Bluetooth cluster notes`](cluster-18-bluetooth/NOTES.md) | `bluetooth_scanner.py` (removed), `blemon_plugin.py`, `bluetoothsniffer.py` | 1 REMOVED (non-functional by construction), 2 KEPT (1 small bug each on blemon_plugin.py, 3 bugs + 1 open question on bluetoothsniffer.py) |
 
+### Cluster 19 - auto-hotspot/connect plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 33. Findings-only,
+all 5 kept. Two of the most severe bugs found anywhere in this project
+turned up here: `auto-hotspot.py` can't even import on this fork (dead
+`pwnagotchi.ai.reward` import - no `pwnagotchi/ai/` module exists here)
+and separately has a real infinite-loop hazard in `on_ui_update` (`while`
+where `if` was clearly intended, four times); `away_base.py`/`home_base.py`
+share a fatal `NameError` in a module-level `_log()` helper that
+incorrectly references `self` outside any method scope, plus an
+independent `TypeError` from an extra argument passed to
+`agent.next_epoch()`. `extWifi.py` (A1buS variant) has an unconditional
+reboot loop - both branches of `on_loaded()` fall through to the same
+`self.restart_pi()` call, so the device would never stay booted once
+enabled - assessed as the single worst bug found in the project to date.
+`ext_wifi.py` (itsdarklikehell variant) is milder: missing interface
+validation and no restart call after its `sed` edit. All 5 are assessed
+as fixable with mechanical patches, no full rewrite needed.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`auto-hotspot/connect cluster notes`](cluster-19-auto-hotspot/NOTES.md) | `auto-hotspot.py`, `away_base.py`, `home_base.py`, `ext_wifi.py`, `extWifi.py` | 5 KEPT (2 fatal-but-fixable bugs on auto-hotspot.py, shared fatal-but-fixable bug + 1 more on away_base.py/home_base.py, 1 active reboot-loop hazard on extWifi.py, 1 minor gap on ext_wifi.py) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
