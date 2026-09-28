@@ -68,6 +68,29 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 23 - duplicate cluster 10 (aircraft tracking):** kept all 3 -
+`adsbsniffer.py`, `pwnaware.py`, `skyhigh.py`. Not duplicates -
+`skyhigh.py` needs no hardware (OpenSky Network API over internet),
+`adsbsniffer.py` and `pwnaware.py` both need an RTL-SDR dongle (user
+owns a couple) but use different toolchains (`adsbsniffer.py` shells
+out to `rtl_adsb` directly; `pwnaware.py` reads a running
+`dump1090-fa` daemon's JSON output) - not interchangeable. `skyhigh.py`
+is clean, no issues found. `adsbsniffer.py` sets its option defaults
+as an instance dict in `__init__` instead of the class-level
+`__defaults__` the plugin loader actually merges config against -
+likely `KeyError`s in `on_loaded()` unless every option is set
+explicitly in config.toml. `pwnaware.py` has a hard bug in
+`on_loaded()`: `logging.warn(f"...options = " % self.options)` mixes
+an f-string with `%`-formatting against a dict with no `%s`
+placeholder - throws `TypeError` immediately, before the very next
+line that sets the `numPlanes` default, so every later hook reading
+`self.options["numPlanes"]` will `KeyError`. Also has two undefined-
+variable bugs (`err` instead of `e` in one except block, bare `hex`
+instead of `"hex"` as a dict key) in less-common code paths. All
+fixes documented, not applied. See
+`plugin-upgrade-proposals/cluster-10-aircraft-tracking/NOTES.md` for
+the full writeup.
+
 **Group 22 - duplicate cluster 9 (wardriving/WiGLE plugins):** kept
 all 10 - `f0xtr0t`, `Pwnagotchi-JSON-to-Wigle-CSV.py`,
 `pwnagotchi_GPSD-ng`, `snoopr.py`, `theylive.py`, `tracker.py`,

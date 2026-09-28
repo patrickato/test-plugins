@@ -153,5 +153,20 @@ alternative to Cluster 8's `gpsdeasy.py`.
 |---|---|---|
 | [`wardriving/WiGLE cluster notes`](cluster-09-wardriving-wigle/NOTES.md) | `f0xtr0t`, `Pwnagotchi-JSON-to-Wigle-CSV.py`, `pwnagotchi_GPSD-ng`, `snoopr.py`, `theylive.py`, `tracker.py`, `wardrive.py`, `wardriver-pwnagotchi-plugin`, `warwalking_trails_kml.py`/`_single.py`, `WigleLocator` | ALL 10 KEPT AS-IS - 3 documented fixes for broken plugins, 1 documented fix for a shared bug, rest clean/noted |
 
+### Cluster 10 - aircraft tracking
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 23. All 3
+kept, not duplicates. `skyhigh.py` is clean (no RTL-SDR needed,
+internet/OpenSky API only). `adsbsniffer.py` sets its defaults as an
+instance dict instead of class-level `__defaults__` - likely
+`KeyError`s in `on_loaded()` as shipped. `pwnaware.py` has a fatal
+`on_loaded()` bug (f-string mixed with `%`-formatting against a dict)
+plus two undefined-variable bugs in less-common paths. Both fixes
+documented (user owns multiple RTL-SDR dongles, so directly relevant).
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`aircraft tracking cluster notes`](cluster-10-aircraft-tracking/NOTES.md) | `adsbsniffer.py`, `pwnaware.py`, `skyhigh.py` | ALL 3 KEPT AS-IS - documented fixes for 2, clean for 1 |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
