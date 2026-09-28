@@ -1,0 +1,11 @@
+# HashFormatDetector - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.HashFormatDetector.enabled = true
+
+# Where converted .hc22000 files (for the WPA/WPA2/PMKID path) are written.
+main.plugins.HashFormatDetector.output_dir = "/home/pi/hashformatdetector/routed"
+
+main.plugins.HashFormatDetector.log_file = "/home/pi/hashformatdetector/results.log"
