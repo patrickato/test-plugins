@@ -1,0 +1,17 @@
+# TargetedKick - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+#
+# IMPORTANT: requires personality.deauth = false, same as PMKIDFirst -
+# this plugin needs to be the only source of deauth activity so it can
+# guarantee "one client at a time."
+
+personality.associate = true
+personality.deauth = false
+
+main.plugins.TargetedKick.enabled = true
+
+# Minimum seconds between deauth attempts against the SAME AP (whether
+# targeting the same or a different client). Default 60.
+main.plugins.TargetedKick.per_client_cooldown_secs = 60
