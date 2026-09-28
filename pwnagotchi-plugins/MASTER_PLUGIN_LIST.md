@@ -68,6 +68,22 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 42 - cluster 27 (attack-mode toggles & AP restriction):** removed
+all 3 (`cuffs.py`, `enable_assoc.py`, `enable_deauth.py`). This is the
+first cluster of a new review pass - now going category-by-category
+through the full master list rather than only the discovery-audit
+plugins. `cuffs.py` had one low-severity bug (mutates a list while
+iterating it in `on_unfiltered_ap_list`, which only affects a log count
+and an unused internal list - actual AP-scoping enforcement is correct)
+but was removed anyway. `enable_assoc.py`/`enable_deauth.py` were both
+clean (no bugs) but removed once it was confirmed, by reading this
+fork's own `defaults.toml`, that `associate`/`deauth` are both already
+`true` by default out of the box - these plugins only force them back to
+`True` on load (redundant against the default) and `False` on unload
+(a live kill-switch, not an enabler as their descriptions imply). See
+`plugin-upgrade-proposals/cluster-27-attack-toggles/NOTES.md` for the
+full writeup.
+
 **Group 41 - cluster 26 (misc grab-bag):** findings-only, all 6 kept for
 now (`wigle_ng.py`, `wpa-sec-list.py`, `wpa-sec_ng.py`, `auto-update_ng.py`,
 `prime_gsm_hat.py`, `auto_tune.py`) - the final cluster spun out of the
@@ -661,13 +677,11 @@ repo).
 - **better_apfaker.py** - Creates fake APs
 - **better_onlinehashcrack.py** - Uploads handshakes to onlinehashcrack.com (alternate implementation)
 - **better_quickdic.py** - Quick dictionary scan; optionally sends found passwords as QR code/text to a Telegram bot
-- **cuffs.py** - Restricts the pwnagotchi to only attack specified APs
 - **deauth.py** - Counts successful deauth attacks for the session
 - **discoBoss.py** - Configurable rule engine for managing deauth ("disco") behavior
 - **DiscoHash** - Converts pcaps to hashcat 22000 format, analyzes them, grabs GPS, posts results to Discord
 - **dropbox_ul.py** - Auto-uploads handshakes to a Dropbox app
 - **educational-purposes-exclusively.py** / **educational-purposes-only.py** - Auto-authenticates to known networks and performs internal network recon (no target scoping)
-- **enable_assoc.py** / **enable_deauth.py** - Toggles assoc/deauth behavior live without a restart
 - **enterprise.py** - Attempts to obtain credentials from enterprise networks when bored
 - **handshakes-dl-hashie.py** - Downloads handshake captures from the web UI and converts them in one step
 - **handshakes-dl.py** - Downloads handshake captures from the web UI (also distributed as jayofelony's official installer plugin)

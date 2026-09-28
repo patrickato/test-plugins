@@ -512,5 +512,28 @@ entries. `auto_tune.py` had no bugs found after extensive review.
 |---|---|---|
 | [`misc grab-bag cluster notes`](cluster-26-misc-grab-bag/NOTES.md) | `wigle_ng.py`, `wpa-sec-list.py`, `wpa-sec_ng.py`, `auto-update_ng.py`, `prime_gsm_hat.py`, `auto_tune.py` | 6 KEPT (wigle_ng.py has the recurring .pcap/.pcapng bug, wpa-sec-list.py has an IndexError risk, wpa-sec_ng.py was misdescribed and shares the Cluster 6 backlog-scan bug, auto-update_ng.py's install feature is silently broken, prime_gsm_hat.py isn't a real plugin at all, auto_tune.py clean) |
 
+## Category-by-category pass (started after Cluster 26)
+
+With the discovery-audit thread (Clusters 20-26) complete, the review
+moved to going through the master list's own category sections one at a
+time, source-verifying plugins that hadn't been individually reviewed
+yet.
+
+### Cluster 27 - attack-mode toggles & AP restriction
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 42. All 3
+removed. `cuffs.py` had one low-severity bug (mutates a list while
+iterating it, only affecting an internal log count/unused list - real
+enforcement was correct) but was removed anyway. `enable_assoc.py`/
+`enable_deauth.py` were both clean, but removed once it was confirmed
+(via this fork's own `defaults.toml`) that `associate`/`deauth` are
+already `true` by default - these plugins only force them back to `True`
+on load (redundant) and `False` on unload (a kill-switch, not an
+enabler as their descriptions imply).
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`attack-mode toggles cluster notes`](cluster-27-attack-toggles/NOTES.md) | `cuffs.py`, `enable_assoc.py`, `enable_deauth.py` | 3 REMOVED |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
