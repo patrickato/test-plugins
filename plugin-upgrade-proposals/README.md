@@ -215,5 +215,20 @@ modern `espeak-ng`-based, best-built of the five).
 |---|---|---|
 | [`TTS/voice cluster notes`](cluster-13-tts-voice/NOTES.md) | `pwnassistant.py` (removed), `pwnspeaker.py`, `rss_voice.py`, `speak_to_me.py`, `voice_gamer.py` (removed) | 2 REMOVED, 3 KEPT (1 documented as needing a real rewrite, 2 clean) |
 
+### Cluster 14 - fake-AP plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 27. Removed
+`apfaker.py` - diffed line-for-line against `better_apfaker.py`,
+confirmed exact functional duplicate (only a class-name difference
+and one dead config key). Kept `better_apfaker.py`, flagged a real
+architecture concern: its `on_ready()` runs an unbounded transmit
+loop directly in that synchronous startup hook instead of a spawned
+thread - likely blocks the whole agent main loop while active. Fix
+(spawn a thread) documented, not applied.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`fake-AP cluster notes`](cluster-14-fake-ap/NOTES.md) | `apfaker.py` (removed), `better_apfaker.py` | 1 REMOVED (exact duplicate), 1 KEPT AS-IS - documented fix for blocking main-loop risk |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

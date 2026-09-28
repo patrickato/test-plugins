@@ -68,6 +68,24 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 27 - duplicate cluster 14 (fake-AP plugins):** removed
+`apfaker.py` (1) - exact functional duplicate of `better_apfaker.py`
+(same author, diffed line-for-line: only differences are the class
+`__name__`, one dead/unreferenced config key
+(`path: /home/pi/apfaker/`) added in the "better" version, and
+cosmetic log-line reordering). Kept `better_apfaker.py`. Both (before
+the diff) shared a real architecture concern worth flagging: `on_ready()`
+ends in an unbounded `while not self.shutdown: sendp(...); sleep(...)`
+loop that runs directly in that synchronous startup hook rather than
+a spawned background thread - since `on_ready()` is expected to
+return so the main agent loop can continue, this pattern likely
+blocks the whole pwnagotchi process for as long as the plugin runs,
+similar in kind (though intentional here, not accidental) to
+`pwnassistant.py`'s hang from Cluster 13. Fix (spawn the transmit
+loop in its own thread) documented, not applied. See
+`plugin-upgrade-proposals/cluster-14-fake-ap/NOTES.md` for the full
+writeup.
+
 **Group 26 - duplicate cluster 13 (TTS/voice plugins):** removed
 `pwnassistant.py` and `voice_gamer.py` (2). `pwnassistant.py` isn't a
 real plugin at all - no `plugins.Plugin` subclass, and its module-
@@ -336,9 +354,8 @@ repo).
 ## Attack / Capture behavior
 
 - **aircrackonly.py** - Verifies a pcap actually contains a handshake/PMKID; deletes it if not
-- **apfaker.py** - Creates fake APs
 - **banthex.py** / **banthex-de.py** - Auto-uploads handshakes to banthex.de
-- **better_apfaker.py** - Creates fake APs (alternate implementation)
+- **better_apfaker.py** - Creates fake APs
 - **better_onlinehashcrack.py** - Uploads handshakes to onlinehashcrack.com (alternate implementation)
 - **better_quickdic.py** - Quick dictionary scan; optionally sends found passwords as QR code/text to a Telegram bot
 - **cuffs.py** - Restricts the pwnagotchi to only attack specified APs
