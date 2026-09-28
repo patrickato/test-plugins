@@ -1,0 +1,33 @@
+# best_quickdic - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.best_quickdic.enabled = true
+
+# Folder to glob for wordlists. Every *.txt file in this folder is
+# tried, in alphabetical order, until one cracks the handshake or all
+# are exhausted. Put your smallest/most-likely-to-hit list first
+# (alphabetically) if you want faster average results.
+main.plugins.best_quickdic.wordlist_folder = "/home/pi/wordlists"
+
+# Where converted .hc22000 files are written.
+main.plugins.best_quickdic.export_dir = "/home/pi/best_quickdic/exports"
+
+# Plain-text run log - one line per attempt/result.
+main.plugins.best_quickdic.log_file = "/home/pi/best_quickdic/results.log"
+
+# Hard timeout (seconds) per wordlist. Enforced by hashcat's own
+# --runtime AND a subprocess timeout as a backstop. If a wordlist
+# doesn't crack it within this window, best_quickdic moves on to the
+# next wordlist rather than hanging.
+main.plugins.best_quickdic.per_wordlist_timeout_secs = 300
+
+# Timeout (seconds) for the hcxpcapngtool conversion step itself.
+# 60s is generous for a single handshake capture.
+main.plugins.best_quickdic.convert_timeout_secs = 60
+
+# Optional cap on how many wordlists to try per handshake, in case
+# your wordlist_folder has many large files and you'd rather bound
+# total time spent per capture. 0 = no limit (try all of them).
+main.plugins.best_quickdic.max_wordlists_per_handshake = 0
