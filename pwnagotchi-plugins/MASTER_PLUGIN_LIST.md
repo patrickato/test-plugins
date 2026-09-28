@@ -39,6 +39,19 @@ left in for now (`educational-purposes-exclusively.py`, `educational-purposes-on
 (`pwnagotchi-postinstall`, `dontuse.py`, `pwna-template-testing.py`,
 `Fancygotchi`, `monstart`/`monstop` counted as one entry, `phwn_hwm.py`).
 
+**Group 5 - category/interest sweep:** no changes - left in for now.
+
+**Group 6 - external dependency burden:** no changes - left in for now.
+
+**Group 7 - cloud-upload destination consolidation:** no changes - left
+in for now.
+
+**Group 8 - overlap with your own custom plugins:** no changes - left
+in for now.
+
+**Group 9 - trust/provenance tier:** kept everything, including the
+~130-plugin Tier 3 (individual one-off repos) - no changes.
+
 ---
 
 ## Attack / Capture behavior
