@@ -472,5 +472,22 @@ unlike its own `merge-save-config` path).
 |---|---|---|
 | [`remote/server control cluster notes`](cluster-24-remote-server-control/NOTES.md) | `fancyserver.py` (removed), `cmd_server.py`, `console.py`, `webcfg_ng.py` (all kept) | 1 REMOVED (2 real bugs), 3 KEPT (cmd_server.py has 2 real bugs, console.py has 1 cosmetic bug, webcfg_ng.py clean with a design note) |
 
+### Cluster 25 - memtemp variants
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 40. Findings-only,
+both kept alongside the already-listed `memtemp-plus.py`. `memtemp_adv.py`
+has a real `NameError` bug - a one-character typo (`y_pos` instead of
+`v_pos`) in its waveshare_v3 vertical-orientation fallback position
+logic - plus a missing-defaults gap on `scale` even by its own file's
+stated intent. `memtemp_ng.py` has no bugs, but its default "cpu" field
+calls the framework's own `pwnagotchi.cpu_load()` with no tag, which
+sleeps 0.1s internally on every call - a small per-refresh UI-thread
+block; a non-blocking alternate field exists in the same file but isn't
+the default.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`memtemp variants cluster notes`](cluster-25-memtemp-variants/NOTES.md) | `memtemp_adv.py`, `memtemp_ng.py` | 2 KEPT (memtemp_adv.py has a real NameError bug plus a scale-defaults gap, memtemp_ng.py clean but has a 0.1s UI-blocking design trade-off on its default field) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

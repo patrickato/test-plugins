@@ -68,6 +68,21 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 40 - cluster 25 (memtemp variants):** findings-only, both kept
+(`memtemp_adv.py`, `memtemp_ng.py`) alongside the already-listed
+`memtemp-plus.py`. `memtemp_adv.py` has a real `NameError` bug - a
+one-character typo (`y_pos` instead of `v_pos`) in its waveshare_v3
+vertical-orientation fallback position logic - plus a missing-defaults
+gap on `scale` even by its own file's stated intent. `memtemp_ng.py` has
+no bugs, but its default "cpu" field calls the framework's own
+`pwnagotchi.cpu_load()` with no tag, which sleeps 0.1s internally on
+every call - a small per-refresh UI-thread block; a non-blocking
+alternate field ("cpus") exists in the same file but isn't the default.
+`memtemp_adv.py`'s psutil-based CPU reading doesn't have this blocking
+cost. See
+`plugin-upgrade-proposals/cluster-25-memtemp-variants/NOTES.md` for the
+full writeup and fixes.
+
 **Group 39 - cluster 24 (remote/server control):** removed `fancyserver.py`
 - two real bugs (a `NameError` on its error-logging path from an unused
 `traceback` import, and an `UnboundLocalError` risk on `name`/`state`
@@ -718,7 +733,7 @@ repo).
 - **gsmfake.py** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable
 - **img2xbm.py** - Converts images to XBM format for a Flipper Zero display
 - **mad_hatter.py** - Universal UPS battery monitor with auto-shutdown
-- **memtemp-plus.py** / **memtemp_adv.py** / **memtemp_ng.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin); memtemp_adv.py adds disk usage, memtemp_ng.py is a separate variant (pending review - Cluster 25)
+- **memtemp-plus.py** / **memtemp_adv.py** / **memtemp_ng.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin); memtemp_adv.py adds disk usage via psutil but has a real `NameError` bug on one screen/orientation combo (`y_pos` typo for `v_pos`); memtemp_ng.py uses the framework's own mem/cpu helpers, no bugs found, but its default CPU-load field blocks the UI thread ~0.1s per refresh (a non-blocking alternate field exists but isn't the default); see Cluster 25 notes
 - **pibat.py** - Voltage indicator for the PiBat I2C UPS/battery hat
 - **pisugar2.py** / **pisugar3.py** - Voltage/percentage indicator for PiSugar 2 / PiSugar 3
 - **pivoyager.py** - PiVoyager UPS hat support
