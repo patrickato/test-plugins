@@ -489,5 +489,28 @@ the default.
 |---|---|---|
 | [`memtemp variants cluster notes`](cluster-25-memtemp-variants/NOTES.md) | `memtemp_adv.py`, `memtemp_ng.py` | 2 KEPT (memtemp_adv.py has a real NameError bug plus a scale-defaults gap, memtemp_ng.py clean but has a 0.1s UI-blocking design trade-off on its default field) |
 
+### Cluster 26 - misc grab-bag
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 41. Findings-only,
+all 6 kept for now. The final cluster spun out of the Group 34 discovery
+audit - unlike the others, a genuine grab-bag with no shared lineage.
+Two of the more significant findings in the project: `prime_gsm_hat.py`
+is not actually a pwnagotchi plugin at all (no `plugins.Plugin` subclass
+anywhere - a standalone Python-2-era manual setup script using the
+removed `raw_input()` builtin), and `auto-update_ng.py` has four
+module-level functions that all reference a nonexistent `self`,
+guaranteeing `NameError` and silently disabling its auto-install feature
+while detect/notify still works. Also found: `wigle_ng.py` has the
+recurring `.pcap`-vs-`.pcapng` bug in its GPS-to-handshake matching;
+`wpa-sec-list.py` has an `IndexError` risk on a malformed potfile line;
+`wpa-sec_ng.py` turned out to be a completely different plugin than
+`wpa-sec-list.py` (an uploader, not a display page) - the master list's
+shared description for the two has been corrected and split into two
+entries. `auto_tune.py` had no bugs found after extensive review.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`misc grab-bag cluster notes`](cluster-26-misc-grab-bag/NOTES.md) | `wigle_ng.py`, `wpa-sec-list.py`, `wpa-sec_ng.py`, `auto-update_ng.py`, `prime_gsm_hat.py`, `auto_tune.py` | 6 KEPT (wigle_ng.py has the recurring .pcap/.pcapng bug, wpa-sec-list.py has an IndexError risk, wpa-sec_ng.py was misdescribed and shares the Cluster 6 backlog-scan bug, auto-update_ng.py's install feature is silently broken, prime_gsm_hat.py isn't a real plugin at all, auto_tune.py clean) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

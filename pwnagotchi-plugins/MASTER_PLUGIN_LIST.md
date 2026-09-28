@@ -68,6 +68,32 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 41 - cluster 26 (misc grab-bag):** findings-only, all 6 kept for
+now (`wigle_ng.py`, `wpa-sec-list.py`, `wpa-sec_ng.py`, `auto-update_ng.py`,
+`prime_gsm_hat.py`, `auto_tune.py`) - the final cluster spun out of the
+Group 34 discovery audit. Two of the more significant findings in the
+project: `prime_gsm_hat.py` is not actually a pwnagotchi plugin at all -
+no `plugins.Plugin` subclass anywhere, confirmed via the same
+`Plugin.__init_subclass__` registration check used on
+`quick_rides_to_jail.py` in Cluster 20 - it's a standalone Python-2-era
+manual setup script using the removed `raw_input()` builtin. And
+`auto-update_ng.py` has four module-level functions
+(`make_path_for`, `download_and_unzip`, `verify`, `install`) that all
+reference `self.__class__.__name__` despite not being class methods,
+guaranteeing `NameError` on every call - caught by the caller's own
+try/except, silently disabling the auto-install feature while
+detect/notify still works. Also found: `wigle_ng.py` has the
+`.pcap`-vs-`.pcapng` bug in its core GPS-to-handshake matching path;
+`wpa-sec-list.py` has an `IndexError` risk on a malformed potfile line
+that breaks its whole page; `wpa-sec_ng.py` turned out to be a
+completely different plugin than `wpa-sec-list.py` (an uploader to
+wpa-sec.stanev.org, not a display page) - the master list's shared
+description for the two has been corrected/split. `auto_tune.py`
+(sniffleupagus) had no bugs found after extensive review of its 692
+lines. See
+`plugin-upgrade-proposals/cluster-26-misc-grab-bag/NOTES.md` for the
+full writeup and fixes.
+
 **Group 40 - cluster 25 (memtemp variants):** findings-only, both kept
 (`memtemp_adv.py`, `memtemp_ng.py`) alongside the already-listed
 `memtemp-plus.py`. `memtemp_adv.py` has a real `NameError` bug - a
@@ -630,7 +656,7 @@ repo).
 ## Attack / Capture behavior
 
 - **aircrackonly.py** / **aircrackonly_ng.py** - Verifies a pcap actually contains a handshake/PMKID; deletes it if not (`_ng` also shows an on-screen status message when it deletes a pcap)
-- **auto_tune.py** - Adjusts AUTO mode parameters (pending review - Cluster 26)
+- **auto_tune.py** - Adjusts AUTO mode parameters; no bugs found after extensive review (692 lines); see Cluster 26 notes
 - **banthex.py** / **banthex-de.py** - Auto-uploads handshakes to banthex.de
 - **better_apfaker.py** - Creates fake APs
 - **better_onlinehashcrack.py** - Uploads handshakes to onlinehashcrack.com (alternate implementation)
@@ -718,7 +744,7 @@ repo).
 - **wardriver-pwnagotchi-plugin** / **wardriver_ng.py** - Logs all seen networks, uploads to WiGLE (`wardriver_ng.py` is a real regression vs. itsdarklikehell's own `wardriver.py` mirror - drops the on-screen network-count UI and session-merging entirely, and its directory cleanup lost its file-type filter, a real bug; see Cluster 21 notes for fixes)
 - **warwalking_trails_kml.py** / **warwalking_trails_kml_single.py** - Generates KML trail files from wardriving data, for Google Earth
 - **webgpsmap_ng.py** - "_ng" rewrite of the webgpsmap concept (f0xtr0t is the enhanced wardriving fork already on the list); **broken as shipped on this fork** - filters `.pcap` throughout its core map-building logic instead of `.pcapng`, so it never finds any of this device's real captures (this fork's own bundled `webgpsmap.py` default already handles `.pcapng` correctly); does add `.paw-gps.json` GPS-source support neither the bundled default nor f0xtr0t has; see Cluster 21 notes for the fix
-- **wigle_ng.py** - Automatically uploads collected WiFi to wigle.net (pending review - Cluster 26)
+- **wigle_ng.py** - Automatically uploads collected WiFi to wigle.net; **broken as shipped on this fork** - filters `.pcap` instead of `.pcapng` in its core GPS-to-handshake filename matching, silently skipping every real capture rather than crashing; see Cluster 26 notes for the fix
 - **WigleLocator** - Queries WiGLE for AP coordinates, live maps
 
 ## Hardware-specific
@@ -737,7 +763,7 @@ repo).
 - **pibat.py** - Voltage indicator for the PiBat I2C UPS/battery hat
 - **pisugar2.py** / **pisugar3.py** - Voltage/percentage indicator for PiSugar 2 / PiSugar 3
 - **pivoyager.py** - PiVoyager UPS hat support
-- **prime_gsm_hat.py** - Feeds bettercap fake GPS coordinates from a GSM hat's fake serial device (companion to gsmfake.py's approach) (pending review - Cluster 26)
+- **prime_gsm_hat.py** - Feeds bettercap fake GPS coordinates from a GSM hat's fake serial device (companion to gsmfake.py's approach); **not actually a pwnagotchi plugin at all** - no `plugins.Plugin` subclass anywhere in the file, so this fork's loader never registers it; it's a standalone Python-2-era manual setup script using the removed `raw_input()` builtin, which doesn't exist in Python 3; see Cluster 26 notes
 - **pwnagotchi-18650** - Case design for an 18650 battery (hardware, not software)
 - **pwnagotchi-plugin-pisugar2** - I2C battery data from PiSugar 2
 - **pwnagotchi-plugin-pisugar3** - PiSugar 3 support (community "improved" fork)
@@ -751,7 +777,7 @@ repo).
 ## Maintenance / Backup / Auto-update / Connectivity
 
 - **auto-hotspot.py** - Automatically creates a WiFi hotspot when in manual mode
-- **auto-update_ng.py** - Checks for and applies updates when internet is available (pending review - Cluster 26)
+- **auto-update_ng.py** - Checks for and applies updates when internet is available; detect/notify works, but the actual auto-install feature is silently disabled - four module-level functions (`make_path_for`, `download_and_unzip`, `verify`, `install`) all reference `self.__class__.__name__` despite not being class methods, guaranteeing `NameError` on every call, caught by the caller's own try/except; see Cluster 26 notes for the fix
 - **AutoBackup v2.0** - Local backup with a retention policy
 - **away_base.py** / **home_base.py** - Watches for known networks and connects when available; `home_base` targets your home network specifically
 - **bt-tether.py** - Makes the display reachable over Bluetooth tethering (dropped its exact-duplicate `bt-tether_ng.py` mirror; a `__help__` copy-paste typo remains, cosmetic only, see Cluster 23 notes)
@@ -835,7 +861,8 @@ repo).
 - **state-api.py** - JSON state API - a backend building block for menu/dashboard tools
 - **web2ssh** - Lightweight web shell-command executor
 - **webcfg_ng.py** - Allows the user to make runtime configuration changes (full web-based config.toml editor via webhook; no bugs found, but its `save-config` path fully overwrites the config file with no merge safety net, unlike its own `merge-save-config` path; see Cluster 24 notes)
-- **wpa-sec-list.py** / **wpa-sec_ng.py** - Lists cracked passwords from wpa-sec on a web page (pending review - Cluster 26)
+- **wpa-sec-list.py** - Lists cracked passwords from wpa-sec on a web page; has an `IndexError` risk on a malformed potfile line that breaks the whole page; see Cluster 26 notes for the fix
+- **wpa-sec_ng.py** - Not a display plugin despite the similar name - per its own `__description__`, automatically uploads handshakes to https://wpa-sec.stanev.org; shares the same `.pcap`-vs-`.pcapng` backlog-scan bug as the Cluster 6 family; see Cluster 26 notes for the fix
 
 ---
 *Compiled by Claude · 2026-09-28*
