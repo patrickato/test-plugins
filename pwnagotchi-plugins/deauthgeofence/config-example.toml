@@ -1,0 +1,27 @@
+# DeauthGeofence - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+#
+# IMPORTANT: requires personality.deauth = false - this plugin needs
+# to be the sole source of deauth activity so it can gate it by
+# location.
+
+personality.associate = true
+personality.deauth = false
+
+main.plugins.DeauthGeofence.enabled = true
+
+main.plugins.DeauthGeofence.center_lat = 40.0000
+main.plugins.DeauthGeofence.center_lon = -75.0000
+main.plugins.DeauthGeofence.radius_meters = 200
+
+# Optional polygon, overrides radius if set - see GPSModeSwitch's
+# config-example.toml for the format.
+# main.plugins.DeauthGeofence.boundary_polygon = [...]
+
+main.plugins.DeauthGeofence.check_interval_secs = 30
+main.plugins.DeauthGeofence.per_ap_cooldown_secs = 60
+main.plugins.DeauthGeofence.gpsd_host = "localhost"
+main.plugins.DeauthGeofence.gpsd_port = 2947
+main.plugins.DeauthGeofence.log_file = "/home/pi/deauthgeofence/results.log"
