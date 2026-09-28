@@ -1,0 +1,33 @@
+# PROPOSED config for instattack_plus - NOT YET IMPLEMENTED.
+# This shape is a planning reference for whoever builds this, not a
+# working config for any plugin that currently exists in this repo.
+
+main.plugins.instattack_plus.enabled = true
+
+# Own allowlist, on top of (not instead of) the stock
+# personality associate/deauth toggles.
+main.plugins.instattack_plus.targets = [
+    "YourTestNetwork",
+]
+
+# Minimum seconds before the same MAC/AP pair can be acted on again -
+# prevents re-attacking a flapping device every time bettercap
+# re-reports it as "new".
+main.plugins.instattack_plus.dedup_ttl_secs = 600
+
+# Throttle values passed to agent.associate() / agent.deauth().
+# Hardcoded to 0.3 / 0.75 in the original - now configurable.
+main.plugins.instattack_plus.assoc_throttle = 0.3
+main.plugins.instattack_plus.deauth_throttle = 0.75
+
+# If true, logs what would be associated/deauthed without calling
+# bettercap. Use first, always.
+main.plugins.instattack_plus.dry_run = true
+
+main.plugins.instattack_plus.log_file = "/home/pi/instattack_plus/results.log"
+
+# See PLAN.md "Open design questions" - depends on whether this
+# fork's bettercap forwards on_bcap_* events. If it doesn't, a
+# polling-based trigger_mode will be needed instead - not yet decided.
+# main.plugins.instattack_plus.trigger_mode = "bcap_event"  # or "poll"
+# main.plugins.instattack_plus.poll_interval_secs = 5

@@ -1,0 +1,59 @@
+# PROPOSED config for probenpwn_scoped - NOT YET IMPLEMENTED.
+# This shape is a planning reference for whoever builds this, not a
+# working config for any plugin that currently exists in this repo.
+# Several keys below (targets_wps, allow_personality_rewrite,
+# skip_enterprise) do not exist in the original probenpwn.py - they
+# are new scoping controls this proposal adds.
+
+main.plugins.probenpwn_scoped.enabled = true
+
+# General allowlist for association/deauth - same role as the
+# original's main.whitelist check, but explicit to this plugin.
+main.plugins.probenpwn_scoped.targets = [
+    "YourTestNetwork",
+]
+
+# Separate, stricter allowlist specifically for WPS PIN brute-forcing
+# via bully/reaver. An SSID must appear in BOTH `targets` and
+# `targets_wps` for WPS to ever run against it - the most intrusive
+# capability gets the most explicit gate.
+main.plugins.probenpwn_scoped.targets_wps = []
+
+main.plugins.probenpwn_scoped.enable_wps = false
+
+# Individually opt-in, default off, matching the original's design -
+# "quiet" meaning no deauth frames, PMKID/handshake solicited via
+# association/auth/reassociation/probe requests instead.
+main.plugins.probenpwn_scoped.enable_pmkid_association_attack = false
+main.plugins.probenpwn_scoped.enable_auth_frame_harvest = false
+main.plugins.probenpwn_scoped.enable_reassociation_pmkid_attack = false
+main.plugins.probenpwn_scoped.enable_probe_with_rsn = false
+
+# Mode: "stealth" or "tactical" only. "maniac" and "adaptive" are
+# dropped in this proposal - see PLAN.md.
+main.plugins.probenpwn_scoped.mode = "stealth"
+
+main.plugins.probenpwn_scoped.min_rssi = -75
+
+# Skip enterprise/WPA3/PMF-flagged APs entirely, independent of
+# whitelist status. The original only used this flag to decide which
+# EXTRA attack technique to add, never to protect the AP - this
+# proposal changes that default.
+main.plugins.probenpwn_scoped.skip_enterprise = true
+
+# If false (default), the adaptive rate limiter still functions
+# internally but never writes back into agent._config['personality'].
+# If true, restores the original's live-rewrite behavior, with every
+# change logged.
+main.plugins.probenpwn_scoped.allow_personality_rewrite = false
+
+# Blacklist/cooldown, same role as the original.
+main.plugins.probenpwn_scoped.blacklist_failure_threshold = 3
+main.plugins.probenpwn_scoped.blacklist_cooldown_secs = 3600
+
+# Token-bucket base rate for the adaptive rate limiter - kept from
+# the original design.
+main.plugins.probenpwn_scoped.token_bucket_base_rate = 1.0
+
+main.plugins.probenpwn_scoped.dry_run = true
+main.plugins.probenpwn_scoped.log_file = "/home/pi/probenpwn_scoped/results.log"

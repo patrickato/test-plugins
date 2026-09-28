@@ -1,0 +1,29 @@
+# PROPOSED config for hulk_scoped - NOT YET IMPLEMENTED.
+# This shape is a planning reference for whoever builds this, not a
+# working config for any plugin that currently exists in this repo.
+
+main.plugins.hulk_scoped.enabled = true
+
+# REQUIRED for any action to be taken at all. Empty list = plugin
+# loads, logs a warning, and does nothing. Accepts SSID and/or BSSID.
+main.plugins.hulk_scoped.targets = [
+    "YourTestNetwork",
+    # "AA:BB:CC:DD:EE:FF"
+]
+
+# Independent second check - even an entry mistakenly in `targets`
+# is skipped if it also appears in pwnagotchi's own main.whitelist.
+main.plugins.hulk_scoped.respect_main_whitelist = true
+
+# Seconds between loop iterations. The original hardcoded this to 5.
+main.plugins.hulk_scoped.loop_interval_secs = 5
+
+# If true, logs exactly what would be deauthed without ever calling
+# bettercap. Use this first, always, before flipping to false.
+main.plugins.hulk_scoped.dry_run = true
+
+main.plugins.hulk_scoped.log_file = "/home/pi/hulk_scoped/results.log"
+
+# See PLAN.md "Open design questions" - loop vs on_wifi_update model
+# is not yet decided; this key is a placeholder for that decision.
+# main.plugins.hulk_scoped.trigger_mode = "loop"  # or "on_wifi_update"
