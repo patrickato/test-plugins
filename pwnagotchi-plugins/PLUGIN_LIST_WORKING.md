@@ -1,4 +1,4 @@
-# Plugin List - Working Copy (Round 1)
+# Plugin List - Working Copy (Round 1 + Round 2 additions)
 
 Starting point: the raw census (`FULL_PLUGIN_CENSUS_RAW.md`), minus
 jayofelony-bundled defaults and your own custom plugins.
@@ -80,6 +80,64 @@ itsdarklikehell, kizeren, evilsocket-contrib, xfox64x, AlienMajik, wpa-2, Sniffl
 
 ### Misc/uncategorized
 RasTacsko build guides, Th4ntis CyberSecNotes, Pnwcomputers cheatsheet (guides referencing plugins, not plugin repos themselves)
+
+---
+
+## Round 2: what the first sweep missed
+
+The first research pass explicitly flagged that it only got a **partial**
+sample of the two largest aggregator repos - `itsdarklikehell/pwnagotchi-plugins`
+(231 `.py` files) and `Pwnagotchi-Unofficial/plugins_archive` (349 `.py` files
+across 71 mirrored contributor folders). This round is a full, exhaustive
+file-by-file listing of both (via `git clone`, not sampling), applying the
+same two Round-1 filters (32-bit-only, superseded-by-jayofelony-bundled) to
+whatever's new.
+
+Files that are just "_ng" (torch-renamed) copies of a plugin already listed,
+or the same plugin mirrored verbatim across many contributor forks (this
+ecosystem re-hosts the same handful of files constantly), are folded into
+one entry rather than re-listed per mirror.
+
+### Removed this round
+
+| Plugin | Reason |
+|---|---|
+| `gpsd.py` (all mirrors: kellertk, k4n3d4-sh0t4r0 V1/V2) | Duplicate of bundled `gps.py`, no added feature - same reasoning as Round 1's `pwnagotchi-plugin-gpsd` cut |
+| `upload.py` (Terminatoror) | Identical function to bundled `wpa-sec.py` ("automatically uploads handshakes to wpa-sec.stanev.org") |
+| `RestartPlugin.py` / `prototype.py` (Terminatoror) | "Restarts pwnagotchi if bettercap crashes" is the same job as bundled `fix_services.py` |
+
+Also excluded as **not plugins at all** (support/library files pulled in by
+the "every .py file" sweep, not standalone pwnagotchi plugins): `fake.py`
+(gpsfake test-double classes), the Waveshare `epd.py`/`epdconfig.py` low-level
+display drivers, and the various Fancygotchi/Fancytools internal backend/UI
+modules (`backend.py`, `components.py`, `state.py`, `view.py`, etc. under
+V0r-T3x's folders) - `Fancygotchi` itself is already listed once as a plugin
+in Round 1.
+
+**32-bit:** still nothing found explicitly built 32-bit-only, same as Round 1.
+
+### New plugins found - by category
+
+**Notifications / Social**
+`apprise-notify.py` (multi-service notification framework - one plugin, dozens of possible destinations via Apprise), `slack.py` (Slack webhook posting - notably absent from Round 1), `discord_notify.py` (Lehniii, simpler Discord alternative), `ntfy_msg.py` (ntfy.sh push notifications), `mqtt_plugin.py` (MQTT integration), `neonbot.py` (Telegram QR/control bot), `sound.py` + `sound/shutdown_button.py` (WAV playback on events, plus a shutdown button), `pwnspeaker.py` (TTS, similar to `speak_to_me.py`), `pwnassistant.py` (voice control via connected mic), `terminal2.py` (WebSSH2 - browser-based terminal access)
+
+**GPS / Location**
+`mygps.py` (GPS via a phone's GPSLogger app - no GPS module hardware needed), `gps_led.py` (flashes an LED when GPS has a fix), `warwalking_trails_kml.py` / `warwalking_trails_kml_single.py` (KML trail generation for Google Earth from wardriving data), `Pwnagotchi-JSON-to-Wigle-CSV.py` (standalone JSON→WiGLE CSV converter script), `wardrive.py` (itsdarklikehell's own wardriving log plugin), `RaspiSyncedTime.py` (corrects timestamps using a synced-time offset - useful if you have no RTC or GPS time source)
+
+**Attack / Capture behavior - several flagged for the same scoping caution as your own gated plugins**
+`enterprise.py` (attempts to obtain credentials from enterprise networks when bored), `educational-purposes-exclusively.py` / `educational-purposes-only.py` / `hp_educational-purposes.py` / `woop_woop.py` (auto-authenticate to known networks + internal network recon - broad/active, no target scoping mentioned), `discoBoss.py` (configurable deauth rule engine), `privacy-nightmare.py` ("eavesdropping metadata" plugin - provocatively named, worth reading the source yourself before trusting), `wd_honey_Pot.py` (honeypot that *detects other pwnagotchis* deauthing nearby - defensive, not an attack tool), `potfilesorter.py` (utility: sorts a hashcat potfile into a usable `wpa_supplicant.conf`), `hashieclean.py` (hashie variant that also purges unconvertable "lonely" pcaps), `hashbot.py` (Discord bot companion to DiscoHash), `hashespwnagotchi.py` (uploads handshakes to hashes.pw - another cloud-crack destination), `pwn2crack.py` (Brets0150's actual filename for the Hashtopolis integration found in Round 1)
+
+**Web UI / Remote control**
+`state-api.py` (JSON state API - a backend building block for menu/dashboard tools), `pwnmenu.py` / `pwnmenucmd.py` (popup menu system + CLI client), `powerutils.py` / `powerutilscmd.py` (remote shutdown/restart server + CLI client), `httpserver.py` (another simple HTTP server plugin, separate from `pwnagotchi-http-module`), `pwnwatch.py` (receives commands from a companion "pwnagotchi-watch" app), `ext_wifi.py` / `extWifi.py` (disables the onboard WiFi chipset to free it for an external adapter - directly relevant to the external-adapter setup discussed earlier in this project), `handshaker.py` (access key pwnagotchi info over an alternate channel when SSH is down)
+
+**Hardware-specific**
+`basiclight.py` (GPIO traffic-light-style signal lights), `fireworks.py` (Pimoroni Button Shim light show), `rgb.py` (RGB LED control), `lcdhat.py` / `lcdhatcontrols.py` (LCD HAT display support), `display_settings.py` (backlight control, Pimoroni Display HAT Mini only), `pivoyager.py` (PiVoyager UPS hat), `pibat.py` (PiBat I2C UPS/battery hat), `sigstr.py` (signal-strength bar display), and a Flipper Zero integration family: `PwnZero.py`, `flipperLink.py`, `wof.py` ("Wall of Flippers" detector), `img2xbm.py` (image conversion helper)
+
+**Novelty**
+`bitcoin.py` (bitcoin price display), `partymode.py`, `pwna-template-testing.py` (activates an "egirl-pwnagotchi" visual theme), `wifi_adventures.py` (achievement system), `spam_peers.py` (auto-messages newly discovered grid peers), `clock_wav_v3.py` (another clock variant), `sprite_faces.py` (sprite-based face graphics)
+
+**Network / Security analysis - new category, several need real scoping caution**
+`dns_spoof_detector.py`, `network_intrusion_detector.py`, `network_mapper.py`, `network_packet_sniffer.py`, `rogue_ap_detector.py`, `traffic_sniffer.py`, `wifi_analyser.py`, `mac_adress_logger.py`, `mac_randomizer.py`, `test_security.py` (all from Deus73's collection - passive/analytical, look fine at face value but unverified). Two are explicitly active/attack tools and should be treated with the same "your own SSIDs only" caution as your own gated plugins, not run as-is: **`wifi_jammer.py`** (sends deauth/jamming frames, no target scoping mentioned in its description) and **`wifi_password_cracker.py`** (redundant with the crack-pipeline plugins already on the list, scoping unclear).
 
 ---
 *Compiled by Claude · 2026-09-28*

@@ -1,0 +1,487 @@
+
+### 7h30th3r0n3
+  Pwnagotchi-plugins/display-aircrack.py :: A plugin to display if aircrack is runing or not
+  Pwnagotchi-plugins/display-password.py :: A plugin to display recently cracked passwords
+  Pwnagotchi-plugins/pwnaget.py :: SFTP-based script to automatically download captured files off the pwnagotchi.
+  Pwnagotchi-plugins/quickdic.py :: Run a quick dictionary scan against captured handshakes
+
+### ad
+  pwnmothership/pwnmothership.py :: Pushes JSON state data to pwnmothership host
+
+### AlienMajik
+  pwnagotchi_plugins/adsbsniffer.py :: A plugin that captures ADS-B data from aircraft using RTL-SDR and logs it.
+  pwnagotchi_plugins/neurolyzer.py :: A plugin for enhanced stealth and privacy.
+
+### alistar79
+  pwnagotchi_theme_script_kicker_plugin/installed-plugins/telegram.py :: Periodically sent messages to Telegram about the recent activity of pwnagotchi
+  pwnagotchi_theme_script_kicker_plugin/installed-plugins/themes.py :: Theme/script kicker plugin for pwnagotchi
+
+### allordacia
+  FlipperLink/flipperLink.py :: A plugin that will add functionality for pwnagotchi to connect to the Flipper Zero
+  Pwnagotchi-Handshaker/handshaker.py :: A plugin to help access important pwnagotchi information when the device cannot be accessed via SSH
+
+### Andyzug
+  PiBatPwnagotchi-Plugin/pibat.py :: Voltage indicator plugin for the PiBat I2C UPS/battery hat.
+
+### arturandre
+  pwnagotchi-beacon-plugins/beaconify.py :: A plugin to send beacon frames more often and restarts pwngrid when it stops listening for other units\' beacons.
+  pwnagotchi-beacon-plugins/hashieclean.py :: This version removes "lonely pcaps", those can't be converted either to the formats .22000 (EAPOL) or .16800 (PMKID). As the number of lonely pcaps increase the loading time increases too. Besides that, the checking for completed handshakes is done more efficiently, thus reducing even further the loading time of the plugin. Based on hashi by <junohea.mail@gmail.com>: Attempt to automatically convert pcaps to a crackable format. If successful, the files containing the hashes will be saved in the same folder as the handshakes. The files are saved in their respective Hashcat format: - EAPOL hashes are saved as _.22000 - PMKID hashes are saved as_.16800 All PCAP files without enough information to create a hash are stored in a file that can be read by the webgpsmap plugin. Why use it?: - Automatically convert handshakes to crackable formats! We dont all upload our hashes online ; ) - Repair PMKID handshakes that hcxpcapngtool misses - If running at time of handshake capture, on_handshake can be used to improve the chance of the repair succeeding - Be a completionist! Not enough packets captured to crack a network? This generates an output file for the webgpsmap plugin, use the location data to revisit networks you need more packets for! Additional information: - Currently requires hcxpcapngtool compiled and installed - Attempts to repair PMKID hashes when hcxpcapngtool cant find the SSID - hcxpcapngtool sometimes has trouble extracting the SSID, so we use the raw 16800 output and attempt to retrieve the SSID via tcpdump - When access_point data is available (on_handshake), we leverage the reported AP name and MAC to complete the hash - The repair is very basic and could certainly be improved! Todo: Make it so users dont need hcxpcapngtool (unless it gets added to the base image) Phase 1: Extract/construct 22000/16800 hashes through tcpdump commands Phase 2: Extract/construct 22000/16800 hashes entirely in python Improve the code, a lot
+  pwnagotchi-beacon-plugins/pwnwatch.py :: This plugin allows the pwnagotchi to receive commands from the pwnagotchi-watch and respond them properly. parseSessionStats and parseSessionStatsFile borrowed from: <https://github.com/GaelicThunder/Experience-Plugin-Pwnagotchi/blob/f456040de4951de1e6ab3fcb4453d42a7da362d1/exp.py#L215>
+
+### BradlySharpe
+  pwnagotchi-plugins/enterprise.py :: This plugin will attempt to obtain credentials from enterprise networks when bored and networks are available.
+
+### Brets0150
+  pwnagotchi-to-hashtopolis-plugin/pwn2crack.py :: This Pwnagotchi plugin will evaluate captured handshakes from pcap files, clean and convert complete handshakes to Hashcat-compatible 22000 hashes, and then create a new hashlist within Hashtopolis.
+
+### bryzz42o
+  Pwnagotchi-fsociety-plugins/EXP.py :: Enables the AI to access age, strength, and experience data (XP/leveling plugin).
+  Pwnagotchi-fsociety-plugins/sigstr.py :: Displays WiFi signal strength as a bar on screen.
+
+### c-nagy
+  pwnagotchi-display-password-plugin/display-password.py :: A plugin to display recently cracked passwords
+
+### cantcodesheet
+  pwnagotchi-print-to-screen/scripts/printp.py :: Example plugin that simply prints to Pwnagotchi screen via labels and to the view area
+
+### charagarlnad
+  pwnagotchi-discord-plugin/discord.py :: Post recent activity to a Discord channel using webhooks. Requires discord.py module.
+
+### crahan
+  pwnagotchi-plugins/gps-plus.py :: Save GPS coordinates whenever an handshake is captured.
+  pwnagotchi-plugins/memtemp-plus.py :: A plugin that will display memory/cpu usage and temperature
+
+### cyberartemio
+  wardriver-pwnagotchi-plugin/wardriver.py :: A wardriving plugin for pwnagotchi. Saves all networks seen and uploads data to WiGLE once internet is available
+  wof-pwnagotchi-plugin/wof.py :: Display found Flipper Zeros from Wall of Flippers
+
+### dadav
+  pwnagotchi-custom-plugins/aircrackonly.py :: confirm pcap contains handshake/PMKID or delete it
+  pwnagotchi-custom-plugins/apfaker.py :: Creates fake aps.
+  pwnagotchi-custom-plugins/auto_backup.py :: This plugin backups files when internet is available.
+  pwnagotchi-custom-plugins/buttonshim.py :: Pimoroni Button Shim GPIO Button and RGB LED support plugin based on the pimoroni-buttonshim-lib and the pwnagotchi-gpio-buttons-plugin
+  pwnagotchi-custom-plugins/christmas.py :: Christmas Countdown timer for pwnagotchi
+  pwnagotchi-custom-plugins/clock.py :: Clock/Calendar for pwnagotchi
+  pwnagotchi-custom-plugins/deauth.py :: counts the successful deauth attacks of this session
+  pwnagotchi-custom-plugins/discord.py :: Post recent activity to a Discord channel using webhooks. Requires discord.py module.
+  pwnagotchi-custom-plugins/gpio_buttons.py :: GPIO Button support plugin
+  pwnagotchi-custom-plugins/gpio_shutdown.py :: GPIO Shutdown plugin
+  pwnagotchi-custom-plugins/handshakes-dl.py :: Download handshake captures from web-ui.
+  pwnagotchi-custom-plugins/hashie.py :: Attempt to automatically convert pcaps to a crackable format. If successful, the files containing the hashes will be saved in the same folder as the handshakes. The files are saved in their respective Hashcat format: - EAPOL hashes are saved as _.2500 - PMKID hashes are saved as_.16800 All PCAP files without enough information to create a hash are stored in a file that can be read by the webgpsmap plugin. Why use it?: - Automatically convert handshakes to crackable formats! We dont all upload our hashes online ; ) - Repair PMKID handshakes that hcxpcaptool misses - If running at time of handshake capture, on_handshake can be used to improve the chance of the repair succeeding - Be a completionist! Not enough packets captured to crack a network? This generates an output file for the webgpsmap plugin, use the location data to revisit networks you need more packets for! Additional information: - Currently requires hcxpcaptool compiled and installed - Attempts to repair PMKID hashes when hcxpcaptool cant find the SSID - hcxpcaptool sometimes has trouble extracting the SSID, so we use the raw 16800 output and attempt to retrieve the SSID via tcpdump - When access_point data is available (on_handshake), we leverage the reported AP name and MAC to complete the hash - The repair is very basic and could certainly be improved! Todo: Make it so users dont need hcxpcaptool (unless it gets added to the base image) Phase 1: Extract/construct 2500/16800 hashes through tcpdump commands Phase 2: Extract/construct 2500/16800 hashes entirely in python Improve the code, a lot
+  pwnagotchi-custom-plugins/hulk.py :: This will put pwnagotchi in hulk mode. Hulk is always angry!
+  pwnagotchi-custom-plugins/mastodon.py :: Periodically post status updates. Based on twitter plugin by evilsocket
+  pwnagotchi-custom-plugins/memtemp.py :: A plugin that will display memory/cpu usage and temperature
+  pwnagotchi-custom-plugins/net-pos.py :: Saves a json file with the access points with more signal whenever a handshake is captured. When internet is available the files are converted in geo locations using Mozilla LocationService
+  pwnagotchi-custom-plugins/onlinehashcrack.py :: This plugin automatically uploads handshakes to <https://onlinehashcrack.com>
+  pwnagotchi-custom-plugins/paw-gps.py :: Saves GPS coordinates whenever an handshake is captured. The GPS data is get from PAW on android
+  pwnagotchi-custom-plugins/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi-custom-plugins/screen_refresh.py :: Refresh he e-ink display after X amount of updates
+  pwnagotchi-custom-plugins/switcher.py :: This plugin is a generic task scheduler.
+  pwnagotchi-custom-plugins/telegram.py :: Periodically sent messages to Telegram about the recent activity of pwnagotchi
+  pwnagotchi-custom-plugins/twitter.py :: This plugin creates tweets about the recent activity of pwnagotchi
+  pwnagotchi-custom-plugins/ups_lite.py :: A plugin that will add a voltage indicator for the UPS Lite v1.1
+  pwnagotchi-custom-plugins/viz.py :: This plugin visualizes the surrounding APs
+  pwnagotchi-custom-plugins/watchdog.py :: Restart pwnagotchi when blindbug is detected.
+  pwnagotchi-custom-plugins/webgpsmap.py :: a plugin for pwnagotchi that shows a openstreetmap with positions of ap-handshakes in your webbrowser
+  pwnagotchi-custom-plugins/wigle.py :: This plugin automatically uploads collected wifis to wigle.net
+  pwnagotchi-custom-plugins/wpa-sec.py :: This plugin automatically uploads handshakes to <https://wpa-sec.stanev.org>
+
+### dbukovac
+  pwnagotchi-plugins-contrib/aircrackonly.py :: confirm pcap contains handshake/PMKID or delete it
+  pwnagotchi-plugins-contrib/auto_backup.py :: This plugin backups files when internet is available.
+  pwnagotchi-plugins-contrib/buttonshim.py :: Pimoroni Button Shim GPIO Button and RGB LED support plugin based on the pimoroni-buttonshim-lib and the pwnagotchi-gpio-buttons-plugin
+  pwnagotchi-plugins-contrib/christmas.py :: Christmas Countdown timer for pwnagotchi
+  pwnagotchi-plugins-contrib/clock.py :: Clock/Calendar for pwnagotchi
+  pwnagotchi-plugins-contrib/discord.py :: Post recent activity to a Discord channel using webhooks. Requires discord.py module.
+  pwnagotchi-plugins-contrib/display-password.py :: A plugin to display recently cracked passwords
+  pwnagotchi-plugins-contrib/gpio_shutdown.py :: GPIO Shutdown plugin
+  pwnagotchi-plugins-contrib/handshakes-dl.py :: Download handshake captures from web-ui.
+  pwnagotchi-plugins-contrib/hashie.py :: Attempt to automatically convert pcaps to a crackable format. If successful, the files containing the hashes will be saved in the same folder as the handshakes. The files are saved in their respective Hashcat format: - EAPOL hashes are saved as _.2500 - PMKID hashes are saved as_.16800 All PCAP files without enough information to create a hash are stored in a file that can be read by the webgpsmap plugin. Why use it?: - Automatically convert handshakes to crackable formats! We dont all upload our hashes online ; ) - Repair PMKID handshakes that hcxpcaptool misses - If running at time of handshake capture, on_handshake can be used to improve the chance of the repair succeeding - Be a completionist! Not enough packets captured to crack a network? This generates an output file for the webgpsmap plugin, use the location data to revisit networks you need more packets for! Additional information: - Currently requires hcxpcaptool compiled and installed - Attempts to repair PMKID hashes when hcxpcaptool cant find the SSID - hcxpcaptool sometimes has trouble extracting the SSID, so we use the raw 16800 output and attempt to retrieve the SSID via tcpdump - When access_point data is available (on_handshake), we leverage the reported AP name and MAC to complete the hash - The repair is very basic and could certainly be improved! Todo: Make it so users dont need hcxpcaptool (unless it gets added to the base image) Phase 1: Extract/construct 2500/16800 hashes through tcpdump commands Phase 2: Extract/construct 2500/16800 hashes entirely in python Improve the code, a lot
+  pwnagotchi-plugins-contrib/mastodon.py :: Periodically post status updates. Based on twitter plugin by evilsocket
+  pwnagotchi-plugins-contrib/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi-plugins-contrib/screen_refresh.py :: Refresh he e-ink display after X amount of updates
+  pwnagotchi-plugins-contrib/telegram.py :: Periodically sent messages to Telegram about the recent activity of pwnagotchi
+  pwnagotchi-plugins-contrib/twitter.py :: This plugin creates tweets about the recent activity of pwnagotchi
+  pwnagotchi-plugins-contrib/wpa-sec-list.py :: List cracked passwords from wpa-sec
+
+### Deus73
+  pwnagotchi-plugins/bluetooth_scanner.py :: Scans for and logs nearby Bluetooth devices.
+  pwnagotchi-plugins/deauthenticator.py :: A plugin that will add the Pwnagotchi version to the left of the current mode.
+  pwnagotchi-plugins/dns_spoof_detector.py :: Detects DNS spoofing/poisoning attempts on the network.
+  pwnagotchi-plugins/mac_adress_logger.py :: Logs MAC addresses seen on the network.
+  pwnagotchi-plugins/mac_randomizer.py :: Randomizes the device's MAC address.
+  pwnagotchi-plugins/network_intrusion_detector.py :: Detects potential network intrusion attempts.
+  pwnagotchi-plugins/network_mapper.py :: Maps/enumerates devices on the local network.
+  pwnagotchi-plugins/network_packet_sniffer.py :: Sniffs and logs network packets.
+  pwnagotchi-plugins/rogue_ap_detector.py :: Detects rogue/unauthorized access points.
+  pwnagotchi-plugins/traffic_sniffer.py :: Sniffs and analyzes network traffic.
+  pwnagotchi-plugins/wifi_analyser.py :: Analyzes nearby WiFi networks/signals.
+  pwnagotchi-plugins/wifi_jammer.py :: Sends deauth/jamming frames at WiFi networks.
+  pwnagotchi-plugins/wifi_password_cracker.py :: Attempts to crack WiFi passwords from captured handshakes.
+
+### dipsylala
+  pwnagotchi-state-api/state-api.py :: Provides JSON state data or a default page
+
+### diytechtinker
+  pwnagotchi_plugins/bluetoothsniffer.py :: A plugin that sniffs Bluetooth devices and saves their MAC addresses, name and counts to a JSON file
+
+### do-ki
+  custom-plugins/dashboard.py :: Dashboard plugin is a consolidation of the clock, deauth counter, memtemp, pivoyager and added few features such as cracked handshake counter and internet status.
+  custom-plugins/dashboard2.py :: Dashboard plugin is a consolidation of the clock, deauth counter, memtemp, pivoyager and added few features such as cracked handshake counter and internet status.
+  custom-plugins/pivoyager.py :: PiVoyager UPS plugin
+  custom-plugins/pwnmenu.py :: A simple popup menu to run scripts from
+  custom-plugins/pwnmenucmd.py :: Command-line client that sends navigation commands to the pwnmenu plugin's socket.
+
+### evilsocket
+  default-plugins/auto-update.py :: Checks for and applies updates when internet is available (stock default plugin).
+  default-plugins/bt-tether.py :: This makes the display reachable over bluetooth
+  default-plugins/example.py :: An example plugin for pwnagotchi that implements all the available callbacks.
+  default-plugins/gpio_buttons.py :: GPIO Button support plugin
+  default-plugins/gps.py :: Save GPS coordinates whenever an handshake is captured.
+  default-plugins/grid.py :: Signals the unit's cryptographic identity and list of pwned networks to the PwnGrid network (stock default plugin).
+  default-plugins/led.py :: This plugin blinks the PWR led with different patterns depending on the event.
+  default-plugins/logtail.py :: This plugin tails the logfile.
+  default-plugins/memtemp.py :: A plugin that will display memory/cpu usage and temperature
+  default-plugins/net-pos.py :: Saves a json file with the access points with more signal whenever a handshake is captured. When internet is available the files are converted in geo locations using Mozilla LocationService
+  default-plugins/onlinehashcrack.py :: This plugin automatically uploads handshakes to <https://onlinehashcrack.com>
+  default-plugins/paw-gps.py :: Saves GPS coordinates whenever an handshake is captured. The GPS data is get from PAW on android
+  default-plugins/session-stats.py :: This plugin displays stats of the current session.
+  default-plugins/switcher.py :: This plugin is a generic task scheduler.
+  default-plugins/ups_lite.py :: A plugin that will add a voltage indicator for the UPS Lite v1.1
+  default-plugins/watchdog.py :: Restart pwnagotchi when blindbug is detected.
+  default-plugins/webcfg.py :: A plugin that displays the weather forecast on the pwnagotchi screen.
+  default-plugins/webgpsmap.py :: a plugin for pwnagotchi that shows a openstreetmap with positions of ap-handshakes in your webbrowser
+  default-plugins/wigle.py :: This plugin automatically uploads collected wifis to wigle.net
+  default-plugins/wpa-sec.py :: This plugin automatically uploads handshakes to <https://wpa-sec.stanev.org>
+  pwnagotchi-plugins-contrib/aircrackonly.py :: confirm pcap contains handshake/PMKID or delete it
+  pwnagotchi-plugins-contrib/auto_backup.py :: This plugin backups files when internet is available.
+  pwnagotchi-plugins-contrib/buttonshim.py :: Pimoroni Button Shim GPIO Button and RGB LED support plugin based on the pimoroni-buttonshim-lib and the pwnagotchi-gpio-buttons-plugin
+  pwnagotchi-plugins-contrib/christmas.py :: Christmas Countdown timer for pwnagotchi
+  pwnagotchi-plugins-contrib/clock.py :: Clock/Calendar for pwnagotchi
+  pwnagotchi-plugins-contrib/discord.py :: Post recent activity to a Discord channel using webhooks. Requires discord.py module.
+  pwnagotchi-plugins-contrib/display-password.py :: A plugin to display recently cracked passwords
+  pwnagotchi-plugins-contrib/gpio_shutdown.py :: GPIO Shutdown plugin
+  pwnagotchi-plugins-contrib/handshakes-dl.py :: Download handshake captures from web-ui.
+  pwnagotchi-plugins-contrib/hashie.py :: Attempt to automatically convert pcaps to a crackable format. If successful, the files containing the hashes will be saved in the same folder as the handshakes. The files are saved in their respective Hashcat format: - EAPOL hashes are saved as _.2500 - PMKID hashes are saved as_.16800 All PCAP files without enough information to create a hash are stored in a file that can be read by the webgpsmap plugin. Why use it?: - Automatically convert handshakes to crackable formats! We dont all upload our hashes online ; ) - Repair PMKID handshakes that hcxpcaptool misses - If running at time of handshake capture, on_handshake can be used to improve the chance of the repair succeeding - Be a completionist! Not enough packets captured to crack a network? This generates an output file for the webgpsmap plugin, use the location data to revisit networks you need more packets for! Additional information: - Currently requires hcxpcaptool compiled and installed - Attempts to repair PMKID hashes when hcxpcaptool cant find the SSID - hcxpcaptool sometimes has trouble extracting the SSID, so we use the raw 16800 output and attempt to retrieve the SSID via tcpdump - When access_point data is available (on_handshake), we leverage the reported AP name and MAC to complete the hash - The repair is very basic and could certainly be improved! Todo: Make it so users dont need hcxpcaptool (unless it gets added to the base image) Phase 1: Extract/construct 2500/16800 hashes through tcpdump commands Phase 2: Extract/construct 2500/16800 hashes entirely in python Improve the code, a lot
+  pwnagotchi-plugins-contrib/mastodon.py :: Periodically post status updates. Based on twitter plugin by evilsocket
+  pwnagotchi-plugins-contrib/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi-plugins-contrib/screen_refresh.py :: Refresh he e-ink display after X amount of updates
+  pwnagotchi-plugins-contrib/telegram.py :: Periodically sent messages to Telegram about the recent activity of pwnagotchi
+  pwnagotchi-plugins-contrib/twitter.py :: This plugin creates tweets about the recent activity of pwnagotchi
+
+### flamebarke
+  DiscoHash/bots/hashbot.py :: This bot will return the hashes obtained using discohash for a specified number of access points as a txt file. Message the bot with !dumphash [NUMBER].
+  DiscoHash/discohash.py :: DiscoHash extracts hashes from pcaps (hashcat mode 22000) using hcxpcapngtool, analyses the hash using hcxhashtool and posts the output to Discord along with any obtained GPS coordinates.
+
+### GaelicThunder
+  Experience-Plugin-Pwnagotchi/exp.py :: Get exp every time a handshake get captured.
+
+### GlennPegden2
+  privacy-nightmare-pwnagotchi-plugin/privacy-nightmare.py :: Private Nightmare. Eavesdropping metadata for fun and profit (well, education and awareness mostly).
+
+### hannadiamond
+  pwnagotchi-plugins/plugins/age.py :: A plugin that will add age and strength stats based on epochs and trained epochs
+  pwnagotchi-plugins/plugins/ups_hat_c.py :: A plugin that will add a battery capacity and charging indicator for the UPS HAT C
+  pwnagotchi-plugins/waveshare_37inch/v37inch/epd3in7.py :: Low-level driver for the Waveshare 3.7in e-paper display.
+  pwnagotchi-plugins/waveshare_37inch/v37inch/epdconfig.py :: GPIO/SPI hardware configuration module for the Waveshare e-paper driver.
+  pwnagotchi-plugins/waveshare_37inch/waveshare37inch.py :: Pwnagotchi display implementation for the Waveshare 3.7in e-paper screen.
+
+### hmax42
+  pwnagotchi-plugins-contrib/aircrackonly.py :: confirm pcap contains handshake/PMKID or delete it
+  pwnagotchi-plugins-contrib/auto_backup.py :: This plugin backups files when internet is available.
+  pwnagotchi-plugins-contrib/buttonshim.py :: Pimoroni Button Shim GPIO Button and RGB LED support plugin based on the pimoroni-buttonshim-lib and the pwnagotchi-gpio-buttons-plugin
+  pwnagotchi-plugins-contrib/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi-plugins-contrib/screen_refresh.py :: Refresh he e-ink display after X amount of updates
+  pwnagotchi-plugins-contrib/twitter.py :: This plugin creates tweets about the recent activity of pwnagotchi
+
+### IdolonInMachina
+  pwnagotchi-plugins/cuffs.py :: Restricts the pwnagotchi to only attack specified ap\'s
+  pwnagotchi-plugins/timer.py :: Measure the amount of time taken by the pwnagotchi to capture a handshake
+
+### iggdawg
+  pwnagotchi_plugins/fireworks.py :: Uses Pimoroni shim to put on a light show
+
+### imnotjames
+  dd882320fe41d323d354a970a27113e5/sprite_faces.py :: Cute sprite-based face graphics widget for the pwnagotchi display.
+
+### itsdarklikehell
+  pwnagotchi-plugins/Weather.py :: A plugin that displays the weather forecast on the pwnagotchi screen.
+  pwnagotchi-plugins/apprise-notify.py :: An Apprise plugin for pwnagotchi that implements all the available callbacks.
+  pwnagotchi-plugins/auto-hotspot.py :: A plugin to automatically create a wifi hotspot when in manual mode.
+  pwnagotchi-plugins/banthex-de.py :: This plugin automatically uploads handshakes to <https://banthex.de/wpa/>
+  pwnagotchi-plugins/bitcoin.py :: A plugin that will display the bitcoin price.
+  pwnagotchi-plugins/display-password-qr.py :: A plugin to display recently cracked passwords
+  pwnagotchi-plugins/display-text.py :: A plugin that displays text on the waveshare144lcd screen.
+  pwnagotchi-plugins/partymode.py :: Partymode plugin.
+  pwnagotchi-plugins/potfilesorter.py :: A plugin that will sort a potfile and output its to a usable wpa_supplicant.conf.
+  pwnagotchi-plugins/rgb.py :: rgb
+  pwnagotchi-plugins/wardrive.py :: Wardriving plugin for pwnagotchi.
+  pwnspeaker/pwnassistant.py :: Adds voice control commands to the pwnagotchi via a connected microphone (uses Google speech APIs).
+  pwnspeaker/pwnspeaker.py :: An Pwnspeak plugin for pwnagotchi that implements all the available callbacks.
+
+### jayofelony
+  pwnagotchi-torch-plugins/bluetoothsniffer.py :: A plugin that sniffs Bluetooth devices and saves their MAC addresses, name and counts to a JSON file
+  pwnagotchi-torch-plugins/gpsdeasy.py :: uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging
+  pwnagotchi-torch-plugins/handshakes-dl.py :: Download handshake captures from web-ui.
+  pwnagotchi-torch-plugins/internet-connection.py :: A plugin that displays the Internet connection status on the pwnagotchi display.
+  pwnagotchi-torch-plugins/memtemp-plus.py :: A plugin that will display memory/cpu usage and temperature
+  pwnagotchi-torch-plugins/show_pwd.py :: A plugin to display recently cracked passwords
+
+### jd-2006
+  pwnagotchi-plugins-scripts_JD-2006/Scripts/Pwnagotchi-JSON-to-Wigle-CSV.py :: Standalone script that converts a folder of pwnagotchi handshake JSON files into a Wigle-compatible CSV.
+  pwnagotchi-plugins-scripts_JD-2006/gps_led/gps_led.py :: Flashes an LED on a GPIO pin when GPS data is available.
+  pwnagotchi-plugins-scripts_JD-2006/warwalking_trails_kml/warwalking_trails_kml.py :: Generates KML trail files (for Google Earth) from wardriving GPS data.
+  pwnagotchi-plugins-scripts_JD-2006/warwalking_trails_kml_single/warwalking_trails_kml_single.py :: Generates a single combined KML trail file from wardriving GPS data.
+
+### jjensn
+  hashespwnagotchi/hashespwnagotchi.py :: uploads handshakes to <https://hashes.pw>
+
+### k4n3d4-sh0t4r0
+  Pwnagotchi_gpsd-upgraded_plugin/V1/gpsd.py :: Talk to GPSD and save coordinates whenever a handshake is captured.
+  Pwnagotchi_gpsd-upgraded_plugin/V2/gpsd.py :: Talk to GPSD and save coordinates whenever a handshake is captured.
+
+### Kaska89
+  pwnagotchi-EXPv2-plugin/agev2.py :: A plugin that will add age and strength stats based on epochs and trained epochs
+  pwnagotchi-EXPv2-plugin/expv2.py :: Get exp every time a handshake get captured.
+
+### kellertk
+  pwnagotchi-plugin-gpsd/gpsd.py :: Talk to GPSD and save coordinates whenever a handshake is captured.
+
+### kripthor
+  pwnagotchi-beacons/plugin/beacons.py :: A plugin that advertises pwnagotchi state via valid WiFi beacons.
+
+### LegendEvent
+  pwnagotchi-custom-plugins/achievements.py :: Collect achievements for daily challenges.
+
+### Lehniii
+  discord-notify-plugin-pwnagotchi/discord_notify.py :: Sends notifications to a Discord channel via a webhook.
+
+### Levi-Michael
+  pwnagotchi-plugins/discoBoss.py :: Manages/controls deauth ('disco') behavior with configurable rules.
+  pwnagotchi-plugins/extWifi.py :: Turns off the local WiFi chipset to make room for an external WiFi adapter.
+
+### LoganMD
+  pwnagotchi-plugins-contrib/aircrackonly.py :: confirm pcap contains handshake/PMKID or delete it
+  pwnagotchi-plugins-contrib/auto_backup.py :: This plugin backups files when internet is available.
+  pwnagotchi-plugins-contrib/buttonshim.py :: Pimoroni Button Shim GPIO Button and RGB LED support plugin based on the pimoroni-buttonshim-lib and the pwnagotchi-gpio-buttons-plugin
+  pwnagotchi-plugins-contrib/christmas.py :: Christmas Countdown timer for pwnagotchi
+  pwnagotchi-plugins-contrib/clock.py :: Clock/Calendar for pwnagotchi
+  pwnagotchi-plugins-contrib/gpio_shutdown.py :: GPIO Shutdown plugin
+  pwnagotchi-plugins-contrib/handshakes-dl.py :: Download handshake captures from web-ui.
+  pwnagotchi-plugins-contrib/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi-plugins-contrib/screen_refresh.py :: Refresh he e-ink display after X amount of updates
+  pwnagotchi-plugins-contrib/twitter.py :: This plugin creates tweets about the recent activity of pwnagotchi
+
+### MaliosDark
+  pwnagotchi-plugins/age.py :: A plugin that will add age and strength stats based on epochs and trained epochs
+  pwnagotchi-plugins/aircrackonly.py :: confirm pcap contains handshake/PMKID or delete it
+  pwnagotchi-plugins/educational-purposes-exclusively.py :: A plugin to automatically authenticate to known networks and perform internal network recon
+  pwnagotchi-plugins/educational-purposes-only.py :: A plugin to automatically authenticate to known networks and perform internal network recon
+  pwnagotchi-plugins/exp.py :: Get exp every time a handshake get captured.
+  pwnagotchi-plugins/hp+educational-purposes.py :: A combined Pwnagotchi plugin for setting up a honey pot and performing network authentication.
+  pwnagotchi-plugins/miyagi.py :: Manage AI training. Pwn on. Pwn off. (just kidding. always b pwn'in'!)
+  pwnagotchi-plugins/pwna-template-testing.py :: Plugin to activate/deactivate the egirl-pwnagotchi theme
+  pwnagotchi-plugins/show_pwd.py :: A plugin to display recently cracked passwords
+  pwnagotchi-plugins/test_security.py :: LAN Security Monitor Plugin for Pwnagotchi
+  pwnagotchi-plugins/tweak_view.py :: Edit the UI layout. Ugly interface, no guardrails. Be careful!!!
+  pwnagotchi-plugins/voice_gamer.py :: Plugin to download and replace voice.py with a custom version
+  pwnagotchi-plugins/wd_honey_Pot.py :: A Pwnagotchi plugin for setting up a honey pot to detect other Pwnagotchis making deauths.
+  pwnagotchi-plugins/wifi_adventures.py :: Taking Pwnagotchi on WiFi adventures and collect fun achievements.
+
+### markenglish
+  pwnplugins/dropbox_ul.py :: This plugin automatically uploads handshakes to a dropbox app
+
+### Matt-London
+  pwnagotchi-flipper/pwnzero/PwnZero.py :: Plugin to display the Pwnagotchi on the Flipper Zero
+  pwnagotchi-flipper/tools/img2xbm.py :: Utility script that converts images to XBM format for the Flipper Zero display.
+
+### nullm0ose
+  pwnagotchi-plugin-birthday/birthday.py :: A plugin that shows the age and birthday of your Pwnagotchi.
+  pwnagotchi-plugin-pisugar3/pisugar3.py :: A plugin that will add a percentage indicator for the PiSugar 3
+
+### Passarb
+  pwnagotchi_plugins/age.py :: A plugin that will add age and strength stats based on epochs and trained epochs
+  pwnagotchi_plugins/agev2.py :: A plugin that will add age and strength stats based on epochs and trained epochs
+  pwnagotchi_plugins/auto_backup.py :: This plugin backups files when internet is available.
+  pwnagotchi_plugins/christmas.py :: Christmas Countdown timer for pwnagotchi
+  pwnagotchi_plugins/dashboard2.py :: Dashboard plugin is a consolidation of the clock, deauth counter, memtemp, pivoyager and added few features such as cracked handshake counter and internet status.
+  pwnagotchi_plugins/display-password.py :: A plugin to display recently cracked passwords
+  pwnagotchi_plugins/display_version.py :: Adds the Pwnagotchi software version to the display next to the current mode.
+  pwnagotchi_plugins/exp.py :: Get exp every time a handshake get captured.
+  pwnagotchi_plugins/expv2.py :: Get exp every time a handshake get captured.
+  pwnagotchi_plugins/hashie.py :: Attempt to automatically convert pcaps to a crackable format. If successful, the files containing the hashes will be saved in the same folder as the handshakes. The files are saved in their respective Hashcat format: - EAPOL hashes are saved as _.2500 - PMKID hashes are saved as_.16800 All PCAP files without enough information to create a hash are stored in a file that can be read by the webgpsmap plugin. Why use it?: - Automatically convert handshakes to crackable formats! We dont all upload our hashes online ; ) - Repair PMKID handshakes that hcxpcaptool misses - If running at time of handshake capture, on_handshake can be used to improve the chance of the repair succeeding - Be a completionist! Not enough packets captured to crack a network? This generates an output file for the webgpsmap plugin, use the location data to revisit networks you need more packets for! Additional information: - Currently requires hcxpcaptool compiled and installed - Attempts to repair PMKID hashes when hcxpcaptool cant find the SSID - hcxpcaptool sometimes has trouble extracting the SSID, so we use the raw 16800 output and attempt to retrieve the SSID via tcpdump - When access_point data is available (on_handshake), we leverage the reported AP name and MAC to complete the hash - The repair is very basic and could certainly be improved! Todo: Make it so users dont need hcxpcaptool (unless it gets added to the base image) Phase 1: Extract/construct 2500/16800 hashes through tcpdump commands Phase 2: Extract/construct 2500/16800 hashes entirely in python Improve the code, a lot
+  pwnagotchi_plugins/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi_plugins/screen_refresh.py :: Refresh he e-ink display after X amount of updates
+  pwnagotchi_plugins/ups_hat_c.py :: A plugin that will add a battery capacity and charging indicator for the UPS HAT C
+
+### PwnPeter
+  pwnagotchi-plugins/handshakes-dl-hashie.py :: Download handshake captures from web-ui.
+  pwnagotchi-plugins/hashie-hcxpcapngtool.py :: Attempt to automatically convert pcaps to a crackable format. If successful, the files containing the hashes will be saved in the same folder as the handshakes. The files are saved in their respective Hashcat format: - EAPOL hashes are saved as _.22000 - PMKID hashes are saved as_.16800 All PCAP files without enough information to create a hash are stored in a file that can be read by the webgpsmap plugin. Why use it?: - Automatically convert handshakes to crackable formats! We dont all upload our hashes online ; ) - Repair PMKID handshakes that hcxpcapngtool misses - If running at time of handshake capture, on_handshake can be used to improve the chance of the repair succeeding - Be a completionist! Not enough packets captured to crack a network? This generates an output file for the webgpsmap plugin, use the location data to revisit networks you need more packets for! Additional information: - Currently requires hcxpcapngtool compiled and installed - Attempts to repair PMKID hashes when hcxpcapngtool cant find the SSID - hcxpcapngtool sometimes has trouble extracting the SSID, so we use the raw 16800 output and attempt to retrieve the SSID via tcpdump - When access_point data is available (on_handshake), we leverage the reported AP name and MAC to complete the hash - The repair is very basic and could certainly be improved! Todo: Make it so users dont need hcxpcapngtool (unless it gets added to the base image) Phase 1: Extract/construct 22000/16800 hashes through tcpdump commands Phase 2: Extract/construct 22000/16800 hashes entirely in python Improve the code, a lot
+
+### rai68
+  gpsd-easy/gpsdeasy.py :: uses gpsd to report lat/long on the screen and setup bettercap pcap gps logging
+
+### sayak-brm
+  pwnagotchi-plugins-contrib/aircrackonly.py :: confirm pcap contains handshake/PMKID or delete it
+  pwnagotchi-plugins-contrib/auto_backup.py :: This plugin backups files when internet is available.
+  pwnagotchi-plugins-contrib/buttonshim.py :: Pimoroni Button Shim GPIO Button and RGB LED support plugin based on the pimoroni-buttonshim-lib and the pwnagotchi-gpio-buttons-plugin
+  pwnagotchi-plugins-contrib/christmas.py :: Christmas Countdown timer for pwnagotchi
+  pwnagotchi-plugins-contrib/clock.py :: Clock/Calendar for pwnagotchi
+  pwnagotchi-plugins-contrib/discord.py :: Post recent activity to a Discord channel using webhooks. Requires discord.py module.
+  pwnagotchi-plugins-contrib/gpio_shutdown.py :: GPIO Shutdown plugin
+  pwnagotchi-plugins-contrib/handshakes-dl.py :: Download handshake captures from web-ui.
+  pwnagotchi-plugins-contrib/hashie.py :: Attempt to automatically convert pcaps to a crackable format. If successful, the files containing the hashes will be saved in the same folder as the handshakes. The files are saved in their respective Hashcat format: - EAPOL hashes are saved as _.2500 - PMKID hashes are saved as_.16800 All PCAP files without enough information to create a hash are stored in a file that can be read by the webgpsmap plugin. Why use it?: - Automatically convert handshakes to crackable formats! We dont all upload our hashes online ; ) - Repair PMKID handshakes that hcxpcaptool misses - If running at time of handshake capture, on_handshake can be used to improve the chance of the repair succeeding - Be a completionist! Not enough packets captured to crack a network? This generates an output file for the webgpsmap plugin, use the location data to revisit networks you need more packets for! Additional information: - Currently requires hcxpcaptool compiled and installed - Attempts to repair PMKID hashes when hcxpcaptool cant find the SSID - hcxpcaptool sometimes has trouble extracting the SSID, so we use the raw 16800 output and attempt to retrieve the SSID via tcpdump - When access_point data is available (on_handshake), we leverage the reported AP name and MAC to complete the hash - The repair is very basic and could certainly be improved! Todo: Make it so users dont need hcxpcaptool (unless it gets added to the base image) Phase 1: Extract/construct 2500/16800 hashes through tcpdump commands Phase 2: Extract/construct 2500/16800 hashes entirely in python Improve the code, a lot
+  pwnagotchi-plugins-contrib/mastodon.py :: Periodically post status updates. Based on twitter plugin by evilsocket
+  pwnagotchi-plugins-contrib/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi-plugins-contrib/screen_refresh.py :: Refresh he e-ink display after X amount of updates
+  pwnagotchi-plugins-contrib/telegram.py :: Periodically sent messages to Telegram about the recent activity of pwnagotchi
+  pwnagotchi-plugins-contrib/twitter.py :: This plugin creates tweets about the recent activity of pwnagotchi
+
+### scorpion3013
+  pwnagotchi-custom-plugins/deauth.py :: counts the successful deauth attacks of this session
+  pwnagotchi-custom-plugins/hulk.py :: This will put pwnagotchi in hulk mode. Hulk is always angry!
+
+### shir0tetsuo
+  pwnagotchi-plugins/basiclight.py :: GPIO traffic-light signals.
+
+### SilenTree12th
+  pwnagotchi_plugins/better_apfaker.py :: Creates fake aps.
+  pwnagotchi_plugins/better_onlinehashcrack.py :: This plugin automatically uploads handshakes to <https://onlinehashcrack.com>
+  pwnagotchi_plugins/better_quickdic.py :: Run a quick dictionary scan against captured handshakes. Optionally send found passwords as qrcode and plain text over to telegram bot.
+  pwnagotchi_plugins/mycracked_pw.py :: A plugin to grab all cracked passwords and creates wifi qrcodes and a wordlist which can be used for the quickdic plugin. It stores them in the home directory. Read with cat
+
+### simonecris
+  TeleGotchi/telegram.py :: Periodically sent messages to Telegram about the recent activity of pwnagotchi
+
+### sixt0o
+  f0xtr0t/f0xtr0t.py :: a plugin for pwnagotchi that shows a openstreetmap with positions of ap-handshakes in your webbrowser. Based on the origional webgpsmaps
+
+### Sliim
+  pwnagotchi-plugins/darkmode.py :: Darkmode plugin.
+  pwnagotchi-plugins/gps_error.py :: Display error when GPS is not running. Requires gps plugin enabled.
+  pwnagotchi-plugins/gps_fix.py :: Display GPS fix quality. Requires gps plugin enabled.
+  pwnagotchi-plugins/gps_grid.py :: Share GPS coordinates with grid. Requires gps plugin enabled.
+  pwnagotchi-plugins/gps_live.py :: Update GPS coordinates on each epoch. Requires gps plugin enabled.
+  pwnagotchi-plugins/gps_sat.py :: Display number of satellites. Requires gps plugin enabled.
+  pwnagotchi-plugins/rtc_grid.py :: Share RTC clock with peers. Some part of this code is based from: <https://stackoverflow.com/questions/12081310>
+  pwnagotchi-plugins/tracker.py :: Track seen access points & clients. If gps plugin is enabled, position will be saved.
+  pwnagotchi-plugins/ups_lite_1_2.py :: A plugin that will add a voltage indicator for the UPS Lite v1.2
+  pwnagotchi-plugins/ups_lite_1_3.py :: A plugin that will add a voltage indicator for the UPS Lite v1.3
+  pwnagotchi-plugins/waveshare_v3_touch.py :: Experimental plugin for Waveshare V3 2.13inch Touch e-Paper HAT.
+  pwnagotchi-plugins/xp.py :: XP / Leveling implementation. Just for fun!
+  pwnagotchi-plugins/xp_grid.py :: Level sharing between peers for xp plugin. xp plugin must be enabled.
+
+### sn0wflakeAU
+  powerutils/powerutils.py :: A server to shutdown or restart pwnagotchi hardware
+  powerutils/powerutilscmd.py :: Command-line client for sending shutdown/restart/reboot commands to the powerutils plugin's socket.
+  pwnmenu/pwnmenu.py :: A simple popup menu to run scripts from
+  pwnmenu/pwnmenucmd.py :: Command-line client that sends navigation commands to the pwnmenu plugin's socket.
+
+### Sniffleupagus
+  pwnagotchi_plugins/Touch_UI.py :: Use touchscreen input to toggle settings.
+  pwnagotchi_plugins/blemon_plugin.py :: BLE (Bluetooth Low Energy) device monitor plugin.
+  pwnagotchi_plugins/clock.py :: Clock/Calendar for pwnagotchi
+  pwnagotchi_plugins/display_settings.py :: Control backlight, and maybe other settings for displays. (but only pimoroni displayhatmini for now)
+  pwnagotchi_plugins/enable_assoc.py :: Enable and disable ASSOC on the fly. Enabled when plugin loads, disabled when plugin unloads.
+  pwnagotchi_plugins/enable_deauth.py :: Enable and disable DEAUTH on the fly. Enabled when plugin loads, disabled when plugin unloads.
+  pwnagotchi_plugins/fix_brcmf_plugin.py :: Reload brcmfmac module when blindbug is detected, instead of rebooting. Adapted from WATCHDOG
+  pwnagotchi_plugins/gps_more.py :: Save GPS coordinates whenever it seems reasonable. on epoch to get starting point, handshake to update.
+  pwnagotchi_plugins/instattack.py :: Pwn more aggressively. Launch immediate associate or deauth attack when bettercap spots a device.
+  pwnagotchi_plugins/miyagi.py :: Manage AI training. Pwn on. Pwn off. (just kidding. always b pwn'in'!)
+  pwnagotchi_plugins/more_uptime.py :: Enable and disable ASSOC on the fly. Enabled when plugin loads, disabled when plugin unloads.
+  pwnagotchi_plugins/morse_code.py :: An example plugin for pwnagotchi that implements all the available callbacks.
+  pwnagotchi_plugins/pwnaware.py :: display information from dump1090 about nearby airplanes
+  pwnagotchi_plugins/rss_voice.py :: Use RSS Feeds to replace canned voice messages on various events
+  pwnagotchi_plugins/spam_peers.py :: Automatically sends a message to newly discovered peers.
+  pwnagotchi_plugins/tweak_view.py :: Edit the UI layout. Ugly interface, no guardrails. Be careful!!!
+
+### taiyonemo
+  pwnagotchi-plugin-pisugar3/pisugar3.py :: A plugin that will add a percentage indicator for the PiSugar 3
+
+### Terminatoror
+  Pwnagotchi-RestartPlugin/RestartPlugin.py :: Restarts the pwnagotchi if bettercap crashes.
+  Pwnagotchi-RestartPlugin/prototype.py :: Prototype/earlier version of RestartPlugin (restarts pwnagotchi if bettercap crashes).
+  plugins/counter.py :: This will add some UI stuff to your Pwnagotchi to count assocs and deauths!
+  plugins/upload.py :: Automatically uploads handshakes to wpa-sec.stanev.org.
+
+### tisboyo
+  pwnagotchi-pisugar2-plugin/pisugar2.py :: A plugin that will add a voltage indicator for the PiSugar 2
+
+### traidento
+  pwnagotchi-plugins-contrib/aircrackonly.py :: confirm pcap contains handshake/PMKID or delete it
+  pwnagotchi-plugins-contrib/auto_backup.py :: This plugin backups files when internet is available.
+  pwnagotchi-plugins-contrib/buttonshim.py :: Pimoroni Button Shim GPIO Button and RGB LED support plugin based on the pimoroni-buttonshim-lib and the pwnagotchi-gpio-buttons-plugin
+  pwnagotchi-plugins-contrib/christmas.py :: Christmas Countdown timer for pwnagotchi
+  pwnagotchi-plugins-contrib/clock.py :: Clock/Calendar for pwnagotchi
+  pwnagotchi-plugins-contrib/discord.py :: Post recent activity to a Discord channel using webhooks. Requires discord.py module.
+  pwnagotchi-plugins-contrib/display_password.py :: Displays recently cracked passwords on screen.
+  pwnagotchi-plugins-contrib/display_version.py :: Adds the Pwnagotchi software version to the display next to the current mode.
+  pwnagotchi-plugins-contrib/gpio_shutdown.py :: GPIO Shutdown plugin
+  pwnagotchi-plugins-contrib/handshakes_dl.py :: Downloads handshake captures from the web UI.
+  pwnagotchi-plugins-contrib/hashie.py :: Attempt to automatically convert pcaps to a crackable format. If successful, the files containing the hashes will be saved in the same folder as the handshakes. The files are saved in their respective Hashcat format: - EAPOL hashes are saved as _.2500 - PMKID hashes are saved as_.16800 All PCAP files without enough information to create a hash are stored in a file that can be read by the webgpsmap plugin. Why use it?: - Automatically convert handshakes to crackable formats! We dont all upload our hashes online ; ) - Repair PMKID handshakes that hcxpcaptool misses - If running at time of handshake capture, on_handshake can be used to improve the chance of the repair succeeding - Be a completionist! Not enough packets captured to crack a network? This generates an output file for the webgpsmap plugin, use the location data to revisit networks you need more packets for! Additional information: - Currently requires hcxpcaptool compiled and installed - Attempts to repair PMKID hashes when hcxpcaptool cant find the SSID - hcxpcaptool sometimes has trouble extracting the SSID, so we use the raw 16800 output and attempt to retrieve the SSID via tcpdump - When access_point data is available (on_handshake), we leverage the reported AP name and MAC to complete the hash - The repair is very basic and could certainly be improved! Todo: Make it so users dont need hcxpcaptool (unless it gets added to the base image) Phase 1: Extract/construct 2500/16800 hashes through tcpdump commands Phase 2: Extract/construct 2500/16800 hashes entirely in python Improve the code, a lot
+  pwnagotchi-plugins-contrib/mastodon.py :: Periodically post status updates. Based on twitter plugin by evilsocket
+  pwnagotchi-plugins-contrib/pisugar.py :: Voltage/battery indicator plugin for the PiSugar 2 UPS hat.
+  pwnagotchi-plugins-contrib/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi-plugins-contrib/screen_refresh.py :: Refresh he e-ink display after X amount of updates
+  pwnagotchi-plugins-contrib/telegram.py :: Periodically sent messages to Telegram about the recent activity of pwnagotchi
+  pwnagotchi-plugins-contrib/twitter.py :: This plugin creates tweets about the recent activity of pwnagotchi
+
+### troystauffer
+  home_base/away_base.py :: Watches for known networks, connects for a while, then returns to recon
+  home_base/home_base.py :: Connects to home network for internet when available
+
+### unagisan69
+  better-button-shim-pwnagotchi/bshim.py :: Pimoroni Button Shim GPIO Button control
+  pwnagotchi-external-wifi-plugin/ext_wifi.py :: Activates external wifi adapter
+
+### V0r-T3x
+  Fancytools/fancyserver.py :: Fancygotchi and additional debug/dev tools
+  Fancytools/fancytools.py :: A server to receive extra commands to control your Pwnagotchi
+  Fancytools/fancytools/sys/fancytools.py :: A server to receive extra commands to control your Pwnagotchi
+  Fancytools/fancytools/tools/default/dev/backend.py :: Backend support module for the 'dev' tool in the Fancytools/Fancygotchi UI framework.
+  Fancytools/fancytools/tools/default/fancygotchi/backend.py :: Backend support module for the Fancygotchi custom UI system within Fancytools.
+  Fancytools/fancytools/tools/default/fancygotchi/files/identity.py :: KeyPair/identity handling module for the Fancygotchi UI system.
+  Fancytools/fancytools/tools/default/fancygotchi/files/ui/components.py :: UI widget base classes for the Fancygotchi custom display system.
+  Fancytools/fancytools/tools/default/fancygotchi/files/ui/fancygotchi.py :: A theme manager for the Pwnagotchi [cannot be disabled, need to be uninstalled from inside the plugin]
+  Fancytools/fancytools/tools/default/fancygotchi/files/ui/hw/libs/waveshare/lcdhat144/epd.py :: Waveshare 1.44in LCD HAT low-level display driver (EPD class).
+  Fancytools/fancytools/tools/default/fancygotchi/files/ui/state.py :: UI state-tracking module for the Fancygotchi display system.
+  Fancytools/fancytools/tools/default/fancygotchi/files/ui/view.py :: View/rendering module for the Fancygotchi display system.
+  Fancytools/fancytools/tools/default/fancygotchi/files/ui/web/handler.py :: Web request handler for the Fancygotchi web UI.
+  Fancytools/fancytools/tools/default/terminal/backend.py :: Backend support module for a 'terminal' tool within Fancytools.
+  fancygotchi/fancygotchi.py :: A theme manager for the Pwnagotchi [cannot be disabled, need to be uninstalled from inside the plugin]
+  fancygotchi/fancygotchi/mod/identity.py :: KeyPair/identity handling module for the Fancygotchi package.
+  fancygotchi/fancygotchi/mod/plugins/default/logtail.py :: This plugin tails the logfile.
+  fancygotchi/fancygotchi/mod/ui/components.py :: UI widget base classes for the Fancygotchi package.
+  fancygotchi/fancygotchi/mod/ui/fonts.py :: Font definitions/loading for the Fancygotchi display UI.
+  fancygotchi/fancygotchi/mod/ui/hw/libs/waveshare/lcdhat144/epd.py :: Waveshare 1.44in LCD HAT low-level display driver (EPD class).
+  fancygotchi/fancygotchi/mod/ui/state.py :: UI state-tracking module for the Fancygotchi package.
+  fancygotchi/fancygotchi/mod/ui/view.py :: View/rendering module for the Fancygotchi package.
+  pwnagotchi_plugins/dev/crack_house-dev.py :: Dev version of crack_house: displays closest cracked network and its password.
+  pwnagotchi_plugins/plugins/banthex.py :: This plugin automatically uploads handshakes to <https://banthex.de/wpa>
+  pwnagotchi_plugins/plugins/clock.py :: Clock/Calendar for pwnagotchi
+  pwnagotchi_plugins/plugins/crack_house.py :: A plugin to display closest cracked network & it password
+  pwnagotchi_plugins/plugins/fix_region.py :: Let you change the iw region to unlock channel
+  pwnagotchi_plugins/plugins/memtemp.py :: A plugin that will display memory/cpu usage and temperature
+  pwnagotchi_plugins/plugins/pisugar3.py :: A plugin that will add a percentage indicator for the PiSugar 3
+
+### vanshksingh
+  Pwnagotchi_Plugins/clock_wav_v3.py :: Clock/Calendar for pwnagotchi
+  Pwnagotchi_Plugins/fortune_cookie.py :: A plugin to display fortune cookie messages
+  Pwnagotchi_Plugins/show_password.py :: A plugin to display recently cracked passwords
+  Pwnagotchi_Plugins/spotify_now_playing.py :: Displays the currently playing Spotify track on the pwnagotchi screen.
+
+### wpa-2
+  telegram.py/telegram.py :: Periodically sent messages to Telegram about the recent activity of pwnagotchi
+
+### xenDE
+  pwnagotchi-plugin-timesync/RaspiSyncedTime.py :: calculates an offset after the time of the rasperry pi has been syncronized and can then correct times before the time of the syncronization
+  pwnagotchi-plugin-timesync/test.py :: Test script for the RaspiSyncedTime plugin (syncing system clock from timesync file / GPS / internet).
+
+### xfox64x
+  pwnagotchi_plugins/gps/gps.py :: Save GPS coordinates whenever an handshake is captured.
+  pwnagotchi_plugins/gsmfake/fake.py :: gpsfake.py -- classes for creating a controlled test environment around gpsd.
+  pwnagotchi_plugins/gsmfake/gsmfake.py :: Feeds bettercap fake GPS coordinates derived from a GSM/GPRS modem when real GPS is unavailable.
+  pwnagotchi_plugins/gsmfake/prime_gsm_hat.py :: Initializes/primes a Waveshare GSM/GPRS/GNSS HAT and starts its GPRS data service.
+  pwnagotchi_plugins/quick_rides_to_jail/quick_rides_to_jail.py :: Run a quick dictionary scan against captured handshakes, update wpa_supplicant for the supplied interface, and go straight to jail.
+  pwnagotchi_plugins/quickdic/quickdic.py :: Run a quick dictionary scan against captured handshakes
+  pwnagotchi_plugins/wigle.py :: This plugin automatically uploads collected wifis to wigle.net
