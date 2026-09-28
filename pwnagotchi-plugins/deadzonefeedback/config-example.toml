@@ -1,0 +1,25 @@
+# DeadZoneFeedback - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.DeadZoneFeedback.enabled = true
+
+# The one AP to track feedback for (your own).
+main.plugins.DeadZoneFeedback.target_ssid = "YourHomeNetwork"
+
+# GPIO pin numbers (BCM numbering) for an optional buzzer and/or LED.
+# Leave either commented out if you only have one wired up.
+main.plugins.DeadZoneFeedback.buzzer_pin = 17
+# main.plugins.DeadZoneFeedback.led_pin = 27
+
+# RSSI (dBm) range this plugin maps to slow-vs-fast beeping.
+# -85 is roughly "barely there", -40 is roughly "very close/strong".
+# Adjust these to your own hardware's typical range if needed.
+main.plugins.DeadZoneFeedback.weak_rssi_dbm = -85
+main.plugins.DeadZoneFeedback.strong_rssi_dbm = -40
+
+# Beep interval bounds in seconds - fastest (strongest signal) and
+# slowest (weakest signal, at the edge of weak_rssi_dbm).
+main.plugins.DeadZoneFeedback.min_pulse_secs = 0.15
+main.plugins.DeadZoneFeedback.max_pulse_secs = 1.5
