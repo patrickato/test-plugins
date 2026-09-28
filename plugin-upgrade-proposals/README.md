@@ -135,5 +135,23 @@ cost rather than harmless dead weight.
 |---|---|---|
 | [`GPS status cluster notes`](cluster-08-gps-status/NOTES.md) | `gps-plus.py`, `gps_error.py`, `gps_sat.py`, `gps_fix.py`, `gps_grid.py`, `gps_led.py`, `gps_live.py`, `gpsdeasy.py`, `gsmfake.py`, `mygps.py` | ALL 10 KEPT AS-IS - documented fixes/flags, low priority |
 
+### Cluster 9 - wardriving / WiGLE plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 22. All 10
+kept. 3 confirmed broken as shipped with fixes documented:
+`f0xtr0t` (fatal `.pcap`-only map scan), `Pwnagotchi-JSON-to-Wigle-CSV.py`
+(not a real plugin, unconditional `sys.exit()` at import time - real
+crash risk if the loader ever imports it), `wardrive.py` (missing
+`import os`, guaranteed `NameError` on load). `pwnagotchi_GPSD-ng`
+shares the known `.pcap`/`.pcapng` bug pattern (fix documented).
+`snoopr.py`, `theylive.py`, `wardriver-pwnagotchi-plugin`,
+`warwalking_trails_kml_single.py`, `WigleLocator` are clean.
+`theylive.py` is notably a strictly-better, already-`.pcapng`-fixed
+alternative to Cluster 8's `gpsdeasy.py`.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`wardriving/WiGLE cluster notes`](cluster-09-wardriving-wigle/NOTES.md) | `f0xtr0t`, `Pwnagotchi-JSON-to-Wigle-CSV.py`, `pwnagotchi_GPSD-ng`, `snoopr.py`, `theylive.py`, `tracker.py`, `wardrive.py`, `wardriver-pwnagotchi-plugin`, `warwalking_trails_kml.py`/`_single.py`, `WigleLocator` | ALL 10 KEPT AS-IS - 3 documented fixes for broken plugins, 1 documented fix for a shared bug, rest clean/noted |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

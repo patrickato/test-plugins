@@ -68,6 +68,40 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 22 - duplicate cluster 9 (wardriving/WiGLE plugins):** kept
+all 10 - `f0xtr0t`, `Pwnagotchi-JSON-to-Wigle-CSV.py`,
+`pwnagotchi_GPSD-ng`, `snoopr.py`, `theylive.py`, `tracker.py`,
+`wardrive.py`, `wardriver-pwnagotchi-plugin`,
+`warwalking_trails_kml.py`/`warwalking_trails_kml_single.py`,
+`WigleLocator`. Three source-confirmed as broken as shipped:
+`f0xtr0t`'s core map-population scan is `.pcap`-only, so on this
+image (`.pcapng`) it finds zero handshakes and the map never
+populates - fatal, only trigger path, fix documented.
+`Pwnagotchi-JSON-to-Wigle-CSV.py` isn't a real plugin (standalone CLI
+script) and has an unconditional top-level `sys.exit(1)` outside any
+`__main__` guard - a real crash risk if the plugin loader ever imports
+it, not just dead weight. `wardrive.py` calls `os.path.exists()` in
+`on_ui_setup` without importing `os` - guaranteed `NameError` on
+load on every screen type, and even fixed only draws UI elements on
+Waveshare v2 screens (user is on an MPI3501 TFT). All three fixes
+documented, not applied (user asked to keep broad scope, not narrow
+yet). `pwnagotchi_GPSD-ng` (fmatray, different/more mature project
+than Cluster 8's `gpsdeasy.py`) shares the same `.pcap`-only
+backlog-scan and filename-mangling bug pattern as Cluster 5/8 - fix
+documented. `snoopr.py`, `theylive.py`, `wardriver-pwnagotchi-plugin`,
+`warwalking_trails_kml_single.py`, and `WigleLocator` are all clean -
+no bugs found, none depend on handshake filenames at all except
+`theylive.py` which was explicitly verified/fixed by its author for
+this fork's `.pcapng` format (notably a strictly better alternative to
+Cluster 8's `gpsdeasy.py`). `tracker.py` and
+`warwalking_trails_kml.py` depend on a plugin registered as `"gps"`
+(same architecture note as Cluster 8); the base (non-`_single`) KML
+plugin also has a design flaw - it writes a new single-point file
+every epoch instead of accumulating one trail, contrary to its own
+name. See
+`plugin-upgrade-proposals/cluster-09-wardriving-wigle/NOTES.md` for
+the full writeup of all 10.
+
 **Group 21 - duplicate cluster 8 (GPS/location status plugins):** kept
 all 10 - `gps-plus.py`, `gps_error.py`, `gps_fix.py`, `gps_grid.py`,
 `gps_led.py`, `gps_live.py`, `gpsdeasy.py`, `gps_sat.py`,
