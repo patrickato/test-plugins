@@ -422,5 +422,22 @@ else on the list has.
 |---|---|---|
 | [`LED/wardriving _ng cluster notes`](cluster-21-led-wardriving-ng/NOTES.md) | `led.py`/`led-ng.py` (removed), `morse_code.py`/`morse_code-ng.py` (removed), `wardriver-pwnagotchi-plugin`/`wardriver_ng.py` (kept), `f0xtr0t`/`webgpsmap_ng.py` (kept) | 4 REMOVED, 4 KEPT (wardriver_ng.py and webgpsmap_ng.py both real regressions vs. their references, fixes documented) |
 
+### Cluster 22 - cracked-password display mirrors
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 37. Findings-only,
+both kept. `show_password.py`/`show_pwd.py` are a third, independent
+mirror of Cluster 7's `mycracked_pw.py`/`display-password.py`/
+`display-password-qr.py` family, reading a WPA-SEC potfile instead of a
+hashcat potfile. `show_password.py` has the recurring missing-defaults
+gap on `orientation`; `show_pwd.py` fixes that with a self-populating
+default, but changes its `awk` query to dedupe by network before taking
+the last line - can show an older crack for a repeat network rather than
+the literal most-recent line - and drops the friendly empty-result
+fallback message. Neither crashes; both work as shipped.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`password display mirrors cluster notes`](cluster-22-password-display-mirrors/NOTES.md) | `show_password.py`, `show_pwd.py` | 2 KEPT (show_password.py has a missing-defaults gap, show_pwd.py fixes it but changes "most recent" semantics and drops the empty-result fallback) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

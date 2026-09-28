@@ -68,6 +68,22 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 37 - cluster 22 (cracked-password display mirrors):** findings-only,
+both kept (`show_password.py`, `show_pwd.py`) - a third, independent
+mirror of the same idea as Cluster 7's `mycracked_pw.py`/
+`display-password.py`/`display-password-qr.py` family, reading a
+WPA-SEC potfile instead of a hashcat potfile. `show_password.py` has the
+recurring missing-defaults gap on its `orientation` option (`KeyError`
+on load unless set explicitly). `show_pwd.py` fixes that with a
+self-populating default, but changes its `awk` query to dedupe by
+network before taking the last line - meaning it can show an older crack
+for a network that's been cracked more than once, working against the
+"recently cracked" framing - and drops `show_password.py`'s friendly
+empty-result fallback message. Neither crashes; both work as shipped,
+just with different trade-offs. See
+`plugin-upgrade-proposals/cluster-22-password-display-mirrors/NOTES.md`
+for the full writeup and fixes.
+
 **Group 36 - cluster 21 (LED/wardriving "_ng" rewrites):** removed
 `led.py`, `led-ng.py`, `morse_code.py`, `morse_code-ng.py` (4). Kept
 `wardriver-pwnagotchi-plugin`, `wardriver_ng.py`, `f0xtr0t`,
@@ -614,7 +630,7 @@ repo).
 - **crack_house.py** (+ a "-dev" variant) - Displays the closest cracked network and its password
 - **darkmode.py** - Dark theme
 - **display-aircrack.py** - Shows whether aircrack is currently running
-- **display-password.py** / **display-password-qr.py** / **show_password.py** / **show_pwd.py** - Displays recently cracked passwords (QR variant adds a QR code; show_password.py/show_pwd.py are separate mirrors of the same idea) (pending review - Cluster 22)
+- **display-password.py** / **display-password-qr.py** / **show_password.py** / **show_pwd.py** - Displays recently cracked passwords (QR variant adds a QR code; show_password.py/show_pwd.py are a separate mirror reading a WPA-SEC potfile rather than a hashcat potfile - show_password.py has a missing-defaults gap on `orientation`, show_pwd.py fixes that but changes "most recent" to mean each network's first-ever crack rather than the literal last line, and drops the empty-result fallback message; see Cluster 22 notes)
 - **display-text.py** - Displays custom text on a Waveshare 1.44" LCD screen
 - **display_version.py** - Adds the pwnagotchi software version to the display
 - **internet-connection.py** - Displays internet connectivity status (also distributed as `wanmon.py` / `internet-conection.py`)
