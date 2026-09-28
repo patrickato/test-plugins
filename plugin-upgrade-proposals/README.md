@@ -439,5 +439,20 @@ fallback message. Neither crashes; both work as shipped.
 |---|---|---|
 | [`password display mirrors cluster notes`](cluster-22-password-display-mirrors/NOTES.md) | `show_password.py`, `show_pwd.py` | 2 KEPT (show_password.py has a missing-defaults gap, show_pwd.py fixes it but changes "most recent" semantics and drops the empty-result fallback) |
 
+### Cluster 23 - Bluetooth tethering
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 38. Removed
+`bt-tether_ng.py` - confirmed via direct diff to be byte-for-byte
+identical to `bt-tether.py` apart from a renamed class and `__name__`
+attribute. Kept `bt-tether.py` - a substantial, well-built plugin with
+real defensive per-device option validation rather than bare indexing,
+one of the more carefully built plugins found in this audit. One
+cosmetic-only issue remains, not fixed: a copy-pasted `__help__` string
+from an unrelated plugin.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`Bluetooth tethering cluster notes`](cluster-23-bluetooth-tethering/NOTES.md) | `bt-tether.py` (kept), `bt-tether_ng.py` (removed) | 1 REMOVED (exact duplicate), 1 KEPT (no bugs found, cosmetic __help__ typo only) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

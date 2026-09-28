@@ -68,6 +68,19 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 38 - cluster 23 (Bluetooth tethering):** removed `bt-tether_ng.py`
+- confirmed via direct diff to be byte-for-byte identical to
+`bt-tether.py` apart from a renamed class and `__name__` attribute (2
+lines differ across 716). Kept `bt-tether.py` - a substantial,
+well-built plugin (pairs with a phone over Bluetooth NAP/PAN, brings up
+a network interface, makes the web UI reachable through it), with real
+defensive per-device option validation rather than bare indexing. One
+cosmetic-only issue not fixed: `__help__` is copy-pasted from an
+unrelated plugin ("This plugin automatically uploads collected WiFi to
+wigle.net" - the real `__description__` is correct). See
+`plugin-upgrade-proposals/cluster-23-bluetooth-tethering/NOTES.md` for
+the full writeup.
+
 **Group 37 - cluster 22 (cracked-password display mirrors):** findings-only,
 both kept (`show_password.py`, `show_pwd.py`) - a third, independent
 mirror of the same idea as Cluster 7's `mycracked_pw.py`/
@@ -711,7 +724,7 @@ repo).
 - **auto-update_ng.py** - Checks for and applies updates when internet is available (pending review - Cluster 26)
 - **AutoBackup v2.0** - Local backup with a retention policy
 - **away_base.py** / **home_base.py** - Watches for known networks and connects when available; `home_base` targets your home network specifically
-- **bt-tether.py** / **bt-tether_ng.py** - Makes the display reachable over Bluetooth tethering (pending review - Cluster 23)
+- **bt-tether.py** - Makes the display reachable over Bluetooth tethering (dropped its exact-duplicate `bt-tether_ng.py` mirror; a `__help__` copy-paste typo remains, cosmetic only, see Cluster 23 notes)
 - **ext_wifi.py** / **extWifi.py** - Disables the onboard WiFi chipset to free it for an external adapter
 - **fix_brcmfmac.py** - Reloads the brcmfmac WiFi driver module on a hang instead of a full reboot
 - **GitHub_Backups** - Syncs config to GitHub/Gitea
