@@ -1,0 +1,39 @@
+# FailedCaptureCleanup - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+
+main.plugins.FailedCaptureCleanup.enabled = true
+
+# Where pwnagotchi writes .pcap captures.
+main.plugins.FailedCaptureCleanup.handshakes_dir = "/home/pi/handshakes"
+
+# Where junk files get moved (only used when hard_delete = false).
+# Defaults to a subfolder inside handshakes_dir if left unset.
+main.plugins.FailedCaptureCleanup.quarantine_dir = "/home/pi/handshakes/failedcapturecleanup_quarantine"
+
+# Any .pcap smaller than this many bytes is treated as a silent
+# failure (zero-byte files, or headers-only captures with nothing
+# actually recorded).
+main.plugins.FailedCaptureCleanup.min_valid_bytes = 200
+
+# If true, also runs hcxpcapngtool against files that pass the size
+# check, and quarantines them anyway if no handshake/PMKID material
+# converts out. Slower (spawns a subprocess per file) but catches
+# pcaps that recorded some traffic but never anything useful.
+main.plugins.FailedCaptureCleanup.deep_check = false
+
+# Optional path to hcxpcapngtool if it's not on PATH.
+main.plugins.FailedCaptureCleanup.hcxpcapngtool_path = "hcxpcapngtool"
+
+# If true, junk files are permanently deleted instead of quarantined.
+# Off by default - review what lands in quarantine_dir for a while
+# before turning this on.
+main.plugins.FailedCaptureCleanup.hard_delete = false
+
+# How often (seconds) to sweep the handshakes directory for junk.
+main.plugins.FailedCaptureCleanup.sweep_interval_secs = 120
+
+# Skip files younger than this (seconds) so an in-progress capture
+# isn't mistaken for a junk file mid-write.
+main.plugins.FailedCaptureCleanup.min_file_age_secs = 30
