@@ -1,0 +1,18 @@
+# PMKIDFirst - example config block
+#
+# Copy into /etc/pwnagotchi/config.toml, edit, then:
+#   sudo systemctl restart pwnagotchi
+#
+# IMPORTANT: this plugin needs pwnagotchi's own built-in deauth turned
+# OFF so it can manage deauth timing itself. Without this change, the
+# core loop will keep deauthing every epoch as normal and this plugin's
+# grace-period logic won't have any effect.
+
+personality.associate = true
+personality.deauth = false
+
+main.plugins.PMKIDFirst.enabled = true
+
+# How long (in seconds) to let an AP sit PMKID-only before this plugin
+# sends ONE targeted deauth as a fallback. Default 300 (5 minutes).
+main.plugins.PMKIDFirst.deauth_grace_period_secs = 300
