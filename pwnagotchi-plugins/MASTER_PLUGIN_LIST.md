@@ -68,6 +68,22 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 25 - duplicate cluster 12 (dashboard plugins):** removed
+`dashboard.py` and `dashboard2.py` (2), per user decision - not
+needed. Both consolidate clock/RAM/CPU/temp/deauth-counter/handshake-
+counter/cracked-count into one display; `dashboard.py` additionally
+integrates a Pivoyager UPS/RTC hat (unconditional `on_loaded()` call
+to a `/usr/local/bin/pivoyager` binary with no existence check -
+would `FileNotFoundError` without that specific hat) plus an internet-
+ping status check; `dashboard2.py` is `dashboard.py` with the
+Pivoyager code stripped, but left a leftover dead call to the
+now-undefined `self.get_status()` in `on_ui_update()` - throws
+`AttributeError` on every single UI refresh cycle. Both also share an
+undeclared-`__defaults__` gap on their ~7-9 position options
+(`clock_x_pos` etc.), same pattern as Clusters 10/11. See
+`plugin-upgrade-proposals/cluster-12-dashboard/NOTES.md` for the full
+writeup.
+
 **Group 24 - duplicate cluster 11 (clock/time-sync plugins):** removed
 `clock_wav_v3.py` (1) - genuinely the same LoganMD-authored clock
 plugin as `clock.py`, but only builds its UI element when
@@ -332,7 +348,6 @@ repo).
 - **clock.py** - Clock/calendar display
 - **crack_house.py** (+ a "-dev" variant) - Displays the closest cracked network and its password
 - **darkmode.py** - Dark theme
-- **dashboard.py** / **dashboard2.py** - Consolidated status display (clock, deauth counter, memtemp, cracked-handshake counter, internet status)
 - **display-aircrack.py** - Shows whether aircrack is currently running
 - **display-password.py** / **display-password-qr.py** - Displays recently cracked passwords (QR variant adds a QR code)
 - **display-text.py** - Displays custom text on a Waveshare 1.44" LCD screen

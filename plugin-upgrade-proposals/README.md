@@ -182,5 +182,18 @@ scripts in this project it has no risky top-level code - harmless).
 |---|---|---|
 | [`clock/time-sync cluster notes`](cluster-11-clock-timesync/NOTES.md) | `clock.py`, `clock_wav_v3.py` (removed), `rtc_grid.py`, `RaspiSyncedTime.py` | 3 KEPT AS-IS, 1 REMOVED (redundant + broken on user's hardware) |
 
+### Cluster 12 - dashboard plugins (removed)
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 25. Both
+`dashboard.py` and `dashboard2.py` removed per user decision.
+`dashboard.py` hard-requires a Pivoyager UPS/RTC hat (crashes on load
+without one). `dashboard2.py` has a leftover dead call to an
+undefined method - crashes every UI refresh cycle. Neither worked out
+of the box on this build.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`dashboard cluster notes`](cluster-12-dashboard/NOTES.md) | `dashboard.py`, `dashboard2.py` | REMOVED - record only |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
