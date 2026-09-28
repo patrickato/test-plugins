@@ -68,6 +68,31 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 20 - duplicate cluster 7 (cracked-password display/export):** kept
+all 3 - `mycracked_pw.py`, `display-password.py`, `display-password-qr.py`.
+Source review: `display-password.py` and `display-password-qr.py` are
+near-identical files (both by the same author, `display-password-qr.py`
+literally embeds a `_update_all()` method copy-pasted from `mycracked_pw.py`
+without its `import qrcode`/`import csv`/`import io` lines) - both throw an
+uncaught `NameError` inside `_update_all()` the moment a password is
+actually cracked (`qrcode`/`csv`/`io` referenced but never imported), which
+kills that method every time it's called from `on_loaded()`. Their actual
+advertised on-screen feature is unaffected by this bug and works
+independently - `on_ui_update()`/`on_webhook()` read the last cracked
+password via a separate `tail -n 1 ... | awk` shell one-liner that doesn't
+touch `_update_all()` at all. `display-password-qr.py`'s name is misleading:
+despite the file name, comment header, and an unused embedded Flask/Jinja
+`TEMPLATE` string referencing `/home/pi/qrcodes/`, it never actually renders
+a QR code on the device screen - the QR-generation code lives only inside
+the broken `_update_all()`. `mycracked_pw.py` is the functional original
+these two forked from: same `_update_all()` logic but with all three
+imports present, so QR/wordlist generation actually runs. Its only flaw is
+minor - `_update_all()` only runs `on_loaded()` and `on_handshake()`, so its
+`mycracked.txt` wordlist and QR codes go stale between captures on quiet
+runs, not a functional break. See
+`plugin-upgrade-proposals/cluster-07-cracked-password-display/NOTES.md` for
+the full writeup and fix.
+
 **Group 19 - duplicate cluster 6 (cloud-crack-upload destinations):** kept
 all 8 - `banthex.py`/`banthex-de.py`, `better_onlinehashcrack.py`,
 `dropbox_ul.py`, `hashespwnagotchi.py`, `nextcloud.py`,

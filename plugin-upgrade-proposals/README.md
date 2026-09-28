@@ -100,5 +100,21 @@ only trigger, not a secondary path. All share one fix. One plugin
 |---|---|---|
 | [`shared upload-trigger pcapng fix`](cluster-06-cloud-crack-upload/NOTES.md) | `banthex.py`, `banthex-de.py`, `better_onlinehashcrack.py`, `dropbox_ul.py`, `hashespwnagotchi.py`, `nextcloud.py`, `wpa-cracking-project-with-pwnagotchi` | KEPT AS-IS - documented fix, low priority (+ extra whitelist flag on hashespwnagotchi.py) |
 
+### Cluster 7 - cracked-password display/export
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 20. All three
+plugins kept. `display-password.py` and `display-password-qr.py` are
+near-copies of `mycracked_pw.py` missing three imports (`qrcode`,
+`csv`, `io`), which breaks their copy-pasted QR/wordlist code with an
+uncaught `NameError` - but their actual advertised on-screen
+cracked-password display works fine independently via a separate
+shell one-liner. `mycracked_pw.py` itself works correctly (minor
+staleness quirk only). `display-password-qr.py`'s name is misleading:
+it never actually renders a QR code on-device.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`shared missing-imports fix`](cluster-07-cracked-password-display/NOTES.md) | `display-password.py`, `display-password-qr.py`, `mycracked_pw.py` | KEPT AS-IS - documented fix, low priority |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
