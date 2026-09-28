@@ -58,6 +58,16 @@ in for now.
 
 **Group 11 - conflict risk:** no changes - left in for now.
 
+**Group 12 - image-compatibility re-check (source-verified):** removed 2.
+`hashie.py` - filters for `.pcap` files and shells out to `hcxpcaptool`
+(classic-pcap-era tool); this image only ever writes `.pcapng`, so it
+silently processes nothing - dead on arrival, superseded by
+`hashie-hcxpcapngtool.py` which is already on the list. `event_multithreading_for_plugins`
+- patches `pwnagotchi/plugins/__init__.py` itself (core plugin-loading
+file); highest-risk item on the list for silently breaking plugin loading
+on a fork with its own modified internals, no diff could be confirmed
+compatible.
+
 ---
 
 ## Attack / Capture behavior
@@ -81,7 +91,6 @@ in for now.
 - **hashbot.py** - Discord bot companion to DiscoHash; dumps hashes for N APs on request
 - **hashespwnagotchi.py** - Uploads handshakes to hashes.pw
 - **hashie-hcxpcapngtool.py** - Converts pcaps to crackable hash formats via hcxpcapngtool, updated for modern hcxtools/hashcat formats
-- **hashie.py** - Converts pcaps to crackable hash formats (older hcxtools assumptions)
 - **hashieclean.py** - hashie variant that also purges pcaps that can't be converted to a hash
 - **hp_educational-purposes.py** - Combined honeypot + auto network-authentication plugin
 - **hulk.py** - Puts pwnagotchi into an "always aggressive" attack mode
@@ -188,7 +197,6 @@ in for now.
 - **auto_backup_ng.py** - Backs up files when internet is available, with retention/garbage collection
 - **AutoBackup v2.0** - Local backup with a retention policy
 - **away_base.py** / **home_base.py** - Watches for known networks and connects when available; `home_base` targets your home network specifically
-- **event_multithreading_for_plugins** - Core patch adding multithreading/event queueing to the plugin system
 - **ext_wifi.py** / **extWifi.py** - Disables the onboard WiFi chipset to free it for an external adapter
 - **fix_brcmfmac.py** - Reloads the brcmfmac WiFi driver module on a hang instead of a full reboot
 - **GitHub_Backups** - Syncs config to GitHub/Gitea
