@@ -10,6 +10,17 @@ A few plugins are genuinely the same file re-hosted by several people
 (this ecosystem re-mirrors constantly) - those are one bullet with the
 aliases noted, not one bullet per mirror.
 
+## Elimination log
+
+**Group 1 - hardware you don't own:** partial pass. Removed the Waveshare
+e-paper family (5: `Pwnagotchi_Waveshare_2.66inch`, `Pwnagotchi-on-waveshare-v4`,
+`Pwnagotchi-WS-V3-V4`, `Pwnagotchi-Waveshare-V3-Fix`, `waveshare_v3_touch.py` -
+you're on the MPI3501 TFT, not e-paper) and the Pimoroni Button Shim/Display
+HAT Mini/LCD HAT family (6: `buttonshim.py`, `bshim.py`, `display_settings.py`,
+`fireworks.py`, `lcdhat.py`, `lcdhatcontrols.py`). Left in for now: the
+UPS/battery-hat group, the RTL-SDR/LoRa/GSM-hat group, the BLE group, the
+Flipper Zero group, and the GPIO-button/LED group.
+
 ---
 
 ## Attack / Capture behavior
@@ -114,16 +125,12 @@ aliases noted, not one bullet per mirror.
 - **blemon_plugin.py** - Counts/tracks max simultaneous BLE devices
 - **bluetooth_scanner.py** - Scans for and logs nearby Bluetooth devices
 - **bluetoothsniffer.py** - Logs nearby Bluetooth MACs/names/counts to a JSON file
-- **buttonshim.py** / **bshim.py** - Pimoroni Button Shim GPIO button (and RGB LED) support
-- **display_settings.py** - Backlight control (Pimoroni Display HAT Mini only)
-- **fireworks.py** - Pimoroni Button Shim light show
 - **fix_region.py** - Changes the iw region to unlock additional channels
 - **flipperLink.py** - Connects pwnagotchi to a Flipper Zero
 - **gpio_buttons_ng.py** - GPIO button support (next-gen/torch variant)
 - **gpio_shutdown.py** - GPIO-triggered clean shutdown
 - **gsmfake.py** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable
 - **img2xbm.py** - Converts images to XBM format for a Flipper Zero display
-- **lcdhat.py** / **lcdhatcontrols.py** - LCD HAT display driver/support
 - **mad_hatter.py** - Universal UPS battery monitor with auto-shutdown
 - **memtemp-plus.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin)
 - **morse_code.py** - Flashes the status LED in Morse code
@@ -134,15 +141,10 @@ aliases noted, not one bullet per mirror.
 - **pwnagotchi-plugin-pisugar2** - I2C battery data from PiSugar 2
 - **pwnagotchi-plugin-pisugar3** - PiSugar 3 support (community "improved" fork)
 - **pwnagotchi-WittyPi4L3V7-plugin** - Battery info + button support for WittyPi4L3V7
-- **Pwnagotchi_Waveshare_2.66inch** - Patch for the Waveshare 2.66" e-paper (B) display
-- **Pwnagotchi-on-waveshare-v4** - Waveshare V4 e-ink + enabled web interface
-- **Pwnagotchi-WS-V3-V4** - Waveshare V3/V4 e-ink support
-- **Pwnagotchi-Waveshare-V3-Fix** - Fix guide for the Waveshare 2.13" HAT
 - **pwndroid.py** - Android/phone tethering integration (jayofelony's official installer plugin)
 - **rgb.py** - RGB LED control
 - **sigstr.py** - Displays WiFi signal strength as an on-screen bar
 - **Touch_UI** - Touchscreen UI support
-- **waveshare_v3_touch.py** - Touch support for a Waveshare V3 2.13" e-Paper HAT
 - **wof.py** - Detects other Flipper Zeros via "Wall of Flippers"
 
 ## Maintenance / Backup / Auto-update / Connectivity
