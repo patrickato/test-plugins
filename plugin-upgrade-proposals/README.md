@@ -860,5 +860,28 @@ nothing in it is approved for building yet.
 | [`plugins-wip: sigstr-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/sigstr-suite/NOTES.md) | `sigstr.py` | IN PROGRESS - 5 bugs fixed into `SigStrNG` (file `sigstr_ng.py`) and moved to `plugins-wip`, not yet tested on real hardware; original preserved in `cluster-37-hardware-specific/originals/` |
 | [`Cluster 37 notes`](cluster-37-hardware-specific/NOTES.md) | Hardware-specific category (in progress) | 10 REMOVED, 5 fixed/upgraded and moved to `plugins-wip` (2 merged, 3 individually fixed/upgraded), 1 kept as-is, 2 deferred at the user's request |
 
+### Cluster 38 - Web UI / API / Remote control (in progress)
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 60. Excluded
+as already handled elsewhere: `cmd_server.py`/`webcfg_ng.py` (Cluster
+24), `wpa-sec-list.py`/`wpa-sec_ng.py` (Cluster 26). Record-only, not
+found anywhere in this environment: `pwmenu`, `pwnagotchi-http-module`,
+`Pwny-WG` (only a README exists). 1 removed at the user's request:
+`pwnwatch.py` (`self.ready` referenced but never set, guaranteed crash
+on first webhook call; its one real response is built but never
+returned; undeclared dependency on an unrelated plugin; never actually
+implements the command-receiving logic its description promises).
+Being worked through the remaining 7 in groups of 5 at the user's
+request. **`web2ssh.py` is flagged as the top security priority found
+in this whole audit** - its config reading is broken so it always
+falls back to default `changeme`/`changeme` credentials guarding
+arbitrary root shell command execution. `pwnmothership.py` and
+`state-api.py` are flagged as a likely merge candidate (same code
+lineage, same bug, same underlying purpose).
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`Cluster 38 notes`](cluster-38-web-ui-api-remote-control/NOTES.md) | Web UI/API/Remote control category (in progress) | 1 REMOVED, 7 pending, being worked through in groups of 5 |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

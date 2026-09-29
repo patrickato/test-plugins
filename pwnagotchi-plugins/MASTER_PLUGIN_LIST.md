@@ -20,6 +20,25 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 60 (Cluster 38, Web UI/API/Remote control, in progress):**
+excluded from new review since they already carry cluster references:
+`cmd_server.py`/`webcfg_ng.py` (Cluster 24), `wpa-sec-list.py`/
+`wpa-sec_ng.py` (Cluster 26). Record-only/not found anywhere in this
+environment, could not be reviewed: `pwmenu`, `pwnagotchi-http-module`,
+`Pwny-WG` (only a README exists, no actual plugin script). **REMOVED**
+at the user's request: `pwnwatch.py` (`self.ready` referenced but
+never set - guaranteed crash on first webhook call; its one real
+response is built but never returned; depends on an unrelated,
+unreviewed "session-stats" plugin; never actually implements any
+command-receiving logic despite that being its stated purpose).
+Remaining pending decisions, being worked through in groups of 5:
+`handshaker.py`, `httpserver.py`, `pwnmenu.py`/`pwnmenucmd.py`,
+`pwnmothership.py`, `Pwny-Tailscale`, `state-api.py`, `web2ssh.py`
+(the latter has a real, severe security bug - its own config reading
+is broken so it always falls back to default `changeme`/`changeme`
+credentials guarding root shell command execution - flagged as the
+top security priority found in this whole audit).
+
 **Group 59 (Cluster 37, Hardware-specific, in progress):** excluded
 from new review since they already carry cluster references:
 memtemp-plus.py/memtemp_adv.py/memtemp_ng.py (Cluster 25),
@@ -1307,7 +1326,7 @@ repo).
 - **pwnagotchi-http-module** - Serves handshake pcaps via a simple HTTP server (targets the Bookworm image)
 - **pwnmenu.py** / **pwnmenucmd.py** - Popup on-screen menu system, plus a CLI client
 - **pwnmothership** - Pushes JSON state data to a "pwnmothership" host
-- **pwnwatch.py** - Receives commands from a companion "pwnagotchi-watch" app
+- **pwnwatch.py** - **REMOVED** - Meant to receive commands from a companion "pwnagotchi-watch" app; `self.ready` referenced but never set (guaranteed crash on first webhook call); its one real response is built but never returned (always falls through to a 404); depends on an unrelated, unreviewed "session-stats" plugin; never actually implements any command-receiving logic despite that being its stated purpose; user chose to drop rather than fix; see Cluster 38 notes
 - **Pwny-Tailscale** - Tailscale remote connectivity, no port-forwarding needed
 - **Pwny-WG** - WireGuard VPN + handshake sync over SSH
 - **state-api.py** - JSON state API - a backend building block for menu/dashboard tools
