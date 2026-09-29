@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (56)
+## Exact match - real config found and copied (53)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -108,9 +108,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `mycracked_pw.py` | [`mycracked_pw.toml`](mycracked_pw.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/mycracked_pw.toml` |
 | `mygps.py` | [`mygps.toml`](mygps.toml) | `itsdarklikehell/pwnagotchi-plugins/mygps.toml` |
 | `net-pos.py` | [`net-pos.toml`](net-pos.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/net-pos.toml` |
-| `pisugar2.py` | [`pisugar2.toml`](pisugar2.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pisugar2.toml` |
-| `pisugar3.py` | [`pisugar3.toml`](pisugar3.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pisugar3.toml` |
-| `pivoyager.py` | [`pivoyager.toml`](pivoyager.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pivoyager.toml` |
 | `powerutils.py` | [`powerutils.toml`](powerutils.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/powerutils.toml` |
 | `prime_gsm_hat.py` | [`prime_gsm_hat.toml`](prime_gsm_hat.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/prime_gsm_hat.toml` |
 | `pwnmenu.py` | [`pwnmenu.toml`](pwnmenu.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pwnmenu.toml` |
@@ -188,12 +185,11 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `wof.py` | [`wof.toml`](wof.toml) | `itsdarklikehell/pwnagotchi-plugins/wof.py` |
 | `woop_woop.py` | [`woop_woop.toml`](woop_woop.toml) | `itsdarklikehell/pwnagotchi-plugins/woop_woop.py` |
 
-## No configurable options detected - `enabled = true` only (10)
+## No configurable options detected - `enabled = true` only (9)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `cmd_server.py` | [`cmd_server.toml`](cmd_server.toml) | `sniffleupagus/pwnagotchi_plugins/cmd_server.py` |
 | `httpserver.py` | [`httpserver.toml`](httpserver.toml) | `itsdarklikehell/pwnagotchi-plugins/httpserver.py` |
-| `pibat.py` | [`pibat.toml`](pibat.toml) | `pwnagotchi-unofficial/plugins_archive/Andyzug/PiBatPwnagotchi-Plugin/pibat.py` |
 | `probenpwn.py` | [`probenpwn.toml`](probenpwn.toml) | `alienmajik/pwnagotchi_plugins/probenpwn.py` |
 | `PWNAGOTCHI-CUSTOM-FACES-MOD` | [`PWNAGOTCHI-CUSTOM-FACES-MOD.toml`](PWNAGOTCHI-CUSTOM-FACES-MOD.toml) | `itsdarklikehell/pwnagotchi-plugins/extras/facemod/faces.py` |
 | `pwnagotchi-fallout-faces-mod` | [`pwnagotchi-fallout-faces-mod.toml`](pwnagotchi-fallout-faces-mod.toml) | `itsdarklikehell/pwnagotchi-plugins/extras/facemod/faces.py` |

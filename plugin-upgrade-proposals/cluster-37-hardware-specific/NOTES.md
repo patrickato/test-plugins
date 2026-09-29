@@ -1,7 +1,7 @@
 # Cluster 37 - Hardware-specific
 
-Status: **IN PROGRESS** - 6 removed, 2 merged and moved to `plugins-wip`,
-10 still pending a decision.
+Status: **IN PROGRESS** - 10 removed, 2 merged and moved to
+`plugins-wip`, 1 kept as-is, 5 still pending a decision.
 
 Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, "## Hardware-specific"
 section, Group 59 in the elimination log.
@@ -61,6 +61,49 @@ section, Group 59 in the elimination log.
   button, this silently reconfigures that pin away from
   `GPIO.IN, PUD_UP` + edge-detect right after setting it up, breaking
   that button.
+
+## Removed: battery/UPS plugins for hardware the user doesn't own (4)
+
+The battery/UPS plugins in this cluster were grouped and discussed
+together. `mad_hatter.py` (see "Kept as-is" below) turned out to
+genuinely support the user's actual hardware - a Waveshare UPS HAT,
+matched via its `ups_type = "waveshare"` alias to its INA219 chip
+driver. The other four each target different, specific hardware the
+user does not own, so they were removed rather than fixed:
+
+- **pibat.py** - PiBat I2C UPS/battery hat. Also had a real bug (opens
+  the I2C bus at module-import time with no guard - a full, silent
+  plugin-load failure if I2C isn't enabled/no device is present) but
+  the primary reason for removal is that this isn't the user's
+  hardware.
+- **pisugar2.py** - PiSugar 2 UPS/battery hat. Also had real bugs
+  (unguarded `KeyError` on two options; `on_unload` unconditionally
+  removes a UI element that only exists on "new model" PiSugar2
+  hardware, crashing unload on the original model) but removed as not
+  matching owned hardware.
+- **pisugar3.py** - PiSugar 3 UPS/battery hat. Also had a real bug
+  (unguarded `KeyError` on the `shutdown` option, silently disabling
+  auto-shutdown and spamming logs; a race condition if the UI fires
+  before `on_loaded` finishes) but removed as not matching owned
+  hardware.
+- **pivoyager.py** - PiVoyager UPS + RTC hat. Also had real bugs
+  (wrong declared dependency; unguarded coords causing a cascading
+  failure; an unmapped battery-status `KeyError` every cycle; its
+  shutdown watchdog thread runs outside the framework's exception
+  safety net, so any error silently kills it forever) but removed as
+  not matching owned hardware.
+
+## Kept as-is (1)
+
+- **mad_hatter.py** - universal UPS/battery monitor supporting
+  MAX17040/17048 fuel gauges, all INA219-based HATs (explicitly
+  including Waveshare, per its own docstring and `ups_type` alias
+  table), and the PiSugar 2/2 Pro/3 families through one plugin with
+  auto-detection. No bugs found - it correctly merges its own
+  defaults and guards throughout, unlike every single-hardware
+  battery plugin reviewed in this cluster. This is the one plugin in
+  the battery/UPS group that actually targets hardware the user owns
+  (a Waveshare UPS HAT).
 
 ## Merged and moved to `plugins-wip` (2 plugins -> 1 new plugin)
 
@@ -200,15 +243,14 @@ confirmation would let tracker flagging work reliably), `hcitool scan`
 output format on the actual image, and the tracker-flagging signatures
 themselves against a real AirTag/Tile/SmartTag.
 
-## Still pending a decision (10)
+## Still pending a decision (5)
 
-`fix_region.py`, `flipperLink.py`, `mad_hatter.py` (no bugs found -
-likely keep-as-is), `pibat.py`, `pisugar2.py`, `pisugar3.py`,
-`pivoyager.py`, `pwndroid.py` (a real path-traversal/arbitrary-file-
-disclosure bug was found in its webhook download handler - flagged as
-a security priority), `sigstr.py`, `wof.py` (no bugs found - likely
-keep-as-is). Full per-plugin findings for these were presented to the
-user in this session's findings table; decisions not yet made.
+`fix_region.py`, `flipperLink.py`, `pwndroid.py` (a real path-
+traversal/arbitrary-file-disclosure bug was found in its webhook
+download handler - flagged as a security priority), `sigstr.py`,
+`wof.py` (no bugs found - likely keep-as-is). Full per-plugin findings
+for these were presented to the user in this session's findings
+table; decisions not yet made.
 
 ## Related
 

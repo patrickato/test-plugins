@@ -36,18 +36,25 @@ subclass, a verbatim gpsd `gpsfake.py` test harness), `img2xbm.py`
 (not a pwnagotchi plugin - standalone tool, `main()` is a no-op),
 `rgb.py` (not a real plugin - mismatched MicroPython display driver
 file), `gpio_buttons_ng.py` (re-inits pins 17/22/27 every loop
-iteration, silently breaking a configured button on pin overlap).
-**Merged and moved to `plugins-wip`**: `blemon_plugin.py` +
+iteration, silently breaking a configured button on pin overlap),
+`pibat.py`/`pisugar2.py`/`pisugar3.py`/`pivoyager.py` (each also had
+real bugs, but removed primarily because none target hardware the
+user owns). **Merged and moved to `plugins-wip`**: `blemon_plugin.py` +
 `bluetoothsniffer.py` -> `BluetoothReconNG` (`bluetooth-recon-suite`)
 - see the master list entry above and
 `plugin-upgrade-proposals/cluster-37-hardware-specific/NOTES.md` for
 full detail. Originals preserved verbatim in
 `plugin-upgrade-proposals/cluster-37-hardware-specific/originals/` in
 case the merge needs to be reverted. Remaining pending decisions:
-fix_region.py, flipperLink.py, mad_hatter.py (no bugs, likely
-keep-as-is), pibat.py, pisugar2.py, pisugar3.py, pivoyager.py,
-pwndroid.py (real path-traversal security bug flagged), sigstr.py,
-wof.py (no bugs, likely keep-as-is).
+fix_region.py, flipperLink.py, pwndroid.py (real path-traversal
+security bug flagged), sigstr.py, wof.py (no bugs, likely
+keep-as-is). `mad_hatter.py` reviewed with no bugs and kept as-is -
+it's the one battery/UPS plugin in this cluster that actually
+targets the user's hardware (a Waveshare INA219-based UPS HAT,
+matched via its `ups_type = "waveshare"` alias). `pibat.py`,
+`pisugar2.py`, `pisugar3.py`, and `pivoyager.py` were removed as not
+matching any hardware the user owns - see the master list entries
+above.
 
 **Group 58 (Cluster 36, Novelty/Games/Personality):** the full
 13-entry cluster (after excluding 6 duplicate listings already
@@ -1198,11 +1205,11 @@ repo).
 - **gpio_shutdown.py** - **REMOVED** - GPIO-triggered clean shutdown; unguarded `KeyError` on missing `gpio` option (framework never merges `__defaults__`); user chose to drop rather than fix; see Cluster 37 notes
 - **gsmfake.py** - **REMOVED** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable; **not actually a pwnagotchi plugin at all** - no `plugins.Plugin` subclass anywhere, loader never registers it; it's a verbatim gpsd `gpsfake.py` test harness; see Cluster 37 notes
 - **img2xbm.py** - **REMOVED** - Converts images to XBM format for a Flipper Zero display; **not a pwnagotchi plugin** - standalone CLI tool, no `Plugin` subclass, and its `main()` is literally `pass` (does nothing); see Cluster 37 notes
-- **mad_hatter.py** - Universal UPS battery monitor with auto-shutdown
+- **mad_hatter.py** - **KEPT AS-IS** - Universal UPS battery monitor with auto-shutdown; no bugs found; the one battery/UPS plugin in this cluster that matches the user's actual hardware (a Waveshare INA219-based UPS HAT, `ups_type = "waveshare"`); see Cluster 37 notes
 - **memtemp-plus.py** / **memtemp_adv.py** / **memtemp_ng.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin); memtemp_adv.py adds disk usage via psutil but has a real `NameError` bug on one screen/orientation combo (`y_pos` typo for `v_pos`); memtemp_ng.py uses the framework's own mem/cpu helpers, no bugs found, but its default CPU-load field blocks the UI thread ~0.1s per refresh (a non-blocking alternate field exists but isn't the default); see Cluster 25 notes
-- **pibat.py** - Voltage indicator for the PiBat I2C UPS/battery hat
-- **pisugar2.py** / **pisugar3.py** - Voltage/percentage indicator for PiSugar 2 / PiSugar 3
-- **pivoyager.py** - PiVoyager UPS hat support
+- **pibat.py** - **REMOVED** - Voltage indicator for the PiBat I2C UPS/battery hat; not hardware the user owns (opens I2C bus at import time with no guard, a separate real bug); see Cluster 37 notes
+- **pisugar2.py** / **pisugar3.py** - **REMOVED** - Voltage/percentage indicator for PiSugar 2 / PiSugar 3; not hardware the user owns (each also had unguarded option `KeyError`s and unload bugs); see Cluster 37 notes
+- **pivoyager.py** - **REMOVED** - PiVoyager UPS hat support; not hardware the user owns (also had a wrong dependency and a watchdog thread running outside the framework's exception safety net); see Cluster 37 notes
 - **prime_gsm_hat.py** - Feeds bettercap fake GPS coordinates from a GSM hat's fake serial device (companion to gsmfake.py's approach); **not actually a pwnagotchi plugin at all** - no `plugins.Plugin` subclass anywhere in the file, so this fork's loader never registers it; it's a standalone Python-2-era manual setup script using the removed `raw_input()` builtin, which doesn't exist in Python 3; see Cluster 26 notes
 - **pwnagotchi-18650** - Case design for an 18650 battery (hardware, not software)
 - **pwnagotchi-plugin-pisugar2** - I2C battery data from PiSugar 2
