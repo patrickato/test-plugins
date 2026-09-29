@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (53)
+## Exact match - real config found and copied (52)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -91,7 +91,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `ext_wifi.py` | [`ext_wifi.toml`](ext_wifi.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/ext_wifi.toml` |
 | `extWifi.py` | [`extWifi.toml`](extWifi.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/ext_wifi.toml` |
 | `f0xtr0t` | [`f0xtr0t.toml`](f0xtr0t.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/f0xtr0t.toml` |
-| `fix_region.py` | [`fix_region.toml`](fix_region.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/fix_region.toml` |
 | `flipperLink.py` | [`flipperLink.toml`](flipperLink.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/flipperLink.toml` |
 | `gps-plus.py` | [`gps-plus.toml`](gps-plus.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps-plus.toml` |
 | `gps_fix.py` | [`gps_fix.yml`](gps_fix.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/gps_fix.yml` |
@@ -184,7 +183,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `wof.py` | [`wof.toml`](wof.toml) | `itsdarklikehell/pwnagotchi-plugins/wof.py` |
 | `woop_woop.py` | [`woop_woop.toml`](woop_woop.toml) | `itsdarklikehell/pwnagotchi-plugins/woop_woop.py` |
 
-## No configurable options detected - `enabled = true` only (9)
+## No configurable options detected - `enabled = true` only (8)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `cmd_server.py` | [`cmd_server.toml`](cmd_server.toml) | `sniffleupagus/pwnagotchi_plugins/cmd_server.py` |
@@ -193,7 +192,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `PWNAGOTCHI-CUSTOM-FACES-MOD` | [`PWNAGOTCHI-CUSTOM-FACES-MOD.toml`](PWNAGOTCHI-CUSTOM-FACES-MOD.toml) | `itsdarklikehell/pwnagotchi-plugins/extras/facemod/faces.py` |
 | `pwnagotchi-fallout-faces-mod` | [`pwnagotchi-fallout-faces-mod.toml`](pwnagotchi-fallout-faces-mod.toml) | `itsdarklikehell/pwnagotchi-plugins/extras/facemod/faces.py` |
 | `RaspiSyncedTime.py` | [`RaspiSyncedTime.toml`](RaspiSyncedTime.toml) | `pwnagotchi-unofficial/plugins_archive/xenDE/pwnagotchi-plugin-timesync/RaspiSyncedTime.py` |
-| `sigstr.py` | [`sigstr.toml`](sigstr.toml) | `pwnagotchi-unofficial/plugins_archive/bryzz42o/Pwnagotchi-fsociety-plugins/sigstr.py` |
 | `snoopr.py` | [`snoopr.toml`](snoopr.toml) | `alienmajik/pwnagotchi_plugins/snoopr.py` |
 | `theylive.py` | [`theylive.toml`](theylive.toml) | `alienmajik/pwnagotchi_plugins/theylive.py` |
 
@@ -210,7 +208,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Pwny-WG` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (30)
+## Already handled - moved to `plugins-wip`, not duplicated here (32)
 | Plugin | Where |
 |---|---|
 | `apprise-notify.py` | `plugins-wip` suite (apprise-notify-suite, AppriseNotifyNG) |
@@ -219,6 +217,8 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `blemon_plugin.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with bluetoothsniffer.py) |
 | `bluetoothsniffer.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with blemon_plugin.py) |
 | `mad_hatter.py` | `plugins-wip` suite (mad-hatter-suite, MadHatterNG - feature upgrade, file MadHatterNG.py) |
+| `fix_region.py` | `plugins-wip` suite (fix-region-suite, FixRegionNG, file fix_region_ng.py) |
+| `sigstr.py` | `plugins-wip` suite (sigstr-suite, SigStrNG, file sigstr_ng.py) |
 | `clock.py` | `plugins-wip` suite (clock-suite, ClockNG) |
 | `crack_house.py` | `plugins-wip` suite (crack-house-suite, CrackHouseNG) |
 | `discoBoss.py` | `plugins-wip` suite |

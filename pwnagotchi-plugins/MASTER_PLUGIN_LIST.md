@@ -48,15 +48,33 @@ hardware (a Waveshare INA219-based UPS HAT, matched via its
 `ups_type = "waveshare"` alias); had no known bugs, so all existing
 chip logic and positioning were preserved unchanged and 4 new
 features were added (threshold notifications, history log + webhook
-graph, drain-rate/activity correlation, config-sanity page). See the
-master list entries above and
+graph, drain-rate/activity correlation, config-sanity page).
+**Fixed and moved to `plugins-wip`**: `fix_region.py` -> `FixRegionNG`
+(`fix-region-suite`, file `fix_region_ng.py`) - 5 real bugs fixed
+(import-time `KeyError` crash, `os.system` string-concat command
+injection surface, config changes silently ignored after first load,
+unguarded `on_unload` cleanup, bogus `scapy` dependency), plus real
+ISO region-code validation, all-`subprocess.run`-list shell calls,
+current-domain detection/logging, and an optional off-by-default
+GPS-based region-suggestion feature. `sigstr.py` -> `SigStrNG`
+(`sigstr-suite`, file `sigstr_ng.py`) - 5 real bugs fixed (`on_unload`
+missing the required `ui` parameter, a call to the nonexistent
+`pwnagotchi.plugins.notify()`, a redundant background timer thread
+that only existed to make that broken call, a hardcoded `wlan0`
+interface, backwards fill/empty bar characters), plus a bounded signal
+history sparkline, strong/medium/weak threshold classification,
+optional handshake-capture correlation against `timer-suite`, and
+user-configurable on-screen positioning. **Kept as-is, no bugs found**:
+`wof.py`. **Deferred at the user's request**: `flipperLink.py` (real
+bugs found, saved for when the user has a Flipper Zero to test
+against), `pwndroid.py` (real path-traversal/arbitrary-file-disclosure
+security bug flagged - deferred but flagged as a priority to return
+to, not deprioritized for lack of interest). See the master list
+entries above and
 `plugin-upgrade-proposals/cluster-37-hardware-specific/NOTES.md` for
-full detail on both. Originals preserved verbatim in
+full detail on all four rebuilds. Originals preserved verbatim in
 `plugin-upgrade-proposals/cluster-37-hardware-specific/originals/` in
-case either rebuild needs to be reverted. Remaining pending
-decisions: fix_region.py, flipperLink.py, pwndroid.py (real
-path-traversal security bug flagged), sigstr.py, wof.py (no bugs,
-likely keep-as-is).
+case any rebuild needs to be reverted.
 
 **Group 58 (Cluster 36, Novelty/Games/Personality):** the full
 13-entry cluster (after excluding 6 duplicate listings already
@@ -1201,8 +1219,8 @@ repo).
 
 - **basiclight.py** - **REMOVED** - GPIO traffic-light-style signal lights; had dead `on_ai_*` hooks (no `[ai]` subsystem on this fork) and a wrong declared dependency (`scapy` instead of `RPi.GPIO`); user chose to drop rather than fix; see Cluster 37 notes
 - **blemon_plugin.py** / **bluetoothsniffer.py** - **IN PROGRESS, moved to `plugins-wip`** as `bluetooth-recon-suite` (`BluetoothReconNG`) - merged both plugins into one: fixes blemon's dead `on_ai_*`/`on_free_channel` hooks, wrong `blecount`/`blemon_count` UI key, `name is ""` bug, and wrong dependency; fixes bluetoothsniffer's real load-time `KeyError`, wrong `BtS`/`BluetoothSniffer` unload key, and unguarded missing-`hcitool` crash; adds OUI/vendor lookup, best-effort AirTag/Tile/SmartTag tracker flagging, WiFi/BT correlation against crack-house-suite/timer-suite/gps-tagger-suite, a webhook status page + JSON export, retention/expiry pruning, RSSI/known-device filtering, and independently user-positionable on-screen BLE/Classic counts; originals preserved verbatim in `plugin-upgrade-proposals/cluster-37-hardware-specific/originals/`; see Cluster 37 notes
-- **fix_region.py** - Changes the iw region to unlock additional channels
-- **flipperLink.py** - Connects pwnagotchi to a Flipper Zero
+- **fix_region.py** - **IN PROGRESS, moved to `plugins-wip`** as `fix-region-suite` (`FixRegionNG`, file `fix_region_ng.py`) - fixes an import-time `KeyError` crash risk, an `os.system` string-concat command-injection surface, config changes being silently ignored after the first load, unguarded `on_unload` cleanup, and a bogus `scapy` dependency; adds real ISO 3166-1 region-code validation, all shell calls via `subprocess.run` argument lists, current-domain detection/logging, and an optional off-by-default GPS-based region-suggestion feature; original + its real upstream config preserved verbatim in `plugin-upgrade-proposals/cluster-37-hardware-specific/originals/`; see Cluster 37 notes
+- **flipperLink.py** - Connects pwnagotchi to a Flipper Zero; real bugs found (UI value set as `bool` instead of `str`, unguarded `KeyError`, undeclared `pybluez` dependency); **deferred at the user's request** until they have a Flipper Zero to test against; see Cluster 37 notes
 - **gpio_buttons_ng.py** - **REMOVED** - GPIO button support (next-gen/torch variant); re-inits pins 17/22/27 every loop iteration, silently breaking a configured button on pin overlap; user chose to drop rather than fix; see Cluster 37 notes
 - **gpio_shutdown.py** - **REMOVED** - GPIO-triggered clean shutdown; unguarded `KeyError` on missing `gpio` option (framework never merges `__defaults__`); user chose to drop rather than fix; see Cluster 37 notes
 - **gsmfake.py** - **REMOVED** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable; **not actually a pwnagotchi plugin at all** - no `plugins.Plugin` subclass anywhere, loader never registers it; it's a verbatim gpsd `gpsfake.py` test harness; see Cluster 37 notes
@@ -1217,11 +1235,11 @@ repo).
 - **pwnagotchi-plugin-pisugar2** - I2C battery data from PiSugar 2
 - **pwnagotchi-plugin-pisugar3** - PiSugar 3 support (community "improved" fork)
 - **pwnagotchi-WittyPi4L3V7-plugin** - Battery info + button support for WittyPi4L3V7
-- **pwndroid.py** - Android/phone tethering integration (jayofelony's official installer plugin)
+- **pwndroid.py** - Android/phone tethering integration (jayofelony's official installer plugin); **real path-traversal/arbitrary-file-disclosure bug found** in its webhook download handler, plus a missing dependency declaration and a code path that drops AP/station data; **deferred at the user's request, flagged as a security priority to come back to**; see Cluster 37 notes
 - **rgb.py** - **REMOVED** - RGB LED control; **not a real plugin** - mismatched MicroPython/CircuitPython SPI display driver file (`utime`/`ustruct` don't exist in this environment), no `Plugin` subclass anywhere; user chose to drop; see Cluster 37 notes
-- **sigstr.py** - Displays WiFi signal strength as an on-screen bar
+- **sigstr.py** - **IN PROGRESS, moved to `plugins-wip`** as `sigstr-suite` (`SigStrNG`, file `sigstr_ng.py`) - fixes `on_unload` missing the required `ui` parameter, a call to the nonexistent `pwnagotchi.plugins.notify()`, a redundant background timer thread that only existed to make that broken call, a hardcoded `wlan0` interface, and visually backwards fill/empty bar characters; adds a bounded signal-history sparkline, strong/medium/weak threshold classification, optional handshake-capture correlation against timer-suite, and user-configurable on-screen positioning; original preserved verbatim in `plugin-upgrade-proposals/cluster-37-hardware-specific/originals/`; see Cluster 37 notes
 - **Touch_UI** - **IN PROGRESS, moved to `plugins-wip`** as `touch-ui-suite` (`TouchUING`) - fixes a non-callable `logging()` call masking real errors, a `list.extend()`-returns-`None` bug that crashed every apt-install attempt, a `NameError` waiting on any momentary+reverse touch button, and a dead missing-binary detection check; kept deliberately conservative given this is the plugin tied to the real MPI3501 touchscreen; also adds (user-approved) a real webhook status page (thread/touchscreen/last-touch/pending-packages) and long-press detection (a new `touch_longpress` event); see Cluster 34 notes
-- **wof.py** - Detects other Flipper Zeros via "Wall of Flippers"
+- **wof.py** - Detects other Flipper Zeros via "Wall of Flippers"; reviewed, no bugs found; kept as-is, no changes needed; see Cluster 37 notes
 
 ## Maintenance / Backup / Auto-update / Connectivity
 

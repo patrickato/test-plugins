@@ -1,8 +1,10 @@
 # Cluster 37 - Hardware-specific
 
-Status: **IN PROGRESS** - 10 removed, 3 fixed/upgraded and moved to
-`plugins-wip` (2 merged into one, 1 feature-upgraded), 5 still
-pending a decision.
+Status: **IN PROGRESS** - 10 removed, 5 fixed/upgraded and moved to
+`plugins-wip` (2 merged into one, 3 individually fixed/upgraded), 1
+kept as-is (no bugs found), 2 deferred at the user's request
+(`flipperLink.py`, `pwndroid.py` - the latter has a real security bug
+and is flagged as a priority to come back to).
 
 Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, "## Hardware-specific"
 section, Group 59 in the elimination log.
@@ -176,6 +178,143 @@ was ever found for it - the sample in `reference-configs/` was
 machine-generated from its own `__defaults__` dict, not a real found
 sample, so there's no `mad_hatter.config.original.toml`).
 
+## Fixed/upgraded individually and moved to `plugins-wip` (2 plugins)
+
+### fix_region.py -> FixRegionNG (`fix-region-suite`, file `fix_region_ng.py`)
+
+Forces the WiFi radio's regulatory domain (country code) via `iw reg
+set`, persisted across reboots with a root-owned shell script + a
+systemd service, so channels the stock regulatory domain blocks (e.g.
+12/13 outside the US) become available. The core mechanism was sound;
+the implementation had five real, source-verified bugs.
+
+**Bugs fixed:**
+
+- Import-time `KeyError` crash risk: `REGION =
+  pwnagotchi.config["main"]["plugins"]["fix_region"]["region"]` ran at
+  MODULE IMPORT TIME with no fallback - a user who left `region` unset
+  (reasonably trusting the documented `__defaults__`, which is never
+  actually merged by this fork's loader) would crash before a plugin
+  instance even existed. Fixed: no config access at import time at
+  all; the region is read and validated (real ISO 3166-1 alpha-2
+  format check) entirely inside `on_loaded`, with a safe fallback.
+- Command-injection surface: every shell interaction was raw string
+  concatenation run through `os.system(...)`, and the region string
+  was written directly into a generated shell script. Fixed: every
+  command now runs via `subprocess.run([...])` with an argument list -
+  no `shell=True`, no string-interpolated command lines anywhere.
+- Config changes were silently ignored after the first load: the
+  script/service files were only ever written `if not
+  os.path.exists(...)`, so changing `region` and restarting did
+  nothing once those files existed. Fixed: a small state file tracks
+  the last-applied region; a real change is now detected and
+  reapplied, and a no-change boot no longer triggers a needless
+  restart.
+- `on_unload` unconditionally shelled out to remove files and
+  stop/disable a systemd service that might not exist, spamming stderr
+  errors. Fixed: guarded file removal (`try/except FileNotFoundError`)
+  and a real `systemctl is-enabled` check before stopping/disabling
+  anything.
+- Bogus `__dependencies__` entry (`pip: ["scapy"]`) - `scapy` is never
+  imported or used anywhere in this plugin. Removed; the real
+  dependency is the `iw` CLI tool (already standard on this project's
+  images), documented as `apt: ["iw"]` for clarity.
+
+**All approved upgrades built:** real ISO 3166-1 alpha-2 region
+validation; all shell interaction via argument lists; the current
+regulatory domain (`iw reg get`) detected and logged before any
+change, and shown live on the webhook status page; an optional,
+off-by-default GPS-based region auto-suggestion (looks up a loaded
+GPS-providing sibling plugin, e.g. this repo's own `gps-tagger-suite`,
+via `pwnagotchi.plugins.loaded`, matches coordinates against a small
+hand-built ~24-country bounding-box table) - explicitly a rough,
+informational-only hint (never auto-applied, degrades silently on any
+failure), not a real offline geocoding database.
+
+**Testing:** 60 automated tests passing, including region-format
+validation, the "only reapply on a genuine change" logic, guarded
+`on_unload` cleanup, webhook page rendering/escaping, and the
+GPS-suggestion feature's firing and silent-degradation paths. **Not
+tested on real hardware** - this sandbox has no real WiFi radio to
+confirm `iw reg set` actually changing the live regulatory domain, or
+that channels 12/13 actually appear afterward.
+
+**Original preserved:** an exact copy of `fix_region.py`, plus its
+real upstream `config.toml` sample, is kept in
+[`originals/`](originals/) (`fix_region.py`,
+`fix_region.config.original.toml`).
+
+**Naming note:** unlike `MadHatterNG.py`, this suite follows
+`bluetooth_recon_ng.py`'s snake_case-filename convention: the file is
+`fix_region_ng.py` and the config section is
+`[main.plugins.fix_region_ng]`, matching the file's exact basename per
+the same verified framework fact used throughout this cluster.
+
+### sigstr.py -> SigStrNG (`sigstr-suite`, file `sigstr_ng.py`)
+
+Shows live WiFi signal strength (RSSI) as an on-screen bar. The
+design was sound; the bugs were entirely in the implementation,
+including a background timer thread that crashed on a fixed 2-second
+cycle calling a framework function that doesn't exist.
+
+**Bugs fixed:**
+
+- `on_unload(self)` was missing the required `ui` parameter - this
+  fork's real loader calls `on_unload(self, ui)`, so every unload
+  raised `TypeError` before the method body ran, which also meant the
+  original's `self.timer.cancel()` never executed: a crash AND a
+  leaked background thread on every unload.
+- The timer's `refresh()` callback called
+  `pwnagotchi.plugins.notify(...)`, a function that does not exist
+  anywhere in this fork's real framework (confirmed against
+  `pwnagotchi/plugins/__init__.py`) - `AttributeError` on a fixed
+  2-second cycle, forever, from the moment the plugin loaded.
+- The entire background `threading.Timer` self-reschedule loop was
+  redundant: `on_ui_update(self, ui)` (which already does the real
+  signal-read-and-display work) is already called periodically by
+  this fork's own UI refresh loop on its own. Removed entirely - this
+  also fully resolves the thread-leak half of the first bug.
+- Hardcoded interface name `"wlan0"` - some builds/adapters enumerate
+  differently. Fixed: `interface` is now a config option, with
+  fallback-and-warn to the first `iw dev`-detected wireless interface
+  if the configured one isn't found.
+- `generate_signal_bar`'s fill/empty characters were visually
+  backwards (`'░'` for filled, `'█'` for empty) - a strong signal
+  rendered looking mostly empty and vice versa. Swapped.
+
+**All approved upgrades built:** a bounded (never-unbounded) signal
+history ring buffer rendered as a compact unicode sparkline, both
+on-screen and in full on the webhook page; strong/medium/weak
+threshold classification (`STR`/`MED`/`WEAK` tags, configurable dBm
+thresholds) instead of a raw number, sized for this project's
+monochrome e-ink displays; optional, off-by-default RSSI-vs-handshake-
+capture correlation against `timer-suite`'s real CSV output
+(best-effort, degrades silently if absent); on-screen positioning
+(`ui_position_x`/`ui_position_y`, same negative-x-from-right-edge
+convention as `MadHatterNG.py`), replacing the original's fixed `(0,
+205)` with a configurable default of the same values.
+
+**Testing:** automated tests passing, including the signature/notify/
+timer-thread bug fixes (directly confirming the removed calls/
+attributes are actually gone, not just "no exception observed"), the
+interface fallback logic, bounded history retention, sparkline
+rendering, threshold classification at and around each boundary,
+on-screen positioning, webhook rendering/escaping, and handshake
+correlation (matched, out-of-window, and feature-disabled cases).
+**Not tested on real hardware** - `iw dev ... link` parsing is
+verified against hand-constructed sample output only, and the
+strong/medium/weak thresholds are reasonable defaults, not tuned
+against this project's real adapters.
+
+**Original preserved:** an exact copy of `sigstr.py` is kept in
+[`originals/`](originals/). No real upstream `config.toml`/`config.yaml`
+was found for this one anywhere, so there is no
+`sigstr.config.original.toml`.
+
+**Naming note:** same snake_case-filename convention as
+`fix_region_ng.py`/`bluetooth_recon_ng.py`: file `sigstr_ng.py`,
+config section `[main.plugins.sigstr_ng]`.
+
 ## Merged and moved to `plugins-wip` (2 plugins -> 1 new plugin)
 
 ### blemon_plugin.py + bluetoothsniffer.py -> BluetoothReconNG (`bluetooth-recon-suite`)
@@ -314,14 +453,25 @@ confirmation would let tracker flagging work reliably), `hcitool scan`
 output format on the actual image, and the tracker-flagging signatures
 themselves against a real AirTag/Tile/SmartTag.
 
-## Still pending a decision (5)
+## Kept as-is, no bugs found (1)
 
-`fix_region.py`, `flipperLink.py`, `pwndroid.py` (a real path-
-traversal/arbitrary-file-disclosure bug was found in its webhook
-download handler - flagged as a security priority), `sigstr.py`,
-`wof.py` (no bugs found - likely keep-as-is). Full per-plugin findings
-for these were presented to the user in this session's findings
-table; decisions not yet made.
+- **wof.py** - "Wheel of Fortune"-style random on-screen face/message
+  picker. Reviewed, no bugs found. No changes made or needed.
+
+## Deferred at the user's request (2)
+
+- **flipperLink.py** - bridges pwnagotchi to a Flipper Zero over
+  Bluetooth. Real bugs found (a UI value set as `bool` instead of
+  `str`; an unguarded `KeyError`; an undeclared `pybluez` dependency)
+  and four upgrade ideas discussed (bug fixes, reconnect logic,
+  two-way control from the Flipper, suppressing the user's own Flipper
+  from BluetoothReconNG's device list). Saved for later - only worth
+  building if/when the user has a Flipper Zero to test it against.
+- **pwndroid.py** - Android companion-app webhook integration. **Has a
+  real path-traversal/arbitrary-file-disclosure bug** in its webhook
+  download handler - flagged as a security priority to come back to,
+  not merely deferred for lack of interest. Also missing a dependency
+  declaration and drops AP/station data on one code path.
 
 ## Related
 

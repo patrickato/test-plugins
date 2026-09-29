@@ -839,10 +839,12 @@ plugin, `BluetoothReconNG`, per the user's explicit direction, rather
 than kept as two separate fixed suites. `mad_hatter.py` had no bugs
 but was feature-upgraded (not just kept as-is) into `MadHatterNG` -
 it's the one battery/UPS plugin here that actually matches the
-user's hardware (a Waveshare UPS 3S HAT) - see below. Remaining
-pending: `fix_region.py`, `flipperLink.py`, `pwndroid.py` (real
-path-traversal security bug flagged), `sigstr.py`, `wof.py` (no
-bugs).
+user's hardware (a Waveshare UPS 3S HAT) - see below. `fix_region.py`
+and `sigstr.py` were each fixed and feature-upgraded individually into
+`FixRegionNG`/`SigStrNG` - see below. `wof.py` was reviewed (no bugs
+found) and kept as-is. `flipperLink.py` and `pwndroid.py` are deferred
+at the user's request - the latter has a real path-traversal security
+bug and is flagged as a priority to come back to.
 
 An idea backlog for offensive/defensive Bluetooth plugins (BLE tracker
 detection, BlueBorne fingerprinting, GATT mapping, BLE spam, etc.),
@@ -854,7 +856,9 @@ nothing in it is approved for building yet.
 |---|---|---|
 | [`plugins-wip: bluetooth-recon-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/bluetooth-recon-suite/NOTES.md) | `blemon_plugin.py`, `bluetoothsniffer.py` | IN PROGRESS - merged into one plugin (`BluetoothReconNG`) and moved to `plugins-wip`, not yet tested on real hardware; originals preserved in `cluster-37-hardware-specific/originals/` |
 | [`plugins-wip: mad-hatter-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/mad-hatter-suite/NOTES.md) | `mad_hatter.py` | IN PROGRESS - feature-upgraded (no bugs found) into `MadHatterNG` (file `MadHatterNG.py`) and moved to `plugins-wip`, not yet tested on real hardware; matches the user's actual Waveshare UPS 3S hardware; original preserved in `cluster-37-hardware-specific/originals/` |
-| [`Cluster 37 notes`](cluster-37-hardware-specific/NOTES.md) | Hardware-specific category (in progress) | 10 REMOVED, 3 fixed/upgraded and moved to `plugins-wip` (2 merged, 1 feature-upgraded), 5 pending decision |
+| [`plugins-wip: fix-region-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/fix-region-suite/NOTES.md) | `fix_region.py` | IN PROGRESS - 5 bugs fixed into `FixRegionNG` (file `fix_region_ng.py`) and moved to `plugins-wip`, not yet tested on real hardware; original + its real upstream config preserved in `cluster-37-hardware-specific/originals/` |
+| [`plugins-wip: sigstr-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/sigstr-suite/NOTES.md) | `sigstr.py` | IN PROGRESS - 5 bugs fixed into `SigStrNG` (file `sigstr_ng.py`) and moved to `plugins-wip`, not yet tested on real hardware; original preserved in `cluster-37-hardware-specific/originals/` |
+| [`Cluster 37 notes`](cluster-37-hardware-specific/NOTES.md) | Hardware-specific category (in progress) | 10 REMOVED, 5 fixed/upgraded and moved to `plugins-wip` (2 merged, 3 individually fixed/upgraded), 1 kept as-is, 2 deferred at the user's request |
 
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
