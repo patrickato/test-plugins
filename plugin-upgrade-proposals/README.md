@@ -873,16 +873,23 @@ returned; undeclared dependency on an unrelated plugin; never actually
 implements the command-receiving logic its description promises),
 `pwnmothership.py` and `state-api.py` (near-identical code lineage,
 same unguarded `for peer in peers_response:` `TypeError` crash - the
-user chose to drop both rather than fix or merge them). Being worked
-through the remaining 5 in groups of 5 at the user's request (group 1
-now down to 3). **`web2ssh.py` is flagged as the top security priority
-found in this whole audit** - its config reading is broken so it
-always falls back to default `changeme`/`changeme` credentials
-guarding arbitrary root shell command execution.
+user chose to drop both rather than fix or merge them). **`web2ssh.py`
+fixed and moved to `plugins-wip`** as `Web2SSHNG` (file
+`web2ssh_ng.py`) - the top security priority found in this whole
+audit (config reading was broken so it always fell back to default
+`changeme`/`changeme` credentials guarding root shell command
+execution, and a blocking `Flask.run()` would have hung the device at
+startup); rebuilt with mandatory real credentials (no default fallback
+at all), an easy-to-use Tailscale-aware `bind_scope` option, and a
+`command_mode` option defaulting to an allowlist of the original's
+shortcut commands. Being worked through the remaining 4 in groups of 5
+at the user's request (group 1 now down to 2: `Pwny-Tailscale`,
+`httpserver.py`).
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
-| [`Cluster 38 notes`](cluster-38-web-ui-api-remote-control/NOTES.md) | Web UI/API/Remote control category (in progress) | 3 REMOVED, 5 pending, being worked through in groups of 5 |
+| [`plugins-wip: web2ssh-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/web2ssh-suite/NOTES.md) | `web2ssh.py` | IN PROGRESS - fixed into `Web2SSHNG` (file `web2ssh_ng.py`) and moved to `plugins-wip`, not yet tested on real hardware; original preserved in `cluster-38-web-ui-api-remote-control/originals/` |
+| [`Cluster 38 notes`](cluster-38-web-ui-api-remote-control/NOTES.md) | Web UI/API/Remote control category (in progress) | 3 REMOVED, 1 fixed/upgraded and moved to `plugins-wip`, 4 pending, being worked through in groups of 5 |
 
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

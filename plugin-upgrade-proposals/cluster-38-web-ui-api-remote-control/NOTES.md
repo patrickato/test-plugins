@@ -1,8 +1,9 @@
 # Cluster 38 - Web UI / API / Remote control
 
-Status: **IN PROGRESS** - 3 removed, being worked through the
-remaining 5 in groups of 5 per the user's request (group 1 now down
-to 3: `Pwny-Tailscale`, `httpserver.py`, `web2ssh.py`).
+Status: **IN PROGRESS** - 3 removed, 1 fixed/upgraded and moved to
+`plugins-wip`, being worked through the remaining 4 in groups of 5
+per the user's request (group 1 now down to 2: `Pwny-Tailscale`,
+`httpserver.py`).
 
 Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, "## Web UI / API /
 Remote control" section, Group 60 in the elimination log.
@@ -52,30 +53,136 @@ Remote control" section, Group 60 in the elimination log.
   specific path. Dropped alongside pwnmothership.py rather than
   fixed/merged.
 
+## Fixed and moved to `plugins-wip` (1 plugin)
+
+### web2ssh.py -> Web2SSHNG (`web2ssh-suite`, file `web2ssh_ng.py`)
+
+The top security priority found in this whole audit. Runs a small web
+server that executes shell commands as root when submitted through a
+browser (one-click shutdown/reboot/pwnkill buttons plus an optional
+free-text command box), behind HTTP Basic Auth.
+
+**Bugs fixed:**
+
+- `self.app.run(host='::', port=self.options["port"])` was called
+  directly inside `on_loaded()` - `Flask.run()` is a blocking,
+  `serve_forever()`-style call, so `on_loaded()` would never return,
+  hanging the entire pwnagotchi plugin-loading process at startup the
+  moment this plugin was enabled. Fixed: the Flask app now runs via
+  `werkzeug.serving.make_server(...)` in a background daemon thread;
+  `on_loaded()` starts the thread and returns immediately, and
+  `on_unload(self, ui)` calls the server's `.shutdown()` to stop it
+  cleanly.
+- `self.config` was always `{}`: the constructor accepted an optional
+  `config` argument that the real framework's loader never actually
+  passes (it constructs every plugin with `cls()`, zero arguments), and
+  even if it had been populated, the code read it with flat dotted-
+  string keys (`"main.plugins.web2ssh.username"`) rather than the real
+  nested config shape. Net effect: **the username/password/port a user
+  set in `config.toml` were silently ignored - the plugin always ran
+  with the hardcoded fallback `"changeme"`/`"changeme"`/`8082`,
+  regardless of configuration.** Combined with `host='::'` (every
+  interface) and root shell command execution by design, this amounted
+  to an effectively unauthenticated root-shell backend reachable from
+  the network. Fixed: config is now read through the real
+  `self.options` the framework actually populates, via this repo's
+  standard `DEFAULTS` + `_opt()` pattern, and (see "what's new" below)
+  there is no code path that lets the server start with a default or
+  guessable credential pair at all.
+- Basic Auth credentials were compared with a straightforward
+  equality check. Fixed: compared with `hmac.compare_digest` (constant
+  time), removing a timing side-channel.
+- Commands ran via untimed `subprocess.check_output` - a hung command
+  would hang the request (and, since the original also blocked the
+  whole server on one thread, potentially the entire plugin) forever.
+  Fixed: `subprocess.run(..., timeout=<configurable, default 30s>)`,
+  reporting a clear timeout message instead of hanging.
+
+**All 3 approved upgrades built:**
+
+1. **Mandatory real credentials, no default fallback of any kind.**
+   `on_loaded()` validates the configured `username`/`password` via
+   `validate_credentials()` and refuses to start the server at all
+   (logs a clear error, no socket is ever bound) if either is missing,
+   blank, or matches a curated `PLACEHOLDER_CREDENTIALS` set
+   (`"changeme"`, `"admin"`, `"password"`, `"root"`, `"12345"`, and
+   about 20 other common defaults, checked case-insensitively and
+   trimmed). There is no code path anywhere in the file that assigns
+   or compares against a working default credential value - confirmed
+   by grep (see this session's build verification).
+2. **An easy-to-use `bind_scope` option**, so restricting network
+   exposure doesn't mean the user has to go hunting for interface
+   names or IP addresses themselves:
+   - `"auto"` (default) - detects a live Tailscale interface
+     (`tailscale ip -4`, falling back to parsing `ip -4 addr show
+     tailscale0`) and binds to that specific IP if found, logging and
+     displaying the exact URL to visit; falls back to `127.0.0.1`
+     only if Tailscale isn't detected, with a friendly explanation of
+     the alternatives.
+   - `"tailscale"` - requires a detected Tailscale interface; refuses
+     to start (fail-safe) rather than silently falling back to
+     something broader if none is found.
+   - `"localhost"` - always `127.0.0.1` only.
+   - `"lan"` - binds every interface (`0.0.0.0`), an explicit,
+     deliberate opt-in that logs a loud, impossible-to-miss warning
+     every time it starts this way.
+   - Whichever scope is used, the reachable URL is always logged AND
+     shown as a banner at the top of the rendered index page itself.
+3. **A `command_mode` option defaulting to an allowlist.**
+   `"shortcuts"` (default) only ever executes a command that exactly
+   matches one of a configurable `[main.plugins.web2ssh_ng.shortcuts]`
+   label->command table (pre-populated with the original's own 10
+   shortcuts) - anything else is rejected without ever invoking a
+   shell, and the rendered page shows only the shortcut buttons, no
+   free-text box at all. `"free"` restores the original's free-text
+   command box alongside the shortcuts, with a mandatory, clearly
+   visible warning banner shown whenever it's active.
+
+**Also added:** output-length truncation (configurable cap, default
+20000 characters, with a visible "truncated" note) so a runaway
+command can't produce an unusably huge page; both rendered pages still
+use Jinja2's auto-escaping `render_template_string` throughout, so no
+raw command output or user input is ever interpolated unescaped.
+
+**Explicitly not built this round** (presented as options, not
+approved): CSRF token protection on the command form, a persistent
+command audit log file, and brute-force login lockout/rate-limiting.
+Noted in the suite's own NOTES.md as available ideas for later.
+
+**Testing:** all tests run against the real, installed Flask/Werkzeug
+(not mocked) - actual HTTP round-trips against a real `make_server`
+instance, including a real 401/401/200 Basic Auth sequence, real
+shortcut execution and rejection, a real timeout via an actual `sleep`
+command, and confirming `on_unload` genuinely closes the port. All
+passing. **Not tested on real hardware** - Tailscale detection and
+real multi-interface LAN behavior still need verification on the
+actual device.
+
+**Original preserved:** an exact copy of `web2ssh.py` is kept in
+[`originals/`](originals/). No real upstream `config.toml`/
+`config.yaml` was ever found for it, so there is no
+`web2ssh.config.original.toml`.
+
+**Naming note:** file `web2ssh_ng.py` (snake_case), config section
+`[main.plugins.web2ssh_ng]` - matching the file's exact basename, per
+the same verified framework fact used throughout this project. NOT
+the class name (`Web2SSHNG`) and NOT the original's section name
+(`web2ssh`).
+
 ## Still pending decisions - working through in groups of 5
 
 Full findings for all 7 remaining plugins were presented to the user
-in this session's findings table. Being decided in two groups (the
-original group 1 of 5 is now down to 3 after pwnmothership.py/
-state-api.py were dropped):
+in this session's findings table. Being decided in two groups (group 1
+started at 5, dropped to 3 after pwnmothership.py/state-api.py were
+removed, and is now down to 2 after web2ssh.py was fixed and moved):
 
-**Group 1 (now 3):** `web2ssh.py`, `Pwny-Tailscale` (`tailscale.py`),
-`httpserver.py`.
+**Group 1 (now 2):** `Pwny-Tailscale` (`tailscale.py`), `httpserver.py`.
 
 **Group 2 (2):** `pwnmenu.py`/`pwnmenucmd.py`, `handshaker.py`.
 
 Key findings, summarized (see this session's findings table for full
 detail):
 
-- **web2ssh.py** - flagged as the top security priority in this whole
-  audit: `Flask.run()` blocks `on_loaded()` forever (device-hanging
-  bug, same class as httpserver.py/pwnmenu.py below); its own
-  config-reading logic never actually receives real config data at
-  all, so the username/password/port a user sets in `config.toml` are
-  silently ignored and it always falls back to the hardcoded default
-  `changeme`/`changeme` guarding **arbitrary root shell command
-  execution** (`shell=True`, one-click shutdown/reboot buttons built
-  in) over plaintext HTTP Basic Auth.
 - **pwnmothership.py** / **state-api.py** - near-identical code
   lineage, same purpose (expose live pwnagotchi status as JSON for
   external tools/dashboards), same real bug: an unguarded

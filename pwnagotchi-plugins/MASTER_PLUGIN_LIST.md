@@ -35,14 +35,24 @@ command-receiving logic despite that being its stated purpose).
 `state-api.py` (near-identical code lineage, same unguarded
 `for peer in peers_response:` `TypeError` crash whenever the local
 mesh-peers API call fails - user chose to drop both rather than fix
-or merge them). Remaining pending decisions, being worked through in
-groups of 5 (group 1 now down to 3: `Pwny-Tailscale`, `httpserver.py`,
-`web2ssh.py`; group 2 unchanged: `handshaker.py`,
-`pwnmenu.py`/`pwnmenucmd.py`). `web2ssh.py` has a real, severe security
-bug - its own config reading is broken so it always falls back to
-default `changeme`/`changeme` credentials guarding root shell command
-execution - flagged as the top security priority found in this whole
-audit.
+or merge them). **Fixed and moved to `plugins-wip`**: `web2ssh.py` ->
+`Web2SSHNG` (`web2ssh-suite`, file `web2ssh_ng.py`) - the top security
+priority found in this whole audit (its own config reading was broken
+so it always fell back to default `changeme`/`changeme` credentials
+guarding root shell command execution, and `Flask.run()` called
+directly in `on_loaded()` would have hung the whole device at
+startup). Rebuilt with mandatory real credentials (no default fallback
+of any kind - refuses to start rather than use a guessable pair), an
+easy-to-use `bind_scope` option (auto-detects a Tailscale interface
+and binds/shows that exact URL, or falls back to localhost with a
+clear explanation of the alternatives - `"lan"` mode remains available
+but is an explicit, loudly-logged opt-in), and a `command_mode` option
+defaulting to an allowlist of the original's own shortcut commands
+(free-text arbitrary commands remain available as an explicit opt-in,
+clearly bannered when active). Remaining pending decisions, being
+worked through in groups of 5 (group 1 now down to 2: `Pwny-Tailscale`,
+`httpserver.py`; group 2 unchanged: `handshaker.py`,
+`pwnmenu.py`/`pwnmenucmd.py`).
 
 **Group 59 (Cluster 37, Hardware-specific, in progress):** excluded
 from new review since they already carry cluster references:
@@ -1335,7 +1345,7 @@ repo).
 - **Pwny-Tailscale** - Tailscale remote connectivity, no port-forwarding needed
 - **Pwny-WG** - WireGuard VPN + handshake sync over SSH
 - **state-api.py** - **REMOVED** - JSON state API - a backend building block for menu/dashboard tools; same unguarded `for peer in peers_response:` `TypeError` crash as pwnmothership.py (near-identical code lineage); dashboard page needs template files manually copied to a hardcoded Python-3.7-specific path; user chose to drop rather than fix/merge; see Cluster 38 notes
-- **web2ssh** - Lightweight web shell-command executor
+- **web2ssh** - **IN PROGRESS, moved to `plugins-wip`** as `web2ssh-suite` (`Web2SSHNG`, file `web2ssh_ng.py`) - fixes the top security priority found in this whole audit: config reading was broken so the plugin always ran with default `changeme`/`changeme` credentials guarding root shell command execution, and `Flask.run()` called directly in `on_loaded()` would have hung the whole device at startup; adds mandatory real credentials with no default fallback, an easy auto-detecting `bind_scope` option (Tailscale-aware, with a loudly-logged explicit opt-in for LAN-wide access), and a `command_mode` option defaulting to an allowlist of the original's shortcut commands; original preserved verbatim in `plugin-upgrade-proposals/cluster-38-web-ui-api-remote-control/originals/`; see Cluster 38 notes
 - **webcfg_ng.py** - Allows the user to make runtime configuration changes (full web-based config.toml editor via webhook; no bugs found, but its `save-config` path fully overwrites the config file with no merge safety net, unlike its own `merge-save-config` path; see Cluster 24 notes)
 - **wpa-sec-list.py** - Lists cracked passwords from wpa-sec on a web page; has an `IndexError` risk on a malformed potfile line that breaks the whole page; see Cluster 26 notes for the fix
 - **wpa-sec_ng.py** - Not a display plugin despite the similar name - per its own `__description__`, automatically uploads handshakes to https://wpa-sec.stanev.org; shares the same `.pcap`-vs-`.pcapng` backlog-scan bug as the Cluster 6 family; see Cluster 26 notes for the fix

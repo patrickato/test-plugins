@@ -165,7 +165,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `tracker.py` | [`tracker.toml`](tracker.toml) | `itsdarklikehell/pwnagotchi-plugins/tracker.py` |
 | `wd_honey_Pot.py` | [`wd_honey_Pot.toml`](wd_honey_Pot.toml) | `itsdarklikehell/pwnagotchi-plugins/wd_honey_Pot.py` |
 
-## Generated from a scan of `self.options` usage (no `__defaults__`) (14)
+## Generated from a scan of `self.options` usage (no `__defaults__`) (13)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `adsbsniffer.py` | [`adsbsniffer.toml`](adsbsniffer.toml) | `alienmajik/pwnagotchi_plugins/adsbsniffer.py` |
@@ -179,7 +179,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `skyhigh.py` | [`skyhigh.toml`](skyhigh.toml) | `alienmajik/pwnagotchi_plugins/skyhigh.py` |
 | `speak_to_me.py` | [`speak_to_me.toml`](speak_to_me.toml) | `sniffleupagus/pwnagotchi_plugins/speak_to_me.py` |
 | `state-api.py` | [`state-api.toml`](state-api.toml) | `pwnagotchi-unofficial/plugins_archive/dipsylala/pwnagotchi-state-api/state-api.py` |
-| `web2ssh` | [`web2ssh.toml`](web2ssh.toml) | `wpa-2/pwnagotchi-plugins/web2ssh.py` |
 | `wof.py` | [`wof.toml`](wof.toml) | `itsdarklikehell/pwnagotchi-plugins/wof.py` |
 | `woop_woop.py` | [`woop_woop.toml`](woop_woop.toml) | `itsdarklikehell/pwnagotchi-plugins/woop_woop.py` |
 
@@ -208,7 +207,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Pwny-WG` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (32)
+## Already handled - moved to `plugins-wip`, not duplicated here (33)
 | Plugin | Where |
 |---|---|
 | `apprise-notify.py` | `plugins-wip` suite (apprise-notify-suite, AppriseNotifyNG) |
@@ -219,6 +218,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `mad_hatter.py` | `plugins-wip` suite (mad-hatter-suite, MadHatterNG - feature upgrade, file MadHatterNG.py) |
 | `fix_region.py` | `plugins-wip` suite (fix-region-suite, FixRegionNG, file fix_region_ng.py) |
 | `sigstr.py` | `plugins-wip` suite (sigstr-suite, SigStrNG, file sigstr_ng.py) |
+| `web2ssh` | `plugins-wip` suite (web2ssh-suite, Web2SSHNG, file web2ssh_ng.py) |
 | `clock.py` | `plugins-wip` suite (clock-suite, ClockNG) |
 | `crack_house.py` | `plugins-wip` suite (crack-house-suite, CrackHouseNG) |
 | `discoBoss.py` | `plugins-wip` suite |
