@@ -1,10 +1,11 @@
 # Notes: Display / UI cluster
 
-**Status: 7 of 19 REMOVED. 2 IN PROGRESS, moving to `plugins-wip`
+**Status: 7 of 19 REMOVED. 2 fixed and moved to `plugins-wip`
 (`internet-connection.py`'s three-way group -> `InternetConnectionNG`,
-`tweak_view.py` -> `TweakViewNG`). 1 KEPT with a documented bug
-(`timer.py`). 9 remain reviewed with real findings but no keep/fix
-decision made yet (5 fix candidates, 4 kept-as-is pending
+`tweak_view.py` -> `TweakViewNG` - both built, documented, and
+sandbox-tested; not yet tested on real hardware). 1 KEPT with a
+documented bug (`timer.py`). 9 remain reviewed with real findings but
+no keep/fix decision made yet (5 fix candidates, 4 kept-as-is pending
 confirmation) - left on the master list, decisions pending.**
 
 All source read from `itsdarklikehell/pwnagotchi-plugins/` unless
@@ -47,47 +48,69 @@ otherwise noted, checked against the real cloned
   (sprite-based faces) when nothing here was independently diagnosed
   as fixable.
 
-## In progress - moving to `plugins-wip`
+## Fixed and moved to `plugins-wip` (built, documented, sandbox-tested)
 
 - **`internet-connection.py`** (its three-way group: itself, `wanmon.py`,
   `internet-conection.py`) - **-> `internet-connection-suite`
-  (`InternetConnectionNG`)**. Consolidating all three into one plugin
+  (`InternetConnectionNG`)**. Consolidates all three into one plugin
   rather than keeping three competing implementations on the list:
   - Base behavior kept from `internet-connection.py`: hooks the real
     `internet_available` event (confirmed in `pwnagotchi/cli.py`) -
     event-driven, no polling, no blocking network calls of its own.
-  - Fixes `wanmon.py`'s fatal bug: reads `position_x`/`position_y`/
-    `testip`/`testdns` via `self.options.get(key, default)` with real
-    defaults instead of direct indexing, so it can no longer
-    `KeyError`-crash on load when a config.toml doesn't set every key.
+  - Fixes `wanmon.py`'s crash-on-load bug: reads `position_x`/
+    `position_y`/`testip`/`testdns` via `self.options.get(key, default)`
+    with real defaults instead of direct indexing. Also fixes a second,
+    subtler `wanmon.py` bug found during the build: its
+    `internet_available`/`dns_resolving` booleans were only ever set to
+    `True` in `test_internet_connection()` and never reset to `False`
+    on a failed check, so it was silently "stuck connected" too, just
+    for a different reason than `internet-connection.py`.
   - Drops `internet-conection.py`'s design entirely: no synchronous
-    `urllib.request.urlopen()` call inside a UI-refresh hook. If a
-    manual connectivity re-check is ever wanted, it belongs on a
-    background timer/thread or the periodic hook, never in the
-    render path.
-  - Suggested improvements (pending approval before building):
-    (1) configurable position AND configurable icon/text style in one
-    place, since `wanmon.py` had position options `internet-connection.py`
-    lacked; (2) an optional "last checked" timestamp shown alongside
-    the status icon, useful for confirming the plugin isn't stuck;
-    (3) a small on/off debounce (e.g. require 2 consecutive
-    `internet_available`/lost events before flipping the icon) so a
-    flaky connection doesn't flicker the display constantly - purely
-    optional via config, defaulting to off/immediate to match current
-    behavior.
+    `urllib.request.urlopen()` call inside `on_ui_update`.
+  - **Approved addition (1 of the 3 originally proposed):**
+    configurable position, label, and connected/disconnected display
+    values. The other two proposed additions ("last checked" timestamp,
+    on/off debounce) were not requested and were not built.
+  - **Added beyond what was proposed, as part of the actual fix**: an
+    `active_recheck` option (default on) - a plain `socket.create_connection()`
+    TCP probe run once per epoch and once at startup (never from a
+    render hook), so the status icon can now correctly flip back to
+    "disconnected" if the connection drops - the one real capability
+    gap shared by both `internet-connection.py` (no way to un-set
+    "connected") and `wanmon.py` (tried to, but via the reset-forgetting
+    bug above). Can be turned off to reproduce `internet-connection.py`'s
+    original one-way behavior exactly.
+  - 17 tests, all passing against the real framework. See
+    `plugins-wip:internet-connection-suite/NOTES.md` for full detail.
 - **`tweak_view.py`** - **-> `tweak-view-suite` (`TweakViewNG`)**.
-  Fixes the hook-ordering bug: `self._tweaks` will be loaded during
-  `on_loaded` (which runs before `on_ui_setup` gets a chance to use
-  it) instead of waiting for the later `on_ready` hook, so tweaks
-  apply on the very first UI setup instead of being silently delayed
-  by one refresh cycle.
-  - Suggested improvements (pending approval before building):
-    (1) validate the tweak JSON at load time and log a clear warning
-    naming which element/key is malformed, instead of only failing
-    silently inside the broad try/except; (2) an optional webhook page
-    to preview/edit tweaks live without editing the JSON file and
-    restarting the daemon - matches the low-friction webhook pattern
-    already used in `WifiJammerNG` and `webcfg_ng.py`.
+  Fixes the hook-ordering bug: tweaks now load in `on_loaded` (confirmed
+  to run before `on_ui_setup`, since plugin loading happens before the
+  display/View is constructed at all) instead of the later `on_ready`,
+  so saved tweaks apply on the very first UI setup instead of being
+  silently delayed by one refresh cycle. Two further real bugs found
+  and fixed during the build, in the plugin's own pre-existing webhook
+  editor: (1) a `res += "...", json.dumps(...)` line in `dump_item()`
+  that's actually a 2-tuple, raising a `TypeError` swallowed by its own
+  broad `except` - meant a JSON-looking string value was never actually
+  shown pretty-printed; (2) an `update_from_request()` error handler
+  that referenced an undefined `ret` instead of the real `res` variable,
+  a `NameError` (also swallowed by an outer `except`) that masked the
+  intended "Unable to save settings" message behind a confusing,
+  unrelated traceback whenever a save actually failed.
+  - **Both approved additions built:** (1) load-time validation of the
+    saved tweaks JSON - every entry is checked against the required
+    `VSS.<element>.<attr>` shape, with a specific warning naming exactly
+    which entry is malformed, instead of the original's all-or-nothing
+    "the whole load failed" fallback; (2) the "webhook page to
+    preview/edit tweaks live" turned out to already exist in the
+    original (a full GET/POST editor was already there) - rather than
+    build a redundant second one, this hardens the existing page: fixes
+    both bugs above, adds a clear "not ready yet" message before the
+    agent reports in, and consistently `html.escape()`s every value
+    inserted into the page (the original escaped some fields but not
+    others).
+  - 27 tests, all passing against the real framework. See
+    `plugins-wip:tweak-view-suite/NOTES.md` for full detail.
 
 ## Reviewed, fix candidates (decision deferred)
 

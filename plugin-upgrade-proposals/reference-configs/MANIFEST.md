@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (79)
+## Exact match - real config found and copied (77)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -117,7 +117,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `home_base.py` | [`home_base.toml`](home_base.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/home_base.toml` |
 | `hulk.py` | [`hulk.toml`](hulk.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/hulk.toml` |
 | `instattack.py` | [`instattack.toml`](instattack.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/instattack.toml` |
-| `internet-connection.py` | [`internet-connection.toml`](internet-connection.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/internet-connection.toml` |
 | `IPDisplay.py` | [`IPDisplay.toml`](IPDisplay.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/IPDisplay.toml` |
 | `mastodon.py` | [`mastodon.toml`](mastodon.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/mastodon.toml` |
 | `memtemp-plus.py` | [`memtemp-plus.toml`](memtemp-plus.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/memtemp-plus.toml` |
@@ -139,7 +138,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `sound.py` | [`sound.toml`](sound.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/sound.toml` |
 | `spotify_now_playing.py` | [`spotify_now_playing.toml`](spotify_now_playing.toml) | `itsdarklikehell/pwnagotchi-plugins/spotify_now_playing.toml` |
 | `timer.py` | [`timer.toml`](timer.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/timer.toml` |
-| `tweak_view.py` | [`tweak_view.json`](tweak_view.json) | `itsdarklikehell/pwnagotchi-plugins/tweak_view.json` |
 | `twitter.py` | [`twitter.toml`](twitter.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/twitter.toml` |
 | `wardrive.py` | [`wardrive.toml`](wardrive.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wardrive.toml` |
 | `warwalking_trails_kml.py` | [`warwalking_trails_kml.yml`](warwalking_trails_kml.yml) | `pwnagotchi-unofficial/plugins_archive/jd-2006/pwnagotchi-plugins-scripts_JD-2006/warwalking_trails_kml/warwalking_trails_kml.yml` |
@@ -260,7 +258,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Showerthoughts` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (8)
+## Already handled - moved to `plugins-wip`, not duplicated here (10)
 | Plugin | Where |
 |---|---|
 | `banthex-de.py` | `plugins-wip` suite |
@@ -269,6 +267,8 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `handshakes-dl-hashie.py` | `plugins-wip` suite |
 | `hashbot.py` | `plugins-wip` suite |
 | `hashespwnagotchi.py` | `plugins-wip` suite |
+| `internet-connection.py` (+ `wanmon.py`, `internet-conection.py`) | `plugins-wip` suite (internet-connection-suite, InternetConnectionNG) |
 | `privacy-nightmare.py` | `plugins-wip` suite |
+| `tweak_view.py` | `plugins-wip` suite (tweak-view-suite, TweakViewNG) |
 | `wifi_jammer.py` | `plugins-wip` suite (wifi-jammer-suite, WifiJammerNG) |
 

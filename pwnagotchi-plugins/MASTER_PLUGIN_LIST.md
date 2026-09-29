@@ -20,6 +20,26 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 52 (Cluster 34, continued):** the two queued Display/UI
+rebuilds are done. `internet-connection.py`'s three-way group (itself,
+`wanmon.py`, `internet-conection.py`) is fixed and moved to
+`plugins-wip` as `internet-connection-suite` (`InternetConnectionNG`) -
+consolidates all three into one plugin, fixes `wanmon.py`'s
+`KeyError`-on-load bug and its never-reset connected/dns-resolving
+flags, drops `internet-conection.py`'s blocking-urllib-on-render-path
+design, and adds an optional lightweight `on_epoch` re-check so the
+status icon can actually flip back to "disconnected" (none of the
+three originals could do this reliably). `tweak_view.py` is fixed and
+moved to `plugins-wip` as `tweak-view-suite` (`TweakViewNG`) - fixes
+the hook-ordering bug (tweaks now load in `on_loaded`, before
+`on_ui_setup` needs them), two real bugs in its already-existing
+webhook editor (a swallowed JSON-preview `TypeError`, an
+undefined-variable bug that masked save failures), and adds load-time
+validation that names exactly which saved tweak entry is malformed
+instead of silently discarding the whole file. Full detail in
+`plugins-wip:internet-connection-suite/NOTES.md` and
+`plugins-wip:tweak-view-suite/NOTES.md`.
+
 **Group 51 (Cluster 34, continued):** 2 more Display/UI plugins
 removed after a closer look at the "kept with documented bug" batch.
 `display-text.py` removed - it's a pure no-op demo (always shows a
@@ -906,7 +926,7 @@ repo).
 - **display-aircrack.py** - Shows whether aircrack is currently running
 - **display-password.py** / **display-password-qr.py** / **show_password.py** / **show_pwd.py** - Displays recently cracked passwords (QR variant adds a QR code; show_password.py/show_pwd.py are a separate mirror reading a WPA-SEC potfile rather than a hashcat potfile - show_password.py has a missing-defaults gap on `orientation`, show_pwd.py fixes that but changes "most recent" to mean each network's first-ever crack rather than the literal last line, and drops the empty-result fallback message; see Cluster 22 notes)
 - **display_version.py** - Adds the pwnagotchi software version to the display
-- **internet-connection.py** - **IN PROGRESS, moving to `plugins-wip`** as `internet-connection-suite` (`InternetConnectionNG`) - consolidating all three sibling implementations (`internet-connection.py`, `wanmon.py`, `internet-conection.py`) into one plugin: keeps `internet-connection.py`'s real `internet_available` hook (event-driven, no polling), fixes `wanmon.py`'s `KeyError`-on-load bug, and drops `internet-conection.py`'s blocking-network-call-on-render-path design entirely; see Cluster 34 notes for the full rebuild proposal
+- **internet-connection.py** - **IN PROGRESS, moved to `plugins-wip`** as `internet-connection-suite` (`InternetConnectionNG`) - consolidates all three sibling implementations (`internet-connection.py`, `wanmon.py`, `internet-conection.py`) into one plugin: keeps `internet-connection.py`'s real `internet_available` hook (event-driven, no polling), fixes `wanmon.py`'s `KeyError`-on-load bug and its never-reset connected/dns-resolving flags, and drops `internet-conection.py`'s blocking-network-call-on-render-path design entirely, replacing it with an optional lightweight `on_epoch` re-check so the icon can actually go back to "disconnected"; see Cluster 34 notes
 - **more_uptime.py** - Cycling uptime stats display
 - **PWNAGOTCHI-CUSTOM-FACES-MOD** - Custom PNG faces with transparency
 - **pwnagotchi_LCD_colorized_darkmode** - Colorized dark-mode LCD/web UI mod
@@ -914,7 +934,7 @@ repo).
 - **screen_refresh.py** - Forces a display refresh after X updates
 - **themes.py** - Theme/script kicker plugin
 - **timer.py** - Measures how long a handshake capture took; reviewed in Cluster 34, no framework-misuse bugs, kept with a documented note - writes to a hardcoded `/home/pi/data/...` path that may not exist on every setup
-- **tweak_view.py** - **IN PROGRESS, moving to `plugins-wip`** as `tweak-view-suite` (`TweakViewNG`) - fixing the hook-ordering bug where tweaks load in `on_ready` but `on_ui_setup` (which runs earlier) tries to apply them first; see Cluster 34 notes for the full rebuild proposal
+- **tweak_view.py** - **IN PROGRESS, moved to `plugins-wip`** as `tweak-view-suite` (`TweakViewNG`) - fixes the hook-ordering bug where tweaks loaded in `on_ready` but `on_ui_setup` (which runs earlier) tried to apply them first, plus two real bugs in its webhook editor (a swallowed JSON-preview crash, an undefined-variable bug masking save failures), and adds load-time validation of the saved tweaks file; see Cluster 34 notes
 - **viz.py** - Visualizes surrounding APs
 
 ## GPS / Location
