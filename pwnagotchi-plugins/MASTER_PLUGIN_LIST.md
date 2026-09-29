@@ -1166,7 +1166,7 @@ repo).
 - **bluetoothsniffer.py** - Logs nearby Bluetooth MACs/names/counts to a JSON file
 - **fix_region.py** - Changes the iw region to unlock additional channels
 - **flipperLink.py** - Connects pwnagotchi to a Flipper Zero
-- **gpio_buttons_ng.py** - GPIO button support (next-gen/torch variant)
+- **gpio_buttons_ng.py** - **REMOVED** - GPIO button support (next-gen/torch variant); re-inits pins 17/22/27 every loop iteration, silently breaking a configured button on pin overlap; user chose to drop rather than fix; see Cluster 37 notes
 - **gpio_shutdown.py** - **REMOVED** - GPIO-triggered clean shutdown; unguarded `KeyError` on missing `gpio` option (framework never merges `__defaults__`); user chose to drop rather than fix; see Cluster 37 notes
 - **gsmfake.py** - **REMOVED** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable; **not actually a pwnagotchi plugin at all** - no `plugins.Plugin` subclass anywhere, loader never registers it; it's a verbatim gpsd `gpsfake.py` test harness; see Cluster 37 notes
 - **img2xbm.py** - **REMOVED** - Converts images to XBM format for a Flipper Zero display; **not a pwnagotchi plugin** - standalone CLI tool, no `Plugin` subclass, and its `main()` is literally `pass` (does nothing); see Cluster 37 notes

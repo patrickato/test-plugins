@@ -128,14 +128,13 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `xp.py` | [`xp.yml`](xp.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp.yml` |
 | `xp_grid.py` | [`xp_grid.yml`](xp_grid.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp_grid.yml` |
 
-## Partial match - closest sibling config found, verify by hand (28)
+## Partial match - closest sibling config found, verify by hand (27)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `aircrackonly_ng.py` | [`aircrackonly_ng.toml`](aircrackonly_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/aircrackonly.toml` |
 | `auto-update_ng.py` | [`auto-update_ng.toml`](auto-update_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/auto-update.toml` |
 | `AutoBackup v2.0` | [`AutoBackup_v2.0.toml`](AutoBackup_v2.0.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/auto_backup.toml` |
 | `display-password-qr.py` | [`display-password-qr.toml`](display-password-qr.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-password.toml` |
-| `gpio_buttons_ng.py` | [`gpio_buttons_ng.toml`](gpio_buttons_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gpio_buttons.toml` |
 | `gps_error.py` | [`gps_error.toml`](gps_error.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps.toml` |
 | `gps_grid.py` | [`gps_grid.toml`](gps_grid.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/grid.toml` |
 | `gps_live.py` | [`gps_live.toml`](gps_live.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps.toml` |
