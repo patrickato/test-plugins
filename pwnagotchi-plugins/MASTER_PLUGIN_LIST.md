@@ -20,6 +20,21 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 51 (Cluster 34, continued):** 2 more Display/UI plugins
+removed after a closer look at the "kept with documented bug" batch.
+`display-text.py` removed - it's a pure no-op demo (always shows a
+hardcoded "Hello World!", no config option to change it, no real
+functionality to preserve). `sprite_faces.py` removed - its own
+upstream author left a `# TODO: Something is wrong with this but I
+can't currently fix it` at the sprite face-lookup step and never
+resolved it; not worth inheriting someone else's unfixed bug when the
+feature (sprite-based faces) isn't essential. `internet-connection.py`'s
+group (itself, `wanmon.py`, `internet-conection.py`) and `tweak_view.py`
+moved from "kept with documented bug" to fix-and-rebuild candidates -
+see `plugin-upgrade-proposals/cluster-34-display-ui/NOTES.md` for the
+rebuild proposals. `timer.py` remains kept as-is (its hardcoded-path
+note is a deployment detail, not a code bug worth fixing).
+
 **Group 50 (Cluster 34 - Display/UI, removals so far):** 5 of 19
 plugins removed this pass, rest of the cluster's decisions still
 pending. `printp.py` removed - explicitly an example/demo plugin in
@@ -890,18 +905,16 @@ repo).
 - **darkmode.py** - Dark theme
 - **display-aircrack.py** - Shows whether aircrack is currently running
 - **display-password.py** / **display-password-qr.py** / **show_password.py** / **show_pwd.py** - Displays recently cracked passwords (QR variant adds a QR code; show_password.py/show_pwd.py are a separate mirror reading a WPA-SEC potfile rather than a hashcat potfile - show_password.py has a missing-defaults gap on `orientation`, show_pwd.py fixes that but changes "most recent" to mean each network's first-ever crack rather than the literal last line, and drops the empty-result fallback message; see Cluster 22 notes)
-- **display-text.py** - Displays custom text on a Waveshare 1.44" LCD screen; reviewed in Cluster 34, no bugs but functionally a no-op demo (always shows a hardcoded "Hello World!", no config option to change it); kept as documented
 - **display_version.py** - Adds the pwnagotchi software version to the display
-- **internet-connection.py** - Displays internet connectivity status (also distributed as `wanmon.py` / `internet-conection.py`); reviewed in Cluster 34 - `internet-connection.py` itself is clean (uses the real `internet_available` hook); `wanmon.py` is a **fix candidate** (reads options with no fallback, `KeyError`-crashes on load, see Cluster 34 notes); `internet-conection.py` kept with a documented bug - makes a blocking `urllib.request.urlopen()` call synchronously inside `on_ui_update`, stuttering the display when offline/slow
+- **internet-connection.py** - **IN PROGRESS, moving to `plugins-wip`** as `internet-connection-suite` (`InternetConnectionNG`) - consolidating all three sibling implementations (`internet-connection.py`, `wanmon.py`, `internet-conection.py`) into one plugin: keeps `internet-connection.py`'s real `internet_available` hook (event-driven, no polling), fixes `wanmon.py`'s `KeyError`-on-load bug, and drops `internet-conection.py`'s blocking-network-call-on-render-path design entirely; see Cluster 34 notes for the full rebuild proposal
 - **more_uptime.py** - Cycling uptime stats display
 - **PWNAGOTCHI-CUSTOM-FACES-MOD** - Custom PNG faces with transparency
 - **pwnagotchi_LCD_colorized_darkmode** - Colorized dark-mode LCD/web UI mod
 - **pwnagotchi-fallout-faces-mod** - Fallout Vault-Boy themed faces
 - **screen_refresh.py** - Forces a display refresh after X updates
-- **sprite_faces.py** - Cute sprite-based face graphics widget; reviewed in Cluster 34, kept with a documented bug - author's own code admits it's broken (`# TODO: Something is wrong with this but I can't currently fix it`) at the sprite face-lookup step
 - **themes.py** - Theme/script kicker plugin
 - **timer.py** - Measures how long a handshake capture took; reviewed in Cluster 34, no framework-misuse bugs, kept with a documented note - writes to a hardcoded `/home/pi/data/...` path that may not exist on every setup
-- **tweak_view.py** - Live UI element repositioning/fonts (no guardrails - be careful); reviewed in Cluster 34, kept with a documented bug - tweaks are read in `on_ready`, but `on_ui_setup` (which runs earlier) tries to apply them first, so tweaks are silently delayed by one refresh cycle at boot rather than applying immediately
+- **tweak_view.py** - **IN PROGRESS, moving to `plugins-wip`** as `tweak-view-suite` (`TweakViewNG`) - fixing the hook-ordering bug where tweaks load in `on_ready` but `on_ui_setup` (which runs earlier) tries to apply them first; see Cluster 34 notes for the full rebuild proposal
 - **viz.py** - Visualizes surrounding APs
 
 ## GPS / Location

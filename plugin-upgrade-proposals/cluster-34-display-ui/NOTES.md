@@ -1,8 +1,10 @@
 # Notes: Display / UI cluster
 
-**Status: 5 of 19 REMOVED, 5 KEPT with a documented bug (decision
-confirmed). 9 remain reviewed with real findings but no keep/fix
-decision made yet (6 fix candidates, 3 kept as-is pending
+**Status: 7 of 19 REMOVED. 2 IN PROGRESS, moving to `plugins-wip`
+(`internet-connection.py`'s three-way group -> `InternetConnectionNG`,
+`tweak_view.py` -> `TweakViewNG`). 1 KEPT with a documented bug
+(`timer.py`). 9 remain reviewed with real findings but no keep/fix
+decision made yet (5 fix candidates, 4 kept-as-is pending
 confirmation) - left on the master list, decisions pending.**
 
 All source read from `itsdarklikehell/pwnagotchi-plugins/` unless
@@ -33,6 +35,59 @@ otherwise noted, checked against the real cloned
   e-paper drivers only include `v4in37g`; there is no `v37inch`
   driver. The display can never initialize - `ModuleNotFoundError`
   every time.
+- **`display-text.py`** - REMOVED (revised from an earlier "kept with
+  documented bug" call). No bug, but no real functionality either - a
+  pure demo that always shows a hardcoded "Hello World!" string with
+  no config option to change it. Nothing worth preserving.
+- **`sprite_faces.py`** - REMOVED (revised from an earlier "kept with
+  documented bug" call). The upstream author's own code left a
+  `# TODO: Something is wrong with this but I can't currently fix it`
+  at the sprite face-lookup step and never resolved it. Not worth
+  inheriting an unfixed upstream bug for a non-essential feature
+  (sprite-based faces) when nothing here was independently diagnosed
+  as fixable.
+
+## In progress - moving to `plugins-wip`
+
+- **`internet-connection.py`** (its three-way group: itself, `wanmon.py`,
+  `internet-conection.py`) - **-> `internet-connection-suite`
+  (`InternetConnectionNG`)**. Consolidating all three into one plugin
+  rather than keeping three competing implementations on the list:
+  - Base behavior kept from `internet-connection.py`: hooks the real
+    `internet_available` event (confirmed in `pwnagotchi/cli.py`) -
+    event-driven, no polling, no blocking network calls of its own.
+  - Fixes `wanmon.py`'s fatal bug: reads `position_x`/`position_y`/
+    `testip`/`testdns` via `self.options.get(key, default)` with real
+    defaults instead of direct indexing, so it can no longer
+    `KeyError`-crash on load when a config.toml doesn't set every key.
+  - Drops `internet-conection.py`'s design entirely: no synchronous
+    `urllib.request.urlopen()` call inside a UI-refresh hook. If a
+    manual connectivity re-check is ever wanted, it belongs on a
+    background timer/thread or the periodic hook, never in the
+    render path.
+  - Suggested improvements (pending approval before building):
+    (1) configurable position AND configurable icon/text style in one
+    place, since `wanmon.py` had position options `internet-connection.py`
+    lacked; (2) an optional "last checked" timestamp shown alongside
+    the status icon, useful for confirming the plugin isn't stuck;
+    (3) a small on/off debounce (e.g. require 2 consecutive
+    `internet_available`/lost events before flipping the icon) so a
+    flaky connection doesn't flicker the display constantly - purely
+    optional via config, defaulting to off/immediate to match current
+    behavior.
+- **`tweak_view.py`** - **-> `tweak-view-suite` (`TweakViewNG`)**.
+  Fixes the hook-ordering bug: `self._tweaks` will be loaded during
+  `on_loaded` (which runs before `on_ui_setup` gets a chance to use
+  it) instead of waiting for the later `on_ready` hook, so tweaks
+  apply on the very first UI setup instead of being silently delayed
+  by one refresh cycle.
+  - Suggested improvements (pending approval before building):
+    (1) validate the tweak JSON at load time and log a clear warning
+    naming which element/key is malformed, instead of only failing
+    silently inside the broad try/except; (2) an optional webhook page
+    to preview/edit tweaks live without editing the JSON file and
+    restarting the daemon - matches the low-friction webhook pattern
+    already used in `WifiJammerNG` and `webcfg_ng.py`.
 
 ## Reviewed, fix candidates (decision deferred)
 
@@ -46,12 +101,6 @@ otherwise noted, checked against the real cloned
   `KeyError`-crashes the plugin on load. Also hardcodes `iwconfig
   wlan0` instead of reading the real interface from
   `pwnagotchi.config['main']['iface']`.
-- **`wanmon.py`** (one of three independent internet-status
-  implementations bundled under `internet-connection.py` on the master
-  list) - same `__defaults__`-not-merged bug as `crack_house.py`:
-  reads `self.options["position_x"]`, `["position_y"]`, `["testip"]`,
-  `["testdns"]` directly with no `.get()`/`in` guard, `KeyError`-crashes
-  on load unless every key is set explicitly.
 - **`more_uptime.py`** - real indentation bug in `on_ui_setup`: the
   `ui.add_element("more_uptime", ...)` call is nested inside the branch
   that only runs when the user has NOT set a custom `position` option.
@@ -84,36 +133,28 @@ otherwise noted, checked against the real cloned
 
 ## Kept with a documented (low-priority) bug (decision confirmed)
 
-- **`display-text.py`** - no bug, but it's a pure demo: always shows
-  a hardcoded "Hello World!" string, not configurable.
-- **`internet-conection.py`** (typo-named mirror, NeonLightning's) -
-  makes a blocking `urllib.request.urlopen(..., timeout=0.5)` call
-  synchronously inside `on_ui_update`, which fires on every UI refresh
-  tick - visibly stutters the display when offline or slow to respond.
-- **`timer.py`** - no framework-misuse bugs; writes to a hardcoded
-  `/home/pi/data/...` path that may not exist on every setup, a
-  deployment detail rather than a code bug.
-- **`tweak_view.py`** - `self._tweaks` is loaded in `on_ready`, but
-  `on_ui_setup` (which runs earlier, from `View.__init__`) tries to use
-  it first. Caught by a broad try/except and logged as a warning -
-  tweaks are simply delayed by one refresh cycle rather than applying
-  immediately. Not fatal.
-- **`sprite_faces.py`** - the author's own code comment admits it's
-  broken (`# TODO: Something is wrong with this but I can't currently
-  fix it`) at the face-lookup step. Left as a documented, self-flagged
-  issue rather than independently diagnosed here.
+- **`timer.py`** - no framework-misuse bugs; correctly uses real hooks
+  (`on_wifi_update`, `on_deauthentication`, `on_handshake`) to time
+  deauth-to-handshake duration and log it to CSV. Writes to a
+  hardcoded `/home/pi/data/...` path that may not exist on every setup
+  - a deployment detail (check/create that directory) rather than a
+  code bug worth fixing. Kept as-is: it's a small, working, genuinely
+  useful piece of telemetry (how long a capture actually takes, per
+  network) that nothing else on the list tracks, and the only issue is
+  a path assumption you control on your own hardware.
 
 ## Reviewed, no bugs found (kept as-is)
 
 - **`clock.py`**, **`darkmode.py`** (same source as
   `pwnagotchi_LCD_colorized_darkmode`), **`display-aircrack.py`**,
-  **`display_version.py`**, **`internet-connection.py`** (the clean
-  one of the three internet-status implementations - confirmed
-  `internet_available` is a real hook via `pwnagotchi/cli.py`),
-  **`themes.py`** (depends on external shell scripts existing, a
-  deployment concern rather than a code bug), **`extras/facemod/faces.py`**
-  (the shared source behind both `PWNAGOTCHI-CUSTOM-FACES-MOD` and
-  `pwnagotchi-fallout-faces-mod` - a trivial constants module).
+  **`display_version.py`**, **`themes.py`** (depends on external shell
+  scripts existing, a deployment concern rather than a code bug),
+  **`extras/facemod/faces.py`** (the shared source behind both
+  `PWNAGOTCHI-CUSTOM-FACES-MOD` and `pwnagotchi-fallout-faces-mod` - a
+  trivial constants module). `internet-connection.py` itself was also
+  clean, but its whole three-way group is being consolidated and
+  rebuilt anyway (see "In progress" above), so it's no longer tracked
+  separately here.
 
 ## Real vs. imagined hooks confirmed this cluster
 

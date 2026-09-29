@@ -648,26 +648,31 @@ reviewed with real, fixable bugs found, decision deferred.
 
 ### Cluster 34 - Display / UI
 
-Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 50. First
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Groups 50-51. First
 category-wide pass over Display/UI (19 plugins) - most of this
 category had never been reviewed in either the earlier duplicate-cluster
-round or the current category-by-category pass. 5 removed so far:
-`printp.py` (explicit example plugin, `KeyError`-crashes on load with
-no `__defaults__` fallback), `PwnagotchiCharacterPlugin`/`Pwan-Girl`/
+round or the current category-by-category pass. 7 removed: `printp.py`
+(explicit example plugin, `KeyError`-crashes on load with no
+`__defaults__` fallback), `PwnagotchiCharacterPlugin`/`Pwan-Girl`/
 `screen_color_invert` (no locatable source anywhere in the cloned
-archives - record only), and `Bat-Trinity` (Waveshare 3.7" driver that
+archives - record only), `Bat-Trinity` (Waveshare 3.7" driver that
 imports a module path that doesn't exist on this fork, so it can never
-load). The rest of the cluster is reviewed with real findings but no
-keep/fix decision made yet: `crack_house.py`, `wanmon.py`,
-`more_uptime.py`, `screen_refresh.py`, `viz.py`, and `Touch_UI.py`
-flagged as fix candidates (the last is especially relevant - a real
-MPI3501 touchscreen is in use); several more kept as-is or kept with a
-documented low-priority bug. No plugin in this batch invented a fake
-hook name, unlike Cluster 33.
+load), `display-text.py` (no-op demo, nothing worth preserving), and
+`sprite_faces.py` (upstream author's own unfixed, self-flagged bug).
+`internet-connection.py`'s three-way group (itself, `wanmon.py`,
+`internet-conection.py`) and `tweak_view.py` are in progress, moving to
+`plugins-wip` as `InternetConnectionNG` and `TweakViewNG` respectively.
+`timer.py` kept with a documented low-priority bug (hardcoded data
+path). The rest of the cluster is reviewed with real findings but no
+keep/fix decision made yet: `crack_house.py`, `more_uptime.py`,
+`screen_refresh.py`, `viz.py`, and `Touch_UI.py` flagged as fix
+candidates (the last is especially relevant - a real MPI3501
+touchscreen is in use); several more kept as-is. No plugin in this
+batch invented a fake hook name, unlike Cluster 33.
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
-| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 5 REMOVED, 5 KEPT (documented bugs: `display-text.py`, `internet-conection.py`, `timer.py`, `tweak_view.py`, `sprite_faces.py`), 9 remaining reviewed with findings - decision pending |
+| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 7 REMOVED, 2 IN PROGRESS (`InternetConnectionNG`, `TweakViewNG`), 1 KEPT (`timer.py`), 9 remaining reviewed with findings - decision pending |
 
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

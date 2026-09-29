@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (81)
+## Exact match - real config found and copied (79)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -96,7 +96,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `deauth.py` | [`deauth.toml`](deauth.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/deauth.toml` |
 | `display-aircrack.py` | [`display-aircrack.toml`](display-aircrack.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-aircrack.toml` |
 | `display-password.py` | [`display-password.toml`](display-password.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-password.toml` |
-| `display-text.py` | [`display-text.toml`](display-text.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-text.toml` |
 | `display_version.py` | [`display_version.toml`](display_version.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display_version.toml` |
 | `educational-purposes-only.py` | [`educational-purposes-only.toml`](educational-purposes-only.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/educational-purposes-only.toml` |
 | `enterprise.py` | [`enterprise.toml`](enterprise.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/enterprise.toml` |
@@ -139,7 +138,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `show_password.py` | [`show_password.toml`](show_password.toml) | `itsdarklikehell/pwnagotchi-plugins/show_password.toml` |
 | `sound.py` | [`sound.toml`](sound.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/sound.toml` |
 | `spotify_now_playing.py` | [`spotify_now_playing.toml`](spotify_now_playing.toml) | `itsdarklikehell/pwnagotchi-plugins/spotify_now_playing.toml` |
-| `sprite_faces.py` | [`sprite_faces.toml`](sprite_faces.toml) | `pwnagotchi-unofficial/plugins_archive/imnotjames/dd882320fe41d323d354a970a27113e5/_sprite_faces.toml` |
 | `timer.py` | [`timer.toml`](timer.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/timer.toml` |
 | `tweak_view.py` | [`tweak_view.json`](tweak_view.json) | `itsdarklikehell/pwnagotchi-plugins/tweak_view.json` |
 | `twitter.py` | [`twitter.toml`](twitter.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/twitter.toml` |
