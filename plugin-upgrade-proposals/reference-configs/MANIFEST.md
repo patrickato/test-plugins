@@ -9,11 +9,12 @@ folder), `sniffleupagus/pwnagotchi_plugins`, `alienmajik/pwnagotchi_plugins`,
 `energydrinksjunkie`, `fmatray`, `pwnagotchi-unofficial/plugins_archive`
 (the older mirror-archive), and `wpa-2/pwnagotchi-plugins`.
 
-**The 5 plugins already moved to `plugins-wip` are NOT duplicated here**
-(`privacy-nightmare.py`, `hashespwnagotchi.py`, `banthex-de.py`,
-`handshakes-dl-hashie.py`, `discohash.py`/`hashbot.py`/`discoBoss.py`) -
-their configs were compared against upstream and finalized directly in
-their own suites; see each suite's own `config.toml` + `NOTES.md`.
+**The 6 plugin suites already moved to `plugins-wip` are NOT duplicated
+here** (`privacy-nightmare.py`, `hashespwnagotchi.py`, `banthex-de.py`,
+`handshakes-dl-hashie.py`, `discohash.py`/`hashbot.py`/`discoBoss.py`,
+`wifi_jammer.py`) - their configs were compared against upstream and
+finalized directly in their own suites; see each suite's own
+`config.toml` + `NOTES.md`.
 
 ## How to read the status column
 
@@ -230,33 +231,22 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `wof.py` | [`wof.toml`](wof.toml) | `itsdarklikehell/pwnagotchi-plugins/wof.py` |
 | `woop_woop.py` | [`woop_woop.toml`](woop_woop.toml) | `itsdarklikehell/pwnagotchi-plugins/woop_woop.py` |
 
-## No configurable options detected - `enabled = true` only (24)
+## No configurable options detected - `enabled = true` only (13)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `Bat-Trinity` | [`Bat-Trinity.toml`](Bat-Trinity.toml) | `pwnagotchi-unofficial/plugins_archive/hannadiamond/pwnagotchi-plugins/waveshare_37inch/v37inch/__init__.py` |
 | `cmd_server.py` | [`cmd_server.toml`](cmd_server.toml) | `sniffleupagus/pwnagotchi_plugins/cmd_server.py` |
-| `dns_spoof_detector.py` | [`dns_spoof_detector.toml`](dns_spoof_detector.toml) | `itsdarklikehell/pwnagotchi-plugins/dns_spoof_detector.py` |
 | `httpserver.py` | [`httpserver.toml`](httpserver.toml) | `itsdarklikehell/pwnagotchi-plugins/httpserver.py` |
 | `img2xbm.py` | [`img2xbm.toml`](img2xbm.toml) | `pwnagotchi-unofficial/plugins_archive/Matt-London/pwnagotchi-flipper/tools/img2xbm.py` |
-| `mac_adress_logger.py` | [`mac_adress_logger.toml`](mac_adress_logger.toml) | `itsdarklikehell/pwnagotchi-plugins/mac_adress_logger.py` |
-| `mac_randomizer.py` | [`mac_randomizer.toml`](mac_randomizer.toml) | `itsdarklikehell/pwnagotchi-plugins/mac_randomizer.py` |
-| `network_intrusion_detector.py` | [`network_intrusion_detector.toml`](network_intrusion_detector.toml) | `itsdarklikehell/pwnagotchi-plugins/network_intrusion_detector.py` |
-| `network_mapper.py` | [`network_mapper.toml`](network_mapper.toml) | `itsdarklikehell/pwnagotchi-plugins/network_mapper.py` |
-| `network_packet_sniffer.py` | [`network_packet_sniffer.toml`](network_packet_sniffer.toml) | `itsdarklikehell/pwnagotchi-plugins/network_packet_sniffer.py` |
 | `pibat.py` | [`pibat.toml`](pibat.toml) | `pwnagotchi-unofficial/plugins_archive/Andyzug/PiBatPwnagotchi-Plugin/pibat.py` |
 | `probenpwn.py` | [`probenpwn.toml`](probenpwn.toml) | `alienmajik/pwnagotchi_plugins/probenpwn.py` |
 | `PWNAGOTCHI-CUSTOM-FACES-MOD` | [`PWNAGOTCHI-CUSTOM-FACES-MOD.toml`](PWNAGOTCHI-CUSTOM-FACES-MOD.toml) | `itsdarklikehell/pwnagotchi-plugins/extras/facemod/faces.py` |
 | `pwnagotchi-fallout-faces-mod` | [`pwnagotchi-fallout-faces-mod.toml`](pwnagotchi-fallout-faces-mod.toml) | `itsdarklikehell/pwnagotchi-plugins/extras/facemod/faces.py` |
 | `RaspiSyncedTime.py` | [`RaspiSyncedTime.toml`](RaspiSyncedTime.toml) | `pwnagotchi-unofficial/plugins_archive/xenDE/pwnagotchi-plugin-timesync/RaspiSyncedTime.py` |
-| `rogue_ap_detector.py` | [`rogue_ap_detector.toml`](rogue_ap_detector.toml) | `itsdarklikehell/pwnagotchi-plugins/rogue_ap_detector.py` |
 | `sigstr.py` | [`sigstr.toml`](sigstr.toml) | `pwnagotchi-unofficial/plugins_archive/bryzz42o/Pwnagotchi-fsociety-plugins/sigstr.py` |
 | `snoopr.py` | [`snoopr.toml`](snoopr.toml) | `alienmajik/pwnagotchi_plugins/snoopr.py` |
 | `terminal2.py` | [`terminal2.toml`](terminal2.toml) | `itsdarklikehell/pwnagotchi-plugins/terminal2.py` |
 | `theylive.py` | [`theylive.toml`](theylive.toml) | `alienmajik/pwnagotchi_plugins/theylive.py` |
-| `traffic_sniffer.py` | [`traffic_sniffer.toml`](traffic_sniffer.toml) | `itsdarklikehell/pwnagotchi-plugins/traffic_sniffer.py` |
-| `wifi_analyser.py` | [`wifi_analyser.toml`](wifi_analyser.toml) | `itsdarklikehell/pwnagotchi-plugins/wifi_analyser.py` |
-| `wifi_jammer.py` | [`wifi_jammer.toml`](wifi_jammer.toml) | `itsdarklikehell/pwnagotchi-plugins/wifi_jammer.py` |
-| `wifi_password_cracker.py` | [`wifi_password_cracker.toml`](wifi_password_cracker.toml) | `itsdarklikehell/pwnagotchi-plugins/wifi_password_cracker.py` |
 
 ## Not found - no config or source located in this environment (15)
 | Plugin |
@@ -277,7 +267,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Showerthoughts` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (7)
+## Already handled - moved to `plugins-wip`, not duplicated here (8)
 | Plugin | Where |
 |---|---|
 | `banthex-de.py` | `plugins-wip` suite |
@@ -287,4 +277,5 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `hashbot.py` | `plugins-wip` suite |
 | `hashespwnagotchi.py` | `plugins-wip` suite |
 | `privacy-nightmare.py` | `plugins-wip` suite |
+| `wifi_jammer.py` | `plugins-wip` suite (wifi-jammer-suite, WifiJammerNG) |
 

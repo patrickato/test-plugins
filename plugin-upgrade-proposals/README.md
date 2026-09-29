@@ -622,5 +622,29 @@ than fixed this pass.
 |---|---|---|
 | [`Cluster 32 notes`](cluster-32-mesh-potfile/NOTES.md) | `potfilesorter.py`, `meshpwnstic.py` | 1 REMOVED (`potfilesorter.py`), 1 SAVED FOR LATER (`meshpwnstic.py`, fix candidate) |
 
+### Cluster 33 - Network / Security analysis
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 49. 9 of 14
+plugins (`dns_spoof_detector.py`, `mac_adress_logger.py`,
+`mac_randomizer.py`, `network_intrusion_detector.py`,
+`network_mapper.py`, `network_packet_sniffer.py`, `rogue_ap_detector.py`,
+`traffic_sniffer.py`, `wifi_analyser.py`) removed - all by the same
+author ("Deus Dust"), all sharing one fatal defect: `from
+pwnagotchi.plugins import BasePlugin`, a class that does not exist
+anywhere on this fork, so none of them could ever load. `wifi_jammer.py`
+(same fatal defect, plus zero targeting scope in its original design)
+was judged worth a real rebuild rather than removal and moved to
+`plugins-wip` as `wifi-jammer-suite` (`WifiJammerNG`) - rebuilt around
+an `authorized_networks` allowlist that is empty by default and gates
+every firing path, using bettercap's own native deauth call instead of
+a separate `aireplay-ng` subprocess. `beacons.py` and `test_security.py`
+reviewed with real, fixable bugs found, decision deferred.
+`beaconify.py` reviewed, no bugs, kept as-is.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`plugins-wip: wifi-jammer-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/wifi-jammer-suite/NOTES.md) | `wifi_jammer.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`Cluster 33 notes`](cluster-33-network-security/NOTES.md) | all 14 plugins in this category | 9 REMOVED, 1 moved to `plugins-wip` (`wifi_jammer.py`), 3 DEFERRED (`beacons.py`, `test_security.py`, `mac_randomizer.py`'s cross-reference on `neurolyzer.py`), 1 KEPT AS-IS (`beaconify.py`) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

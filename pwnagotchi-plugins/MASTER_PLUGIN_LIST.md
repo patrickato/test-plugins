@@ -20,6 +20,42 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 49 (Cluster 33 - Network / Security analysis):** 9 of 14
+plugins removed for a fatal, shared defect: `dns_spoof_detector.py`,
+`mac_adress_logger.py`, `mac_randomizer.py`, `network_intrusion_detector.py`,
+`network_mapper.py`, `network_packet_sniffer.py`, `rogue_ap_detector.py`,
+`traffic_sniffer.py`, and `wifi_analyser.py` (all by the same author,
+"Deus Dust") every one subclass `from pwnagotchi.plugins import
+BasePlugin` - confirmed by grepping the real cloned framework source
+that `BasePlugin` does not exist anywhere on this fork (the real base
+class is `plugins.Plugin`) - so none of them could ever even import,
+let alone load. Several also had independent, non-fixable-by-patch
+issues on top: `network_intrusion_detector.py` logs "intrusion
+detected" for literally every IP packet with no actual detection logic
+(not a real IDS even in concept); `network_packet_sniffer.py` and
+`traffic_sniffer.py` are the identical `print(packet.summary())` script
+duplicated under two names; `mac_randomizer.py` was redundant with the
+already-on-the-list `neurolyzer.py` (well-engineered, no bugs); `wifi_password_cracker.py`
+(also reviewed this cluster, same fatal defect) duplicated the existing
+crack-pipeline `_ng` plugins. `wifi_jammer.py` - the one plugin in this
+group judged worth a real rebuild rather than removal - **fixed and
+moved to `plugins-wip`** as `wifi-jammer-suite` (`WifiJammerNG`): same
+fatal `BasePlugin` bug fixed, plus the complete lack of any targeting
+scope (the original fired at every AP that ever yielded a handshake,
+unconditionally, via an unbounded `aireplay-ng --deauth 0`) replaced
+with an `authorized_networks` allowlist that is empty by default and
+gates every firing path - the plugin does nothing at all until
+explicitly pointed at specific hardware by BSSID or SSID. Also switched
+from a separate `aireplay-ng` subprocess to `agent.run('wifi.deauth
+<mac>')`, the same in-process bettercap call this fork's own core
+`pwnagotchi/agent.py` already uses. `beaconify.py` reviewed, no bugs,
+kept as-is. `beacons.py` and `test_security.py` reviewed and found to
+have real, fixable bugs (interface hardcoding + a face-lookup risk;
+an uninitialized-attribute crash + a wrong AP-dict key, respectively)
+but no keep/fix decision made yet - both left on the list, decision
+deferred. Full detail in `plugin-upgrade-proposals/cluster-33-network-security/NOTES.md`
+and `plugins-wip:wifi-jammer-suite/NOTES.md`.
+
 **Group 48 (Cluster 32 - Attack/Capture, last two unreviewed):**
 `potfilesorter.py` removed - its `on_webhook()` signature can never match
 the framework's real call, so the entire advertised sort/backup feature
@@ -813,7 +849,7 @@ repo).
 - **instattack.py** - Launches an immediate associate/deauth attack the instant a device is spotted
 - **meshpwnstic.py** - Remote deauth/assoc/status control over a Meshtastic LoRa radio; **fix candidate, saved for later** - real functionality, but ships with no sender authentication at all on `/bcap`/`/deauth`/`/assoc`/`/restart` (any device on the mesh can run them), plus a `.pcap`-vs-`.pcapng` GPS-sidecar bug, a `self.nodes['num']` literal-key bug, two non-callable `logging(e)` calls, and an unguarded `self.interface.sendText()`; see Cluster 32 notes
 - **mycracked_pw.py** - Grabs all cracked passwords, generates WiFi QR codes and a wordlist
-- **neurolyzer.py** - MAC randomization, WIDS/WIPS evasion; well-engineered, no bugs found, but directly overlaps `mac_randomizer.py` (below) - both would fight over the interface's MAC if both are enabled; decision on both deferred, see Cluster 30 notes
+- **neurolyzer.py** - MAC randomization, WIDS/WIPS evasion; well-engineered, no bugs found; the `mac_randomizer.py` MAC-conflict concern is now moot (that plugin was removed in Cluster 33 - fatal `BasePlugin` import bug, never actually functional), leaving this as the clear single option for MAC rotation; still no explicit keep decision made, decision deferred, see Cluster 30 notes
 - **onlinehashcrack_ng.py** - Uploads handshakes to onlinehashcrack.com (another alternate implementation, alongside better_onlinehashcrack.py; shares the same `.pcap`-only backlog-scan bug, but uses a possibly-more-current download endpoint and the device's real global whitelist)
 - **privacy-nightmare.py** - **IN PROGRESS, moved to `plugins-wip`** as `gps-tagger-suite` (renamed `GPSTaggerNG`) - GPS-tags every AP seen and writes a `.gps.json` sidecar next to each handshake, interoperating with `handshakes_dl_ng.py`'s existing sidecar support; see Cluster 30 notes
 - **probenpwn.py** - Aggressive handshake/PMKID capture, quiet assoc attacks, WPS PIN extraction, adaptive rate limiting
@@ -920,20 +956,10 @@ repo).
 
 ## Network / Security analysis
 
-- **beaconify.py** - Sends beacon frames more often, restarts pwngrid when it stops listening for other units' beacons
-- **beacons.py** - Advertises pwnagotchi state via valid WiFi beacon frames
-- **dns_spoof_detector.py** - Detects DNS spoofing/poisoning attempts
-- **mac_adress_logger.py** - Logs MAC addresses seen on the network
-- **mac_randomizer.py** - Randomizes the device's own MAC address; overlaps `neurolyzer.py`'s MAC rotation (Attack/Capture category) - would conflict if both enabled; not yet independently reviewed, decision deferred alongside neurolyzer.py, see Cluster 30 notes
-- **network_intrusion_detector.py** - Detects potential network intrusion attempts
-- **network_mapper.py** - Maps/enumerates devices on the local network
-- **network_packet_sniffer.py** - Sniffs and logs network packets
-- **rogue_ap_detector.py** - Detects rogue/unauthorized access points
-- **test_security.py** - "LAN Security Monitor" plugin
-- **traffic_sniffer.py** - Sniffs and analyzes network traffic
-- **wifi_analyser.py** - Analyzes nearby WiFi networks/signals
-- **wifi_jammer.py** - Sends deauth/jamming frames at WiFi networks - active, no scoping mentioned, treat with the same "your own SSIDs only" caution as your own gated plugins
-- **wifi_password_cracker.py** - Attempts to crack WiFi passwords from captured handshakes - scoping unclear, redundant with crack-pipeline plugins already on the list
+- **beaconify.py** - Sends beacon frames more often, restarts pwngrid when it stops listening for other units' beacons; reviewed in Cluster 33, no bugs found, kept as-is
+- **beacons.py** - Advertises pwnagotchi state via valid WiFi beacon frames; reviewed in Cluster 33 - real base class and hooks, but `__init__` hardcodes the monitor interface as `wlan0mon` and reads `/sys/class/net/wlan0mon/address` at construction time (crashes plugin load if the interface isn't up yet or is named differently), plus a possible `ValueError` if the live face value isn't in its hardcoded face list; fix candidate, decision deferred, see Cluster 33 notes
+- **test_security.py** - "LAN Security Monitor" plugin; reviewed in Cluster 33 - real base class, but `self.security_issue_detected` is read at the end of `deep_packet_inspection()` without always being initialized first, causing an `AttributeError` crash on most `on_excited` events (a common, frequent personality state); also checks a nonexistent `essid` AP-dict key (should be `hostname`) so its network-ID checks never actually match; explicitly marked "ON DEVELOPMENT" in its own header with most methods unfilled stubs; fix candidate but mostly scaffolding, decision deferred, see Cluster 33 notes
+- **wifi_jammer.py** - **IN PROGRESS, moved to `plugins-wip`** as `wifi-jammer-suite` (renamed `WifiJammerNG`) - the fatal `BasePlugin` import (doesn't exist on this fork), the `.bssid` attribute-access bug, and the complete lack of any targeting scope have all been fixed; rebuilt around an `authorized_networks` allowlist (empty by default - fires at nothing until explicitly configured) and bettercap's own native `agent.run('wifi.deauth <mac>')` call instead of a separate `aireplay-ng` subprocess; see Cluster 33 notes
 
 ## Notifications / Social / Webhooks
 
