@@ -1,7 +1,8 @@
 # Cluster 37 - Hardware-specific
 
-Status: **IN PROGRESS** - 10 removed, 2 merged and moved to
-`plugins-wip`, 1 kept as-is, 5 still pending a decision.
+Status: **IN PROGRESS** - 10 removed, 3 fixed/upgraded and moved to
+`plugins-wip` (2 merged into one, 1 feature-upgraded), 5 still
+pending a decision.
 
 Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, "## Hardware-specific"
 section, Group 59 in the elimination log.
@@ -93,17 +94,87 @@ user does not own, so they were removed rather than fixed:
   safety net, so any error silently kills it forever) but removed as
   not matching owned hardware.
 
-## Kept as-is (1)
+## Feature-upgraded and moved to `plugins-wip` (1 plugin)
 
-- **mad_hatter.py** - universal UPS/battery monitor supporting
-  MAX17040/17048 fuel gauges, all INA219-based HATs (explicitly
-  including Waveshare, per its own docstring and `ups_type` alias
-  table), and the PiSugar 2/2 Pro/3 families through one plugin with
-  auto-detection. No bugs found - it correctly merges its own
-  defaults and guards throughout, unlike every single-hardware
-  battery plugin reviewed in this cluster. This is the one plugin in
-  the battery/UPS group that actually targets hardware the user owns
-  (a Waveshare UPS HAT).
+### mad_hatter.py -> MadHatterNG (`mad-hatter-suite`, file `mad_hatterNG.py`)
+
+Universal UPS/battery monitor supporting MAX17040/17048 fuel gauges,
+all INA219-based HATs (explicitly including Waveshare, per its own
+docstring and `ups_type` alias table), and the PiSugar 2/2 Pro/3
+families through one plugin with auto-detection. **No bugs found** -
+it correctly merges its own defaults and guards throughout, unlike
+every single-hardware battery plugin reviewed in this cluster. This
+is the one plugin in the battery/UPS group that actually targets
+hardware the user owns (a Waveshare UPS 3S HAT).
+
+Because there were no bugs to fix, this was a **pure feature-upgrade
+rebuild**, not a bugfix. Everything that already worked was preserved
+verbatim: all chip-backend calibration math (MAX170xx VCELL scaling,
+INA219 shunt-voltage-based current calculation, PiSugar 2/2 Pro/3
+register handling), the `ups_type` auto-detect/alias system
+(including `"waveshare"` -> `"ina219"`), the `self.options =
+dict(self.__defaults__)` defaults-merge workaround, and the existing
+on-screen positioning (`ui_position_x`/`ui_position_y`, including the
+negative-x-means-"pixels in from the right edge" convention - this
+plugin was already user-positionable before the rebuild).
+
+**Naming note:** the file is `mad_hatterNG.py` (capital NG, no
+underscore) per the user's explicit request, but the `config.toml`
+section is `[main.plugins.mad_hatterNG]` - NOT snake_case
+`mad_hatter_ng` - because this fork's loader
+(`pwnagotchi/plugins/__init__.py`, `load_from_file()`) registers and
+looks up every plugin by the plugin file's exact basename, case
+included (`plugin_name = os.path.basename(filename.replace(".py",
+""))`, confirmed by reading and running that function against this
+file). A `mad_hatter_ng` config section for a file named
+`mad_hatterNG.py` would never appear in the framework's "enabled"
+list - not an options bug, a total no-load. Documented prominently in
+the suite's `config.toml` header, `README.md`, and its own `NOTES.md`.
+
+**4 new features built (all approved):**
+
+- **Threshold notifications** - fires a notification through
+  whichever notification suite is available (looked up via
+  `pwnagotchi.plugins.loaded`, matching the real framework's plugin
+  registry) when a warning/critical/shutdown-imminent threshold is
+  crossed, instead of only updating the on-screen text. Fires once
+  per crossing, not every poll cycle, and degrades gracefully (log +
+  skip) if `apprise-notify-suite`/`discord-suite` isn't loaded.
+- **Historical trend logging** - a bounded, disk-persisted history of
+  voltage/SoC/drain-rate readings (configurable size/interval), with
+  new `/history` (inline-SVG rendering, no external chart dependency)
+  and `/history.json` webhook pages.
+- **Drain-rate / activity correlation** - reads `timer-suite`'s real
+  CSV output (best-effort/optional, same graceful-degradation pattern
+  as `BluetoothReconNG`'s correlation feature) to show drain rate
+  during active epochs vs. idle, alongside the existing flat
+  mAh/current time estimate.
+- **Config-sanity webhook page** (`/sanity`) - cross-checks the
+  configured `ups_type` against what was actually auto-detected on
+  the I2C bus, and flags internally inconsistent option combinations
+  (e.g. `shunt_ohms <= 0`, a fixed `battery_cells` that doesn't match
+  the detected pack voltage, `charging_gpio` colliding with a
+  reserved/I2C pin).
+
+**Testing:** 60 automated tests passing, including spot-checks of the
+preserved calibration math against hand-encoded fake I2C register
+values (not just "does it run"), the positioning logic, the
+notification threshold-crossing logic, history retention, the
+correlation logic against a constructed sample `timer-suite` CSV, and
+the sanity-check page's flagging logic. **Not tested on real hardware
+yet** - this is the one plugin in the entire Hardware-specific
+cluster confirmed to match hardware the user actually owns, so a
+real-hardware pass here is especially worth doing: the Waveshare UPS
+3S HAT's actual `shunt_ohms`/current sign, GPIO charge detection
+against a real status line, notifications against a real Discord
+webhook/Apprise target, and a real discharge cycle to sanity-check
+`avg_current_ma` and the drain-rate correlation numbers.
+
+**Original preserved:** an exact, unmodified copy of `mad_hatter.py`
+is kept in [`originals/`](originals/) (no real upstream `config.toml`
+was ever found for it - the sample in `reference-configs/` was
+machine-generated from its own `__defaults__` dict, not a real found
+sample, so there's no `mad_hatter.config.original.toml`).
 
 ## Merged and moved to `plugins-wip` (2 plugins -> 1 new plugin)
 

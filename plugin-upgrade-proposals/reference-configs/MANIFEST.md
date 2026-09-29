@@ -154,11 +154,10 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `WigleLocator` | [`WigleLocator.toml`](WigleLocator.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wigle.toml` |
 | `wpa-sec_ng.py` | [`wpa-sec_ng.toml`](wpa-sec_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wpa-sec.toml` |
 
-## Generated from the plugin's own `__defaults__` dict (9)
+## Generated from the plugin's own `__defaults__` dict (8)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `educational-purposes-exclusively.py` | [`educational-purposes-exclusively.toml`](educational-purposes-exclusively.toml) | `itsdarklikehell/pwnagotchi-plugins/educational-purposes-exclusively.py` |
-| `mad_hatter.py` | [`mad_hatter.toml`](mad_hatter.toml) | `alienmajik/pwnagotchi_plugins/mad_hatter.py` |
 | `pwnaware.py` | [`pwnaware.toml`](pwnaware.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnaware.py` |
 | `pwnmothership` | [`pwnmothership.toml`](pwnmothership.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnmothership.py` |
 | `rss_voice.py` | [`rss_voice.toml`](rss_voice.toml) | `itsdarklikehell/pwnagotchi-plugins/rss_voice.py` |
@@ -211,7 +210,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Pwny-WG` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (29)
+## Already handled - moved to `plugins-wip`, not duplicated here (30)
 | Plugin | Where |
 |---|---|
 | `apprise-notify.py` | `plugins-wip` suite (apprise-notify-suite, AppriseNotifyNG) |
@@ -219,6 +218,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `birthday.py` | `plugins-wip` suite (birthday-suite, BirthdayNG) |
 | `blemon_plugin.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with bluetoothsniffer.py) |
 | `bluetoothsniffer.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with blemon_plugin.py) |
+| `mad_hatter.py` | `plugins-wip` suite (mad-hatter-suite, MadHatterNG - feature upgrade, file mad_hatterNG.py) |
 | `clock.py` | `plugins-wip` suite (clock-suite, ClockNG) |
 | `crack_house.py` | `plugins-wip` suite (crack-house-suite, CrackHouseNG) |
 | `discoBoss.py` | `plugins-wip` suite |

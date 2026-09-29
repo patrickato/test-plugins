@@ -40,21 +40,23 @@ iteration, silently breaking a configured button on pin overlap),
 `pibat.py`/`pisugar2.py`/`pisugar3.py`/`pivoyager.py` (each also had
 real bugs, but removed primarily because none target hardware the
 user owns). **Merged and moved to `plugins-wip`**: `blemon_plugin.py` +
-`bluetoothsniffer.py` -> `BluetoothReconNG` (`bluetooth-recon-suite`)
-- see the master list entry above and
+`bluetoothsniffer.py` -> `BluetoothReconNG` (`bluetooth-recon-suite`).
+**Feature-upgraded and moved to `plugins-wip`**: `mad_hatter.py` ->
+`MadHatterNG` (`mad-hatter-suite`, file `mad_hatterNG.py`) - the one
+battery/UPS plugin in this cluster that actually targets the user's
+hardware (a Waveshare INA219-based UPS HAT, matched via its
+`ups_type = "waveshare"` alias); had no known bugs, so all existing
+chip logic and positioning were preserved unchanged and 4 new
+features were added (threshold notifications, history log + webhook
+graph, drain-rate/activity correlation, config-sanity page). See the
+master list entries above and
 `plugin-upgrade-proposals/cluster-37-hardware-specific/NOTES.md` for
-full detail. Originals preserved verbatim in
+full detail on both. Originals preserved verbatim in
 `plugin-upgrade-proposals/cluster-37-hardware-specific/originals/` in
-case the merge needs to be reverted. Remaining pending decisions:
-fix_region.py, flipperLink.py, pwndroid.py (real path-traversal
-security bug flagged), sigstr.py, wof.py (no bugs, likely
-keep-as-is). `mad_hatter.py` reviewed with no bugs and kept as-is -
-it's the one battery/UPS plugin in this cluster that actually
-targets the user's hardware (a Waveshare INA219-based UPS HAT,
-matched via its `ups_type = "waveshare"` alias). `pibat.py`,
-`pisugar2.py`, `pisugar3.py`, and `pivoyager.py` were removed as not
-matching any hardware the user owns - see the master list entries
-above.
+case either rebuild needs to be reverted. Remaining pending
+decisions: fix_region.py, flipperLink.py, pwndroid.py (real
+path-traversal security bug flagged), sigstr.py, wof.py (no bugs,
+likely keep-as-is).
 
 **Group 58 (Cluster 36, Novelty/Games/Personality):** the full
 13-entry cluster (after excluding 6 duplicate listings already
@@ -1205,7 +1207,7 @@ repo).
 - **gpio_shutdown.py** - **REMOVED** - GPIO-triggered clean shutdown; unguarded `KeyError` on missing `gpio` option (framework never merges `__defaults__`); user chose to drop rather than fix; see Cluster 37 notes
 - **gsmfake.py** - **REMOVED** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable; **not actually a pwnagotchi plugin at all** - no `plugins.Plugin` subclass anywhere, loader never registers it; it's a verbatim gpsd `gpsfake.py` test harness; see Cluster 37 notes
 - **img2xbm.py** - **REMOVED** - Converts images to XBM format for a Flipper Zero display; **not a pwnagotchi plugin** - standalone CLI tool, no `Plugin` subclass, and its `main()` is literally `pass` (does nothing); see Cluster 37 notes
-- **mad_hatter.py** - **KEPT AS-IS** - Universal UPS battery monitor with auto-shutdown; no bugs found; the one battery/UPS plugin in this cluster that matches the user's actual hardware (a Waveshare INA219-based UPS HAT, `ups_type = "waveshare"`); see Cluster 37 notes
+- **mad_hatter.py** - **IN PROGRESS, moved to `plugins-wip`** as `mad-hatter-suite` (`MadHatterNG`, file `mad_hatterNG.py`) - no bugs in the original, so this is a pure feature-upgrade rebuild; all existing chip backends, the `ups_type`/auto-detect alias system (including `"waveshare"` - the user's actual hardware), and existing on-screen positioning preserved unchanged; adds threshold notifications (via apprise-notify-suite/discord-suite), a persisted history log + webhook graph, drain-rate/activity correlation against timer-suite, and a config-sanity webhook page; original preserved verbatim in `plugin-upgrade-proposals/cluster-37-hardware-specific/originals/`; see Cluster 37 notes
 - **memtemp-plus.py** / **memtemp_adv.py** / **memtemp_ng.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin); memtemp_adv.py adds disk usage via psutil but has a real `NameError` bug on one screen/orientation combo (`y_pos` typo for `v_pos`); memtemp_ng.py uses the framework's own mem/cpu helpers, no bugs found, but its default CPU-load field blocks the UI thread ~0.1s per refresh (a non-blocking alternate field exists but isn't the default); see Cluster 25 notes
 - **pibat.py** - **REMOVED** - Voltage indicator for the PiBat I2C UPS/battery hat; not hardware the user owns (opens I2C bus at import time with no guard, a separate real bug); see Cluster 37 notes
 - **pisugar2.py** / **pisugar3.py** - **REMOVED** - Voltage/percentage indicator for PiSugar 2 / PiSugar 3; not hardware the user owns (each also had unguarded option `KeyError`s and unload bugs); see Cluster 37 notes
