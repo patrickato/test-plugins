@@ -20,6 +20,25 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 46 (Cluster 31 - Attack/Capture, cloud-crack-upload destinations,
+revisiting Group 19):** `banthex.py` removed - redundant with, and more
+buggy than, `banthex-de.py` (which fixes a file-deletion copy/paste bug
+`banthex.py` has in its corrupted-state-file recovery path). `dropbox_ul.py`
+removed. `nextcloud.py` removed - source review found an additional bug
+beyond the shared `.pcap`/`.pcapng` issue: `_make_session()` returns
+`False` on bad credentials/URL, but the caller never checks that return
+value, guaranteeing an `AttributeError` crash on every internet-available
+cycle instead of the clean failure the code intended. `hashespwnagotchi.py`
+kept on the list pending a decision - real security concern found and
+confirmed this cluster: it shells out via `subprocess.getoutput()` with
+Python-string-formatted commands, and this fork's handshake filenames
+embed the AP's ESSID (attacker-controlled), creating a real command-
+injection risk from a maliciously-named nearby AP; also still has the
+`.pcap` batch-scan bug and a disabled whitelist-exclusion call already
+flagged back in Group 19. `banthex-de.py` kept, not yet fixed. See
+`plugin-upgrade-proposals/cluster-06-cloud-crack-upload/NOTES.md` (updated
+this cluster) for full detail.
+
 **Group 45 (Cluster 30 - Attack/Capture, continued):** `privacy-nightmare.py`
 moved to `plugins-wip` as `gps-tagger-suite` (renamed `GPSTaggerNG`) - nine
 source-verified bugs fixed (see `plugins-wip:gps-tagger-suite/NOTES.md`),
@@ -741,19 +760,18 @@ repo).
 
 - **aircrackonly.py** / **aircrackonly_ng.py** - Verifies a pcap actually contains a handshake/PMKID; deletes it if not (`_ng` also shows an on-screen status message when it deletes a pcap)
 - **auto_tune.py** - Adjusts AUTO mode parameters; no bugs found after extensive review (692 lines); see Cluster 26 notes
-- **banthex.py** / **banthex-de.py** - Auto-uploads handshakes to banthex.de
+- **banthex-de.py** - Auto-uploads handshakes to banthex.de; has the recurring `.pcap`/`.pcapng` bug (never finds this fork's real captures) but is otherwise the better-fixed of the two banthex variants (`banthex.py` removed as the redundant, more-buggy twin); not yet fixed, see Cluster 31 notes
 - **better_apfaker.py** - Creates fake APs
 - **better_onlinehashcrack.py** - Uploads handshakes to onlinehashcrack.com (alternate implementation)
 - **better_quickdic.py** - Quick dictionary scan; optionally sends found passwords as QR code/text to a Telegram bot
 - **deauth.py** - Counts successful deauth attacks for the session
 - **discoBoss.py** - Configurable rule engine for managing deauth ("disco") behavior
 - **DiscoHash** - **IN PROGRESS, moved to `plugins-wip`** - broken as shipped (wrong hardcoded handshake directory plus the recurring `.pcap`/`.pcapng` bug); being rebuilt as `discohash_ng.py`, consolidated with `discoBoss.py` and `hashbot.py` into the DiscoHash Suite; see `plugins-wip` repo, `discohash-suite/`
-- **dropbox_ul.py** - Auto-uploads handshakes to a Dropbox app
 - **educational-purposes-exclusively.py** / **educational-purposes-only.py** - Auto-authenticates to known networks and performs internal network recon (no target scoping)
 - **enterprise.py** - Attempts to obtain credentials from enterprise networks when bored
 - **handshakes-dl-hashie.py** - **IN PROGRESS, moved to `plugins-wip`** - web-UI handshake download page, also surfaces already-converted `.2500`/`.16800`/`.22000` hash files per capture; broken as shipped (the recurring `.pcap`-only bug in its glob filter, filename math, and download handler); being rebuilt; see `plugins-wip` repo
 - **hashbot.py** - **IN PROGRESS, moved to `plugins-wip`** - not actually a pwnagotchi plugin (standalone script meant to run off-pi); consolidated into the DiscoHash Suite as the sole Discord-command bot (absorbing `discoBoss.py`'s control functions too); see `plugins-wip` repo, `discohash-suite/`
-- **hashespwnagotchi.py** - Uploads handshakes to hashes.pw
+- **hashespwnagotchi.py** - Uploads handshakes to hashes.pw, converts locally via `hcxpcapngtool` first; **real security concern found** - builds several `hcxpcapngtool` shell commands via Python string formatting and runs them with `subprocess.getoutput()` rather than a non-shell call; this fork's own handshake filenames embed the AP's ESSID (`{ESSID}_{BSSID}.pcap`/`.pcapng`, confirmed against the fork's documented capture-file naming), and ESSID is fully attacker-controlled - a malicious nearby AP broadcasting an SSID containing shell metacharacters could achieve command injection as root the moment this plugin tries to convert that capture; also has the recurring `.pcap`-only bug in its backlog batch-scan (live per-capture conversion still works), fragile `path.split(".")[0]` extension-stripping throughout, and its whitelist-exclusion call is present but commented out (would need to be re-enabled alongside any other fix); not yet fixed, see Cluster 31 notes
 - **hashie-hcxpcapngtool.py** - Converts pcaps to crackable hash formats via hcxpcapngtool, updated for modern hcxtools/hashcat formats
 - **hashie_ng.py** - Cleaned-up hashie variant co-authored by jayofelony himself; same live pcap->hash conversion, no delete-lonely-pcaps behavior
 - **hashieclean.py** - hashie variant that also purges pcaps that can't be converted to a hash
@@ -762,7 +780,6 @@ repo).
 - **meshpwnstic.py** - Remote deauth/assoc/status control over a Meshtastic LoRa radio
 - **mycracked_pw.py** - Grabs all cracked passwords, generates WiFi QR codes and a wordlist
 - **neurolyzer.py** - MAC randomization, WIDS/WIPS evasion; well-engineered, no bugs found, but directly overlaps `mac_randomizer.py` (below) - both would fight over the interface's MAC if both are enabled; decision on both deferred, see Cluster 30 notes
-- **nextcloud.py** - Auto-uploads handshakes to a Nextcloud WebDAV endpoint
 - **onlinehashcrack_ng.py** - Uploads handshakes to onlinehashcrack.com (another alternate implementation, alongside better_onlinehashcrack.py; shares the same `.pcap`-only backlog-scan bug, but uses a possibly-more-current download endpoint and the device's real global whitelist)
 - **potfilesorter.py** - Sorts a hashcat potfile into a usable wpa_supplicant.conf
 - **privacy-nightmare.py** - **IN PROGRESS, moved to `plugins-wip`** as `gps-tagger-suite` (renamed `GPSTaggerNG`) - GPS-tags every AP seen and writes a `.gps.json` sidecar next to each handshake, interoperating with `handshakes_dl_ng.py`'s existing sidecar support; see Cluster 30 notes

@@ -112,17 +112,20 @@ backlog-scan filters for `.pcap` only and never matches this image's
 |---|---|---|
 | [`shared batch-scan pcapng fix`](cluster-05-pcap-hash-conversion/NOTES.md) | `hashie-hcxpcapngtool.py`, `hashieclean.py`, `hashie_ng.py` | KEPT AS-IS - documented fix, low priority |
 
-### Cluster 6 - cloud-crack-upload destinations
+### Cluster 6 - cloud-crack-upload destinations (revisited in Cluster 31)
 
-Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 19. 7 of 8
-plugins in this cluster are completely non-functional on this image -
-same `.pcap`-only filter bug as Cluster 5, but here it's the plugin's
-only trigger, not a secondary path. All share one fix. One plugin
-(`pwn2crack.py`) already works correctly and needs nothing.
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 19, revisited
+in Group 46. Originally 7 of 8 plugins in this cluster were found
+completely non-functional on this image (same `.pcap`-only filter bug
+as Cluster 5, but here it's the plugin's only trigger, not a secondary
+path) and all 8 were kept pending a shared one-line fix. A closer
+per-plugin pass in Cluster 31 removed 3 of the 8 outright (each had its
+own additional, more serious bug beyond the shared one) and found a real
+command-injection security concern in `hashespwnagotchi.py`.
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
-| [`shared upload-trigger pcapng fix`](cluster-06-cloud-crack-upload/NOTES.md) | `banthex.py`, `banthex-de.py`, `better_onlinehashcrack.py`, `dropbox_ul.py`, `hashespwnagotchi.py`, `nextcloud.py`, `wpa-cracking-project-with-pwnagotchi` | KEPT AS-IS - documented fix, low priority (+ extra whitelist flag on hashespwnagotchi.py) |
+| [`cloud-crack-upload cluster notes`](cluster-06-cloud-crack-upload/NOTES.md) | `banthex.py`, `banthex-de.py`, `better_onlinehashcrack.py`, `dropbox_ul.py`, `hashespwnagotchi.py`, `nextcloud.py`, `wpa-cracking-project-with-pwnagotchi`, `pwn2crack.py` | 3 REMOVED (`banthex.py`, `dropbox_ul.py`, `nextcloud.py`), `banthex-de.py`/`hashespwnagotchi.py` KEPT pending a fix (`hashespwnagotchi.py` has a real security finding - see notes), `better_onlinehashcrack.py`/`wpa-cracking-project-with-pwnagotchi` KEPT AS-IS untouched this pass, `pwn2crack.py` already works, no fix needed |
 
 ### Cluster 7 - cracked-password display/export
 

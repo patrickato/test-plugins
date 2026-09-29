@@ -1,7 +1,89 @@
 # Notes: cloud-crack-upload destination cluster
 
-**Status: all 8 KEPT on the master list.** 7 share one bug and one
-shared fix; the 8th already works correctly.
+**Status (updated, Cluster 31): 3 of 8 REMOVED, 2 kept-pending-fix, 3
+untouched.** Originally (Group 19) all 8 were kept pending a shared
+one-line fix. Revisited in Cluster 31 with a closer per-plugin pass:
+
+- **Removed**: `banthex.py` (redundant/more-buggy twin of `banthex-de.py`
+  - see the file-deletion bug below), `dropbox_ul.py` (the shared `.pcap`
+  bug plus an unvalidated required option that guarantees an uncaught
+  `KeyError` on every upload if `path` isn't set), `nextcloud.py` (the
+  shared `.pcap` bug plus a genuine crash bug - see below).
+- **Kept, not yet fixed**: `banthex-de.py` (the better of the two
+  banthex variants - still needs the `.pcap`/`.pcapng` fix),
+  `hashespwnagotchi.py` (kept specifically because of the real security
+  finding below, which needs to be dealt with regardless of what
+  happens to the rest of it - see that section).
+- **Untouched this pass**: `better_onlinehashcrack.py`,
+  `wpa-cracking-project-with-pwnagotchi`, `pwn2crack.py` (already works,
+  no fix needed - see below).
+
+## Additional bugs found in Cluster 31 (beyond the shared `.pcap` issue)
+
+- **`banthex.py`**: its `__init__` corrupted-state-file recovery has a
+  copy/paste bug - if its own `/root/.banthex_uploads` state file is
+  ever corrupt JSON, the except-handler deletes a *different* file
+  (`/root/.wpa_sec_uploads`, another plugin's state file entirely) and
+  then immediately tries to reopen the still-corrupt original file,
+  which fails again, this time uncaught - the plugin fails to load at
+  all. `banthex-de.py` (a separate contributor's fork of the same
+  plugin) fixes this correctly - it deletes its own actual state file.
+  This, on top of being otherwise identical code, is why `banthex.py`
+  was removed as the redundant/worse of the two rather than fixed.
+- **`dropbox_ul.py`**: `on_loaded()` validates the `app_token` option
+  but not the `path` option, which `_upload_to_dropbox()` also requires
+  (`self.options["path"]`, bare-indexed). If `path` is ever left unset,
+  every upload attempt raises `KeyError` - not a `requests` exception or
+  `OSError`, so the existing `except` clauses around the upload call
+  never catch it - which aborts that entire upload cycle silently.
+- **`nextcloud.py`**: `_make_session()` returns `False` on bad
+  credentials or a bad `baseurl`/path (a 401 or 404 response), but
+  `on_internet_available` never checks that return value before
+  continuing to use `self.session` - which is still `None` in that
+  case - guaranteeing `AttributeError: 'NoneType' object has no
+  attribute 'request'` on every single internet-available cycle instead
+  of the clean "wrong creds"/"path does not exist" log message the code
+  clearly intended.
+
+## `hashespwnagotchi.py` - real security concern (new this pass)
+
+`_writeEAPOL()` and `_writePMKID()` build `hcxpcapngtool` commands with
+Python string formatting (`"hcxpcapngtool -o {}.22000 {} ...".format(...)`)
+and execute them with `subprocess.getoutput()`, which runs the string
+through a real shell (`/bin/sh -c`) rather than calling the binary
+directly with an argument list.
+
+This fork's own handshake filenames embed the AP's ESSID directly -
+confirmed convention is `{ESSID}_{BSSID}.pcap`/`.pcapng` (this plugin's
+own `_essid_from_path`/`_bssid_from_path` helpers assume exactly this
+shape, splitting the filename on `_`). An ESSID is a value any nearby
+device can broadcast as literally anything, including shell
+metacharacters (backticks, `$()`, `;`, `|`, etc.). Since that string
+ends up as part of the filename passed into a shell-interpreted command,
+a maliciously-named nearby AP could achieve command injection - running
+arbitrary commands as root - the moment the pwnagotchi captures a
+handshake from it and this plugin attempts to convert the file. This
+applies to the real-time `on_handshake` path too, not just the broken
+`.pcap` batch scan, since `on_handshake` is handed the real filename
+directly and isn't affected by that bug.
+
+This needs a real fix (switching to `subprocess.run([...], shell=False)`
+with the path passed as a proper argument, never shell-interpolated)
+before this plugin should run on a device meant to actually capture
+handshakes from networks it doesn't control - which is the entire point
+of a pwnagotchi. Kept on the list rather than removed since the upload
+feature itself is otherwise the most capable of this cluster (local
+conversion plus PMKID repair), but **not safe to run as shipped.**
+
+Also still true from the original Group 19 review: the batch backlog
+scan has the shared `.pcap`-only bug (live per-handshake conversion via
+`on_handshake` is unaffected, since it uses the real filename directly);
+filename parsing throughout uses a fragile `path.split(".")[0]`, which
+assumes exactly one `.` in the full path and can mis-parse if an ESSID
+or directory component itself contains a dot; and its
+`remove_whitelisted()` call is present in the source but commented out
+(see the original finding below) - would need to be re-enabled in the
+same pass as anything else.
 
 ## The shared bug (7 of 8 plugins)
 
