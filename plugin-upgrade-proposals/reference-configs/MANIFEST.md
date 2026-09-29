@@ -209,7 +209,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `wd_honey_Pot.py` | [`wd_honey_Pot.toml`](wd_honey_Pot.toml) | `itsdarklikehell/pwnagotchi-plugins/wd_honey_Pot.py` |
 | `wifi_adventures.py` | [`wifi_adventures.toml`](wifi_adventures.toml) | `itsdarklikehell/pwnagotchi-plugins/wifi_adventures.py` |
 
-## Generated from a scan of `self.options` usage (no `__defaults__`) (18)
+## Generated from a scan of `self.options` usage (no `__defaults__`) (17)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `adsbsniffer.py` | [`adsbsniffer.toml`](adsbsniffer.toml) | `alienmajik/pwnagotchi_plugins/adsbsniffer.py` |
@@ -218,7 +218,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `meshpwnstic.py` | [`meshpwnstic.toml`](meshpwnstic.toml) | `sniffleupagus/pwnagotchi_plugins/meshpwnstic.py` |
 | `neurolyzer.py` | [`neurolyzer.toml`](neurolyzer.toml) | `alienmajik/pwnagotchi_plugins/neurolyzer.py` |
 | `ntfy_msg.py` | [`ntfy_msg.toml`](ntfy_msg.toml) | `itsdarklikehell/pwnagotchi-plugins/ntfy_msg.py` |
-| `printp.py` | [`printp.toml`](printp.toml) | `itsdarklikehell/pwnagotchi-plugins/printp.py` |
 | `pwn2crack.py` | [`pwn2crack.toml`](pwn2crack.toml) | `pwnagotchi-unofficial/plugins_archive/Brets0150/pwnagotchi-to-hashtopolis-plugin/pwn2crack.py` |
 | `pwnwatch.py` | [`pwnwatch.toml`](pwnwatch.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnwatch.py` |
 | `Pwny-Tailscale` | [`Pwny-Tailscale.toml`](Pwny-Tailscale.toml) | `wpa-2/pwnagotchi-plugins/tailscale.py` |
@@ -231,10 +230,9 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `wof.py` | [`wof.toml`](wof.toml) | `itsdarklikehell/pwnagotchi-plugins/wof.py` |
 | `woop_woop.py` | [`woop_woop.toml`](woop_woop.toml) | `itsdarklikehell/pwnagotchi-plugins/woop_woop.py` |
 
-## No configurable options detected - `enabled = true` only (13)
+## No configurable options detected - `enabled = true` only (12)
 | Plugin | Reference config | Source |
 |---|---|---|
-| `Bat-Trinity` | [`Bat-Trinity.toml`](Bat-Trinity.toml) | `pwnagotchi-unofficial/plugins_archive/hannadiamond/pwnagotchi-plugins/waveshare_37inch/v37inch/__init__.py` |
 | `cmd_server.py` | [`cmd_server.toml`](cmd_server.toml) | `sniffleupagus/pwnagotchi_plugins/cmd_server.py` |
 | `httpserver.py` | [`httpserver.toml`](httpserver.toml) | `itsdarklikehell/pwnagotchi-plugins/httpserver.py` |
 | `img2xbm.py` | [`img2xbm.toml`](img2xbm.toml) | `pwnagotchi-unofficial/plugins_archive/Matt-London/pwnagotchi-flipper/tools/img2xbm.py` |
@@ -248,22 +246,19 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `terminal2.py` | [`terminal2.toml`](terminal2.toml) | `itsdarklikehell/pwnagotchi-plugins/terminal2.py` |
 | `theylive.py` | [`theylive.toml`](theylive.toml) | `alienmajik/pwnagotchi_plugins/theylive.py` |
 
-## Not found - no config or source located in this environment (15)
+## Not found - no config or source located in this environment (12)
 | Plugin |
 |---|
 | `envtune` |
 | `fix_brcmfmac.py` |
 | `GitHub_Backups` |
-| `Pwan-Girl` |
 | `pwmenu` |
 | `pwnagotchi-18650` |
 | `pwnagotchi-http-module` |
 | `pwnagotchi-WittyPi4L3V7-plugin` |
-| `PwnagotchiCharacterPlugin` |
 | `pwndroid.py` |
 | `PwnSpotify` |
 | `Pwny-WG` |
-| `screen_color_invert` |
 | `Showerthoughts` |
 | `wpa-cracking-project-with-pwnagotchi` |
 

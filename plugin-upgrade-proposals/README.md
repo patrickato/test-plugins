@@ -646,5 +646,28 @@ reviewed with real, fixable bugs found, decision deferred.
 | [`plugins-wip: wifi-jammer-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/wifi-jammer-suite/NOTES.md) | `wifi_jammer.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
 | [`Cluster 33 notes`](cluster-33-network-security/NOTES.md) | all 14 plugins in this category | 9 REMOVED, 1 moved to `plugins-wip` (`wifi_jammer.py`), 3 DEFERRED (`beacons.py`, `test_security.py`, `mac_randomizer.py`'s cross-reference on `neurolyzer.py`), 1 KEPT AS-IS (`beaconify.py`) |
 
+### Cluster 34 - Display / UI
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 50. First
+category-wide pass over Display/UI (19 plugins) - most of this
+category had never been reviewed in either the earlier duplicate-cluster
+round or the current category-by-category pass. 5 removed so far:
+`printp.py` (explicit example plugin, `KeyError`-crashes on load with
+no `__defaults__` fallback), `PwnagotchiCharacterPlugin`/`Pwan-Girl`/
+`screen_color_invert` (no locatable source anywhere in the cloned
+archives - record only), and `Bat-Trinity` (Waveshare 3.7" driver that
+imports a module path that doesn't exist on this fork, so it can never
+load). The rest of the cluster is reviewed with real findings but no
+keep/fix decision made yet: `crack_house.py`, `wanmon.py`,
+`more_uptime.py`, `screen_refresh.py`, `viz.py`, and `Touch_UI.py`
+flagged as fix candidates (the last is especially relevant - a real
+MPI3501 touchscreen is in use); several more kept as-is or kept with a
+documented low-priority bug. No plugin in this batch invented a fake
+hook name, unlike Cluster 33.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 5 REMOVED, 14 reviewed with findings - decision pending |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

@@ -20,6 +20,29 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 50 (Cluster 34 - Display/UI, removals so far):** 5 of 19
+plugins removed this pass, rest of the cluster's decisions still
+pending. `printp.py` removed - explicitly an example/demo plugin in
+its own docstring, with no `__defaults__` block at all and every UI
+coordinate read via direct `self.options[...]` indexing, so it
+`KeyError`-crashes on load unless a user's config.toml happens to set
+every coordinate key explicitly. `PwnagotchiCharacterPlugin`,
+`Pwan-Girl`, and `screen_color_invert` removed - record only, no
+source code locatable anywhere in the cloned plugin archives after a
+real search (checked `pwnagotchi-unofficial/plugins_archive/*` by
+name/keyword and the reference-configs manifest, which already
+flagged all three the same way); likely dead/renamed/asset-only
+projects. `Bat-Trinity` (the Waveshare 3.7" e-paper driver from
+hannadiamond) removed - imports from
+`pwnagotchi.ui.hw.libs.waveshare.v37inch.epd3in7`, a module path that
+does not exist on this fork (only `v4in37g` exists under this fork's
+waveshare drivers), so it can never load. The rest of this cluster
+(`crack_house.py`, `wanmon.py`, `more_uptime.py`, `screen_refresh.py`,
+`viz.py`, `Touch_UI.py` flagged as fix candidates; several more kept
+as-is or kept with a documented low-priority bug) is reviewed with
+findings but no keep/fix decision made yet. Full detail in
+`plugin-upgrade-proposals/cluster-34-display-ui/NOTES.md`.
+
 **Group 49 (Cluster 33 - Network / Security analysis):** 9 of 14
 plugins removed for a fatal, shared defect: `dns_spoof_detector.py`,
 `mac_adress_logger.py`, `mac_randomizer.py`, `network_intrusion_detector.py`,
@@ -871,13 +894,9 @@ repo).
 - **display_version.py** - Adds the pwnagotchi software version to the display
 - **internet-connection.py** - Displays internet connectivity status (also distributed as `wanmon.py` / `internet-conection.py`)
 - **more_uptime.py** - Cycling uptime stats display
-- **printp.py** - Minimal example plugin that prints to the pwnagotchi screen
 - **PWNAGOTCHI-CUSTOM-FACES-MOD** - Custom PNG faces with transparency
 - **pwnagotchi_LCD_colorized_darkmode** - Colorized dark-mode LCD/web UI mod
-- **PwnagotchiCharacterPlugin** - Change face/voice via the web UI
-- **Pwan-Girl** / **Bat-Trinity** - Custom anime/bat character faces
 - **pwnagotchi-fallout-faces-mod** - Fallout Vault-Boy themed faces
-- **screen_color_invert** - Inverts screen colors
 - **screen_refresh.py** - Forces a display refresh after X updates
 - **sprite_faces.py** - Cute sprite-based face graphics widget
 - **themes.py** - Theme/script kicker plugin
