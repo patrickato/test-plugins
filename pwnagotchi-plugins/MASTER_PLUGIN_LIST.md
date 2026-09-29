@@ -1161,15 +1161,15 @@ repo).
 
 ## Hardware-specific
 
-- **basiclight.py** - GPIO traffic-light-style signal lights
+- **basiclight.py** - **REMOVED** - GPIO traffic-light-style signal lights; had dead `on_ai_*` hooks (no `[ai]` subsystem on this fork) and a wrong declared dependency (`scapy` instead of `RPi.GPIO`); user chose to drop rather than fix; see Cluster 37 notes
 - **blemon_plugin.py** - Counts/tracks max simultaneous BLE devices
 - **bluetoothsniffer.py** - Logs nearby Bluetooth MACs/names/counts to a JSON file
 - **fix_region.py** - Changes the iw region to unlock additional channels
 - **flipperLink.py** - Connects pwnagotchi to a Flipper Zero
 - **gpio_buttons_ng.py** - GPIO button support (next-gen/torch variant)
-- **gpio_shutdown.py** - GPIO-triggered clean shutdown
-- **gsmfake.py** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable
-- **img2xbm.py** - Converts images to XBM format for a Flipper Zero display
+- **gpio_shutdown.py** - **REMOVED** - GPIO-triggered clean shutdown; unguarded `KeyError` on missing `gpio` option (framework never merges `__defaults__`); user chose to drop rather than fix; see Cluster 37 notes
+- **gsmfake.py** - **REMOVED** - Feeds bettercap fake GPS coordinates from a GSM/GPRS modem when real GPS is unavailable; **not actually a pwnagotchi plugin at all** - no `plugins.Plugin` subclass anywhere, loader never registers it; it's a verbatim gpsd `gpsfake.py` test harness; see Cluster 37 notes
+- **img2xbm.py** - **REMOVED** - Converts images to XBM format for a Flipper Zero display; **not a pwnagotchi plugin** - standalone CLI tool, no `Plugin` subclass, and its `main()` is literally `pass` (does nothing); see Cluster 37 notes
 - **mad_hatter.py** - Universal UPS battery monitor with auto-shutdown
 - **memtemp-plus.py** / **memtemp_adv.py** / **memtemp_ng.py** - Memory/CPU usage + temperature display, adds CPU frequency (jayofelony's official installer plugin); memtemp_adv.py adds disk usage via psutil but has a real `NameError` bug on one screen/orientation combo (`y_pos` typo for `v_pos`); memtemp_ng.py uses the framework's own mem/cpu helpers, no bugs found, but its default CPU-load field blocks the UI thread ~0.1s per refresh (a non-blocking alternate field exists but isn't the default); see Cluster 25 notes
 - **pibat.py** - Voltage indicator for the PiBat I2C UPS/battery hat
@@ -1181,7 +1181,7 @@ repo).
 - **pwnagotchi-plugin-pisugar3** - PiSugar 3 support (community "improved" fork)
 - **pwnagotchi-WittyPi4L3V7-plugin** - Battery info + button support for WittyPi4L3V7
 - **pwndroid.py** - Android/phone tethering integration (jayofelony's official installer plugin)
-- **rgb.py** - RGB LED control
+- **rgb.py** - **REMOVED** - RGB LED control; **not a real plugin** - mismatched MicroPython/CircuitPython SPI display driver file (`utime`/`ustruct` don't exist in this environment), no `Plugin` subclass anywhere; user chose to drop; see Cluster 37 notes
 - **sigstr.py** - Displays WiFi signal strength as an on-screen bar
 - **Touch_UI** - **IN PROGRESS, moved to `plugins-wip`** as `touch-ui-suite` (`TouchUING`) - fixes a non-callable `logging()` call masking real errors, a `list.extend()`-returns-`None` bug that crashed every apt-install attempt, a `NameError` waiting on any momentary+reverse touch button, and a dead missing-binary detection check; kept deliberately conservative given this is the plugin tied to the real MPI3501 touchscreen; also adds (user-approved) a real webhook status page (thread/touchscreen/last-touch/pending-packages) and long-press detection (a new `touch_longpress` event); see Cluster 34 notes
 - **wof.py** - Detects other Flipper Zeros via "Wall of Flippers"

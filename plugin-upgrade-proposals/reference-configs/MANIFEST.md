@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (60)
+## Exact match - real config found and copied (58)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -76,7 +76,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `aircrackonly.py` | [`aircrackonly.toml`](aircrackonly.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/aircrackonly.toml` |
 | `auto-hotspot.py` | [`auto-hotspot.toml`](auto-hotspot.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/auto-hotspot.toml` |
 | `away_base.py` | [`away_base.toml`](away_base.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/away_base.toml` |
-| `basiclight.py` | [`basiclight.toml`](basiclight.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/basiclight.toml` |
 | `beaconify.py` | [`beaconify.toml`](beaconify.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/beaconify.toml` |
 | `beacons.py` | [`beacons.toml`](beacons.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/beacons.toml` |
 | `better_apfaker.py` | [`better_apfaker.toml`](better_apfaker.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/better_apfaker.toml` |
@@ -96,7 +95,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `f0xtr0t` | [`f0xtr0t.toml`](f0xtr0t.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/f0xtr0t.toml` |
 | `fix_region.py` | [`fix_region.toml`](fix_region.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/fix_region.toml` |
 | `flipperLink.py` | [`flipperLink.toml`](flipperLink.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/flipperLink.toml` |
-| `gpio_shutdown.py` | [`gpio_shutdown.toml`](gpio_shutdown.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gpio_shutdown.toml` |
 | `gps-plus.py` | [`gps-plus.toml`](gps-plus.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps-plus.toml` |
 | `gps_fix.py` | [`gps_fix.yml`](gps_fix.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/gps_fix.yml` |
 | `gps_led.py` | [`gps_led.yml`](gps_led.yml) | `pwnagotchi-unofficial/plugins_archive/jd-2006/pwnagotchi-plugins-scripts_JD-2006/gps_led/gps_led.yml` |
@@ -130,7 +128,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `xp.py` | [`xp.yml`](xp.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp.yml` |
 | `xp_grid.py` | [`xp_grid.yml`](xp_grid.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp_grid.yml` |
 
-## Partial match - closest sibling config found, verify by hand (29)
+## Partial match - closest sibling config found, verify by hand (28)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `aircrackonly_ng.py` | [`aircrackonly_ng.toml`](aircrackonly_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/aircrackonly.toml` |
@@ -142,7 +140,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `gps_grid.py` | [`gps_grid.toml`](gps_grid.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/grid.toml` |
 | `gps_live.py` | [`gps_live.toml`](gps_live.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps.toml` |
 | `gpsdeasy.py` | [`gpsdeasy.toml`](gpsdeasy.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps.toml` |
-| `gsmfake.py` | [`gsmfake.toml`](gsmfake.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/fake.toml` |
 | `hashie_ng.py` | [`hashie_ng.toml`](hashie_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/hashie.toml` |
 | `memtemp_adv.py` | [`memtemp_adv.toml`](memtemp_adv.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/memtemp.toml` |
 | `memtemp_ng.py` | [`memtemp_ng.toml`](memtemp_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/memtemp.toml` |
@@ -163,14 +160,13 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `WigleLocator` | [`WigleLocator.toml`](WigleLocator.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wigle.toml` |
 | `wpa-sec_ng.py` | [`wpa-sec_ng.toml`](wpa-sec_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wpa-sec.toml` |
 
-## Generated from the plugin's own `__defaults__` dict (10)
+## Generated from the plugin's own `__defaults__` dict (9)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `educational-purposes-exclusively.py` | [`educational-purposes-exclusively.toml`](educational-purposes-exclusively.toml) | `itsdarklikehell/pwnagotchi-plugins/educational-purposes-exclusively.py` |
 | `mad_hatter.py` | [`mad_hatter.toml`](mad_hatter.toml) | `alienmajik/pwnagotchi_plugins/mad_hatter.py` |
 | `pwnaware.py` | [`pwnaware.toml`](pwnaware.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnaware.py` |
 | `pwnmothership` | [`pwnmothership.toml`](pwnmothership.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnmothership.py` |
-| `rgb.py` | [`rgb.toml`](rgb.toml) | `itsdarklikehell/pwnagotchi-plugins/rgb.py` |
 | `rss_voice.py` | [`rss_voice.toml`](rss_voice.toml) | `itsdarklikehell/pwnagotchi-plugins/rss_voice.py` |
 | `show_pwd.py` | [`show_pwd.toml`](show_pwd.toml) | `itsdarklikehell/pwnagotchi-plugins/show_pwd.py` |
 | `test_security.py` | [`test_security.toml`](test_security.toml) | `itsdarklikehell/pwnagotchi-plugins/test_security.py` |
@@ -195,12 +191,11 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `wof.py` | [`wof.toml`](wof.toml) | `itsdarklikehell/pwnagotchi-plugins/wof.py` |
 | `woop_woop.py` | [`woop_woop.toml`](woop_woop.toml) | `itsdarklikehell/pwnagotchi-plugins/woop_woop.py` |
 
-## No configurable options detected - `enabled = true` only (11)
+## No configurable options detected - `enabled = true` only (10)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `cmd_server.py` | [`cmd_server.toml`](cmd_server.toml) | `sniffleupagus/pwnagotchi_plugins/cmd_server.py` |
 | `httpserver.py` | [`httpserver.toml`](httpserver.toml) | `itsdarklikehell/pwnagotchi-plugins/httpserver.py` |
-| `img2xbm.py` | [`img2xbm.toml`](img2xbm.toml) | `pwnagotchi-unofficial/plugins_archive/Matt-London/pwnagotchi-flipper/tools/img2xbm.py` |
 | `pibat.py` | [`pibat.toml`](pibat.toml) | `pwnagotchi-unofficial/plugins_archive/Andyzug/PiBatPwnagotchi-Plugin/pibat.py` |
 | `probenpwn.py` | [`probenpwn.toml`](probenpwn.toml) | `alienmajik/pwnagotchi_plugins/probenpwn.py` |
 | `PWNAGOTCHI-CUSTOM-FACES-MOD` | [`PWNAGOTCHI-CUSTOM-FACES-MOD.toml`](PWNAGOTCHI-CUSTOM-FACES-MOD.toml) | `itsdarklikehell/pwnagotchi-plugins/extras/facemod/faces.py` |
