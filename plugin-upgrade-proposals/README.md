@@ -679,9 +679,16 @@ crash on every display type that the first-pass review hadn't caught
 (each assumed an API - a `Display`-only method, or an import path -
 that simply doesn't exist on this fork). All 7 remaining suites are
 built, documented, and sandbox-tested against the real framework; none
-tested on real hardware yet. Several more plugins in this category are
-kept as-is pending formal confirmation. No plugin in this batch
-invented a fake hook name, unlike Cluster 33.
+tested on real hardware yet. After the initial bug-fix rebuilds, the
+user reviewed and approved a further round of specific improvements
+for 4 of them: `CrackHouseNG` (case-insensitive matching, cross-reboot
+persistence), `MoreUptimeNG` (configurable cycle interval and
+state subset/order), `VizNG` (last-updated timestamp, cracked-node
+cross-referencing against CrackHouseNG, configurable poll interval),
+and `TouchUING` (a real webhook status page, long-press detection) -
+see each suite's own NOTES.md for detail. Several more plugins in this
+category are kept as-is pending formal confirmation. No plugin in this
+batch invented a fake hook name, unlike Cluster 33.
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|

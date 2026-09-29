@@ -170,7 +170,11 @@ otherwise noted, checked against the real cloned
   - Replaced the broken display-detection entirely with configurable
     `position_x`/`position_y` (defaulting to the original's own
     fallback values, so nothing changes for the common case).
-  - 16 tests, all passing against the real framework. See
+  - **User-approved additions**: case-insensitive hostname matching in
+    `on_wifi_update`, and cross-reboot persistence of the merged
+    cracked list (`on_loaded` also seeds from its own previous
+    `saving_path` output).
+  - 20 tests, all passing against the real framework. See
     `plugins-wip:crack-house-suite/NOTES.md` for full detail.
 - **`more_uptime.py`** - **-> `more-uptime-suite` (`MoreUptimeNG`)**.
   Fixes the indentation bug: `ui.add_element(...)` was nested inside
@@ -182,7 +186,10 @@ otherwise noted, checked against the real cloned
   assigned inside one conditional branch of the try block above it -
   any exception raised earlier crashed the handler a second time with
   `NameError`, hiding the real problem.
-  - 10 tests, all passing against the real framework. See
+  - **User-approved additions**: a configurable `cycle_interval` (was
+    hardcoded to 5 seconds), and a configurable `states` list (subset/
+    order of which of IN/PR/UP cycle - was a fixed hardcoded order).
+  - 20 tests, all passing against the real framework. See
     `plugins-wip:more-uptime-suite/NOTES.md` for full detail.
 - **`viz.py`** - **-> `viz-suite` (`VizNG`)**. Originally flagged only
   for an uninitialized `self.channel`; reading the source in full
@@ -195,7 +202,13 @@ otherwise noted, checked against the real cloned
   `pwnagotchi.mesh.wifi`, and `self.channel` is initialized to `None`
   in `__init__` (the graph-building code already tolerated a falsy
   channel gracefully - the bug was purely the missing attribute).
-  - 13 tests, all passing against the real framework except genuine
+  - **User-approved additions**: a last-updated timestamp on the
+    webhook page (a new `meta` endpoint); already-cracked networks
+    cross-referenced against CrackHouseNG's `saving_path` file
+    (case-insensitively) and marked with a star symbol and
+    "[CRACKED]" label on the graph; and a configurable
+    `poll_interval_ms` (was hardcoded to 5000ms).
+  - 26 tests, all passing against the real framework except genuine
     `plotly` itself, which wasn't installable in this build's sandbox
     - a small local stand-in covers its public interface instead. See
     `plugins-wip:viz-suite/NOTES.md` for full detail.
@@ -218,7 +231,14 @@ otherwise noted, checked against the real cloned
   `FileNotFoundError` that was swallowed by a broader try/except much
   further out, meaning the plugin's own auto-install-on-connectivity
   feature could never actually trigger).
-  - 18 tests, all passing against the real framework. The core
+  - **User-approved additions**: a real webhook status page (reader
+    thread alive?, touchscreen process active?, last touch seen?,
+    pending apt packages?) - the original returned nothing at all; and
+    long-press detection (a new `longpress_seconds` option drives an
+    extra `touch_longpress` event dispatched alongside the normal
+    `touch_release`, through the same targeted/broadcast dispatch
+    logic as every other event).
+  - 33 tests, all passing against the real framework. The core
     touch-detection pipeline (spawning `evtest`/`ts_print`, parsing
     real touch input) can't be exercised without physical touchscreen
     hardware - **please test this one carefully on the real MPI3501
