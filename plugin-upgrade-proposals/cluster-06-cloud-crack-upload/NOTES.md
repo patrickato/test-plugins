@@ -1,19 +1,25 @@
 # Notes: cloud-crack-upload destination cluster
 
-**Status (updated, Cluster 31): 3 of 8 REMOVED, 2 kept-pending-fix, 3
-untouched.** Originally (Group 19) all 8 were kept pending a shared
-one-line fix. Revisited in Cluster 31 with a closer per-plugin pass:
+**Status (updated, Cluster 31): 3 of 8 REMOVED, 2 moved to `plugins-wip`
+and fixed, 3 untouched.** Originally (Group 19) all 8 were kept pending a
+shared one-line fix. Revisited in Cluster 31 with a closer per-plugin
+pass, then both survivors were fully fixed and moved:
 
 - **Removed**: `banthex.py` (redundant/more-buggy twin of `banthex-de.py`
   - see the file-deletion bug below), `dropbox_ul.py` (the shared `.pcap`
   bug plus an unvalidated required option that guarantees an uncaught
   `KeyError` on every upload if `path` isn't set), `nextcloud.py` (the
   shared `.pcap` bug plus a genuine crash bug - see below).
-- **Kept, not yet fixed**: `banthex-de.py` (the better of the two
-  banthex variants - still needs the `.pcap`/`.pcapng` fix),
-  `hashespwnagotchi.py` (kept specifically because of the real security
-  finding below, which needs to be dealt with regardless of what
-  happens to the rest of it - see that section).
+- **Moved to `plugins-wip`, fixed**: `banthex-de.py` (now `BanthexNG` in
+  `plugins-wip:banthex-suite/`) - the `.pcap`/`.pcapng` bug and a
+  permanent-skip-on-failure bug both fixed.
+  `hashespwnagotchi.py` (now `HashesPwnagotchiNG` in
+  `plugins-wip:hashespwnagotchi-suite/`) - the real security finding
+  below fixed (every external command now runs via a real argument list,
+  never a shell), plus a previously-unknown `on_config_changed` crash
+  bug, the shared `.pcap` bug, a Python-2 `.encode("hex")` bug, the
+  disabled whitelist, and the same permanent-skip-on-failure bug as
+  `banthex-de.py`, all fixed. Full detail in each suite's own NOTES.md.
 - **Untouched this pass**: `better_onlinehashcrack.py`,
   `wpa-cracking-project-with-pwnagotchi`, `pwn2crack.py` (already works,
   no fix needed - see below).
@@ -45,7 +51,7 @@ one-line fix. Revisited in Cluster 31 with a closer per-plugin pass:
   of the clean "wrong creds"/"path does not exist" log message the code
   clearly intended.
 
-## `hashespwnagotchi.py` - real security concern (new this pass)
+## `hashespwnagotchi.py` - real security concern (found this pass, now FIXED)
 
 `_writeEAPOL()` and `_writePMKID()` build `hcxpcapngtool` commands with
 Python string formatting (`"hcxpcapngtool -o {}.22000 {} ...".format(...)`)
@@ -67,23 +73,21 @@ applies to the real-time `on_handshake` path too, not just the broken
 `.pcap` batch scan, since `on_handshake` is handed the real filename
 directly and isn't affected by that bug.
 
-This needs a real fix (switching to `subprocess.run([...], shell=False)`
-with the path passed as a proper argument, never shell-interpolated)
-before this plugin should run on a device meant to actually capture
-handshakes from networks it doesn't control - which is the entire point
-of a pwnagotchi. Kept on the list rather than removed since the upload
-feature itself is otherwise the most capable of this cluster (local
-conversion plus PMKID repair), but **not safe to run as shipped.**
-
-Also still true from the original Group 19 review: the batch backlog
-scan has the shared `.pcap`-only bug (live per-handshake conversion via
-`on_handshake` is unaffected, since it uses the real filename directly);
-filename parsing throughout uses a fragile `path.split(".")[0]`, which
-assumes exactly one `.` in the full path and can mis-parse if an ESSID
-or directory component itself contains a dot; and its
-`remove_whitelisted()` call is present in the source but commented out
-(see the original finding below) - would need to be re-enabled in the
-same pass as anything else.
+**Fixed** in the `plugins-wip` rebuild (`HashesPwnagotchiNG`): every
+external command (`hcxpcapngtool`, `tcpdump`) now runs via
+`subprocess.run([...], shell=False)` with each argument passed
+separately, so nothing from a filename can ever be shell-interpreted,
+regardless of what an AP names itself. The rebuild also fixed a
+previously-unknown `on_config_changed` crash bug (`self.status` was
+referenced but never assigned - only `self.report` was - so setting the
+`interval` option crashed this method every time, silently disabling the
+startup batch-conversion pass entirely), the shared `.pcap` bug, the
+fragile `path.split(".")[0]` filename parsing (now `os.path.splitext()`
+throughout), a Python-2-only `.encode("hex")` call in the PMKID repair
+path, the disabled whitelist (re-enabled), and a permanent-skip-on-
+failure bug (bounded retries added). Full detail, and the full sandbox
+test suite proving the fix, in
+`plugins-wip:hashespwnagotchi-suite/NOTES.md`.
 
 ## The shared bug (7 of 8 plugins)
 

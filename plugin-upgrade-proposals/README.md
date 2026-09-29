@@ -120,12 +120,14 @@ completely non-functional on this image (same `.pcap`-only filter bug
 as Cluster 5, but here it's the plugin's only trigger, not a secondary
 path) and all 8 were kept pending a shared one-line fix. A closer
 per-plugin pass in Cluster 31 removed 3 of the 8 outright (each had its
-own additional, more serious bug beyond the shared one) and found a real
-command-injection security concern in `hashespwnagotchi.py`.
+own additional, more serious bug beyond the shared one), found a real
+command-injection security concern in `hashespwnagotchi.py`, then fixed
+and moved both survivors (`banthex-de.py`, `hashespwnagotchi.py`) to
+`plugins-wip`.
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
-| [`cloud-crack-upload cluster notes`](cluster-06-cloud-crack-upload/NOTES.md) | `banthex.py`, `banthex-de.py`, `better_onlinehashcrack.py`, `dropbox_ul.py`, `hashespwnagotchi.py`, `nextcloud.py`, `wpa-cracking-project-with-pwnagotchi`, `pwn2crack.py` | 3 REMOVED (`banthex.py`, `dropbox_ul.py`, `nextcloud.py`), `banthex-de.py`/`hashespwnagotchi.py` KEPT pending a fix (`hashespwnagotchi.py` has a real security finding - see notes), `better_onlinehashcrack.py`/`wpa-cracking-project-with-pwnagotchi` KEPT AS-IS untouched this pass, `pwn2crack.py` already works, no fix needed |
+| [`cloud-crack-upload cluster notes`](cluster-06-cloud-crack-upload/NOTES.md) | `banthex.py`, `banthex-de.py`, `better_onlinehashcrack.py`, `dropbox_ul.py`, `hashespwnagotchi.py`, `nextcloud.py`, `wpa-cracking-project-with-pwnagotchi`, `pwn2crack.py` | 3 REMOVED (`banthex.py`, `dropbox_ul.py`, `nextcloud.py`); `banthex-de.py` -> `plugins-wip:banthex-suite/` (`BanthexNG`), `hashespwnagotchi.py` -> `plugins-wip:hashespwnagotchi-suite/` (`HashesPwnagotchiNG`, security issue fixed) - both IN PROGRESS, not yet tested on real hardware; `better_onlinehashcrack.py`/`wpa-cracking-project-with-pwnagotchi` KEPT AS-IS untouched this pass; `pwn2crack.py` already works, no fix needed |
 
 ### Cluster 7 - cracked-password display/export
 

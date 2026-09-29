@@ -20,6 +20,24 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 47 (Cluster 31, continued - fixing what was kept):**
+`banthex-de.py` moved to `plugins-wip` as `banthex-suite` (`BanthexNG`) -
+the shared `.pcap`/`.pcapng` bug fixed, plus a permanent-skip-on-failure
+bug (a single transient upload failure blacklisted a handshake forever)
+fixed with bounded retries. `hashespwnagotchi.py` moved to `plugins-wip`
+as `hashespwnagotchi-suite` (`HashesPwnagotchiNG`) - the confirmed
+command-injection security issue fixed (every `hcxpcapngtool`/`tcpdump`
+call now runs via `subprocess.run([...], shell=False)` with a real
+argument list, never a shell string, closing the path a maliciously-named
+AP could have used to run commands as root), plus a previously-unknown
+`on_config_changed` crash bug (`self.status` was never assigned -
+setting the `interval` option crashed this method every time, silently
+disabling the startup batch-conversion pass), the shared `.pcap` bug, a
+Python-2-only `.encode("hex")` call, the already-flagged disabled
+whitelist, and the same permanent-skip-on-failure bug as `banthex-de.py`,
+all fixed. Full detail in `plugins-wip:banthex-suite/NOTES.md` and
+`plugins-wip:hashespwnagotchi-suite/NOTES.md`.
+
 **Group 46 (Cluster 31 - Attack/Capture, cloud-crack-upload destinations,
 revisiting Group 19):** `banthex.py` removed - redundant with, and more
 buggy than, `banthex-de.py` (which fixes a file-deletion copy/paste bug
@@ -760,7 +778,7 @@ repo).
 
 - **aircrackonly.py** / **aircrackonly_ng.py** - Verifies a pcap actually contains a handshake/PMKID; deletes it if not (`_ng` also shows an on-screen status message when it deletes a pcap)
 - **auto_tune.py** - Adjusts AUTO mode parameters; no bugs found after extensive review (692 lines); see Cluster 26 notes
-- **banthex-de.py** - Auto-uploads handshakes to banthex.de; has the recurring `.pcap`/`.pcapng` bug (never finds this fork's real captures) but is otherwise the better-fixed of the two banthex variants (`banthex.py` removed as the redundant, more-buggy twin); not yet fixed, see Cluster 31 notes
+- **banthex-de.py** - **IN PROGRESS, moved to `plugins-wip`** as `banthex-suite` (renamed `BanthexNG`) - `.pcap`/`.pcapng` bug fixed, plus a permanent-skip-on-failure bug fixed with bounded retries; see Cluster 31 notes
 - **better_apfaker.py** - Creates fake APs
 - **better_onlinehashcrack.py** - Uploads handshakes to onlinehashcrack.com (alternate implementation)
 - **better_quickdic.py** - Quick dictionary scan; optionally sends found passwords as QR code/text to a Telegram bot
@@ -771,7 +789,7 @@ repo).
 - **enterprise.py** - Attempts to obtain credentials from enterprise networks when bored
 - **handshakes-dl-hashie.py** - **IN PROGRESS, moved to `plugins-wip`** - web-UI handshake download page, also surfaces already-converted `.2500`/`.16800`/`.22000` hash files per capture; broken as shipped (the recurring `.pcap`-only bug in its glob filter, filename math, and download handler); being rebuilt; see `plugins-wip` repo
 - **hashbot.py** - **IN PROGRESS, moved to `plugins-wip`** - not actually a pwnagotchi plugin (standalone script meant to run off-pi); consolidated into the DiscoHash Suite as the sole Discord-command bot (absorbing `discoBoss.py`'s control functions too); see `plugins-wip` repo, `discohash-suite/`
-- **hashespwnagotchi.py** - Uploads handshakes to hashes.pw, converts locally via `hcxpcapngtool` first; **real security concern found** - builds several `hcxpcapngtool` shell commands via Python string formatting and runs them with `subprocess.getoutput()` rather than a non-shell call; this fork's own handshake filenames embed the AP's ESSID (`{ESSID}_{BSSID}.pcap`/`.pcapng`, confirmed against the fork's documented capture-file naming), and ESSID is fully attacker-controlled - a malicious nearby AP broadcasting an SSID containing shell metacharacters could achieve command injection as root the moment this plugin tries to convert that capture; also has the recurring `.pcap`-only bug in its backlog batch-scan (live per-capture conversion still works), fragile `path.split(".")[0]` extension-stripping throughout, and its whitelist-exclusion call is present but commented out (would need to be re-enabled alongside any other fix); not yet fixed, see Cluster 31 notes
+- **hashespwnagotchi.py** - **IN PROGRESS, moved to `plugins-wip`** as `hashespwnagotchi-suite` (renamed `HashesPwnagotchiNG`) - the confirmed command-injection security issue fixed (every external command now runs via a real argument list, never a shell), plus the `on_config_changed` crash bug, the `.pcap`/`.pcapng` bug, a Python-2 `.encode("hex")` bug, the disabled whitelist, and a permanent-skip-on-failure bug all fixed; see Cluster 31 notes
 - **hashie-hcxpcapngtool.py** - Converts pcaps to crackable hash formats via hcxpcapngtool, updated for modern hcxtools/hashcat formats
 - **hashie_ng.py** - Cleaned-up hashie variant co-authored by jayofelony himself; same live pcap->hash conversion, no delete-lonely-pcaps behavior
 - **hashieclean.py** - hashie variant that also purges pcaps that can't be converted to a hash
