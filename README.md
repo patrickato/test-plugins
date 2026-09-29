@@ -32,6 +32,7 @@ feature to be worthwhile.
 See:
 
 - [PWNAGOTCHI_GAP_AND_PLUGIN_IDEAS_2026-09-24.md](PWNAGOTCHI_GAP_AND_PLUGIN_IDEAS_2026-09-24.md)
+- [OFFENSIVE_BLUETOOTH_IDEAS_2026-09-29.md](OFFENSIVE_BLUETOOTH_IDEAS_2026-09-29.md) - offensive/defensive Bluetooth plugin ideas, from the Cluster 37 (Hardware-specific) review
 
 ## Development principles
 
