@@ -31,13 +31,18 @@ never set - guaranteed crash on first webhook call; its one real
 response is built but never returned; depends on an unrelated,
 unreviewed "session-stats" plugin; never actually implements any
 command-receiving logic despite that being its stated purpose).
-Remaining pending decisions, being worked through in groups of 5:
-`handshaker.py`, `httpserver.py`, `pwnmenu.py`/`pwnmenucmd.py`,
-`pwnmothership.py`, `Pwny-Tailscale`, `state-api.py`, `web2ssh.py`
-(the latter has a real, severe security bug - its own config reading
-is broken so it always falls back to default `changeme`/`changeme`
-credentials guarding root shell command execution - flagged as the
-top security priority found in this whole audit).
+**REMOVED** at the user's request: `pwnmothership.py` and
+`state-api.py` (near-identical code lineage, same unguarded
+`for peer in peers_response:` `TypeError` crash whenever the local
+mesh-peers API call fails - user chose to drop both rather than fix
+or merge them). Remaining pending decisions, being worked through in
+groups of 5 (group 1 now down to 3: `Pwny-Tailscale`, `httpserver.py`,
+`web2ssh.py`; group 2 unchanged: `handshaker.py`,
+`pwnmenu.py`/`pwnmenucmd.py`). `web2ssh.py` has a real, severe security
+bug - its own config reading is broken so it always falls back to
+default `changeme`/`changeme` credentials guarding root shell command
+execution - flagged as the top security priority found in this whole
+audit.
 
 **Group 59 (Cluster 37, Hardware-specific, in progress):** excluded
 from new review since they already carry cluster references:
@@ -1325,11 +1330,11 @@ repo).
 - **pwmenu** - Mobile-first field console for captures/cracking/exports/whitelists
 - **pwnagotchi-http-module** - Serves handshake pcaps via a simple HTTP server (targets the Bookworm image)
 - **pwnmenu.py** / **pwnmenucmd.py** - Popup on-screen menu system, plus a CLI client
-- **pwnmothership** - Pushes JSON state data to a "pwnmothership" host
+- **pwnmothership** - **REMOVED** - Pushes JSON state data to a "pwnmothership" host on every screen update; unguarded `for peer in peers_response:` crashes with `TypeError` on every UI update whenever the local mesh-peers API call fails; blocks the UI thread up to 30s per POST attempt; disables TLS cert verification on the outbound POST; near-identical code lineage to state-api.py; user chose to drop rather than fix/merge; see Cluster 38 notes
 - **pwnwatch.py** - **REMOVED** - Meant to receive commands from a companion "pwnagotchi-watch" app; `self.ready` referenced but never set (guaranteed crash on first webhook call); its one real response is built but never returned (always falls through to a 404); depends on an unrelated, unreviewed "session-stats" plugin; never actually implements any command-receiving logic despite that being its stated purpose; user chose to drop rather than fix; see Cluster 38 notes
 - **Pwny-Tailscale** - Tailscale remote connectivity, no port-forwarding needed
 - **Pwny-WG** - WireGuard VPN + handshake sync over SSH
-- **state-api.py** - JSON state API - a backend building block for menu/dashboard tools
+- **state-api.py** - **REMOVED** - JSON state API - a backend building block for menu/dashboard tools; same unguarded `for peer in peers_response:` `TypeError` crash as pwnmothership.py (near-identical code lineage); dashboard page needs template files manually copied to a hardcoded Python-3.7-specific path; user chose to drop rather than fix/merge; see Cluster 38 notes
 - **web2ssh** - Lightweight web shell-command executor
 - **webcfg_ng.py** - Allows the user to make runtime configuration changes (full web-based config.toml editor via webhook; no bugs found, but its `save-config` path fully overwrites the config file with no merge safety net, unlike its own `merge-save-config` path; see Cluster 24 notes)
 - **wpa-sec-list.py** - Lists cracked passwords from wpa-sec on a web page; has an `IndexError` risk on a malformed potfile line that breaks the whole page; see Cluster 26 notes for the fix

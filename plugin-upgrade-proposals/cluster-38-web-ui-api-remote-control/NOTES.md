@@ -1,7 +1,8 @@
 # Cluster 38 - Web UI / API / Remote control
 
-Status: **IN PROGRESS** - 1 removed, being worked through the
-remaining 7 in groups of 5 per the user's request.
+Status: **IN PROGRESS** - 3 removed, being worked through the
+remaining 5 in groups of 5 per the user's request (group 1 now down
+to 3: `Pwny-Tailscale`, `httpserver.py`, `web2ssh.py`).
 
 Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, "## Web UI / API /
 Remote control" section, Group 60 in the elimination log.
@@ -19,7 +20,7 @@ Remote control" section, Group 60 in the elimination log.
   exists in this environment (`wpa-2/pwnagotchi-plugins/Pwny-WG/`), no
   actual plugin script anywhere
 
-## Removed at the user's request (1)
+## Removed at the user's request (3)
 
 - **pwnwatch.py** - meant to receive commands from a companion
   "pwnagotchi-watch" app and report session stats. `on_webhook`
@@ -34,17 +35,34 @@ Remote control" section, Group 60 in the elimination log.
   dependency. Despite the plugin's stated purpose ("receive commands
   from pwnagotchi-watch"), there is no command-parsing or dispatch
   logic anywhere in the file at all - only session-stats file reading.
+- **pwnmothership.py** - pushes a JSON status snapshot (peers,
+  handshake counts, uptime, etc.) to a remote host on every screen
+  update. Unguarded `for peer in peers_response:` crashes with
+  `TypeError` on every UI update whenever the local mesh-peers API
+  call fails (`peers_response` stays `None` on failure); blocks the UI
+  thread up to 30s per POST attempt (no background thread); disables
+  TLS cert verification (`verify=False`) on the outbound POST. Near-
+  identical code lineage to state-api.py (presented as a merge
+  candidate) - the user chose to drop both rather than fix or merge.
+- **state-api.py** - on-demand JSON status endpoint + optional HTML
+  dashboard page for external tools/dashboards. Same unguarded
+  `for peer in peers_response:` `TypeError` crash as pwnmothership.py;
+  dashboard page needs template files manually copied into the
+  installed `pwnagotchi` package directory on a hardcoded Python-3.7-
+  specific path. Dropped alongside pwnmothership.py rather than
+  fixed/merged.
 
 ## Still pending decisions - working through in groups of 5
 
 Full findings for all 7 remaining plugins were presented to the user
-in this session's findings table. Being decided in two groups:
+in this session's findings table. Being decided in two groups (the
+original group 1 of 5 is now down to 3 after pwnmothership.py/
+state-api.py were dropped):
 
-**Group 1 (first 5):** `web2ssh.py`, `pwnmothership.py`,
-`state-api.py`, `Pwny-Tailscale` (`tailscale.py`), `httpserver.py`.
+**Group 1 (now 3):** `web2ssh.py`, `Pwny-Tailscale` (`tailscale.py`),
+`httpserver.py`.
 
-**Group 2 (remaining 2):** `pwnmenu.py`/`pwnmenucmd.py`,
-`handshaker.py`.
+**Group 2 (2):** `pwnmenu.py`/`pwnmenucmd.py`, `handshaker.py`.
 
 Key findings, summarized (see this session's findings table for full
 detail):
