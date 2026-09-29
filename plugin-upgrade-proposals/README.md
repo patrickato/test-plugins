@@ -569,5 +569,21 @@ repo distributes `handshakes-dl.py` with this same unfixed bug.
 |---|---|---|
 | [`handshakes-dl cluster notes`](cluster-29-handshakes-dl/NOTES.md) | `handshakes-dl.py`, `handshakes-dl-hashie.py` | 1 REMOVED (redundant subset), 1 IN PROGRESS - moved to `plugins-wip` |
 
+### Cluster 30 - Attack/Capture: privacy / honeypot / evasion
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 45.
+`privacy-nightmare.py` moved to `plugins-wip` for a full rebuild (nine
+source-verified bugs fixed, plus a `.gps.json` sidecar, distance filter,
+and GPS-conflict-avoidance improvements). `wd_honey_Pot.py` is not
+fixable with a patch (same "imagined API" root cause as the
+already-removed `bluetooth_scanner.py`) - options presented, decision
+deferred. `neurolyzer.py` has no bugs but overlaps `mac_randomizer.py`
+over MAC control - both flagged, decision on both deferred.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`plugins-wip: gps-tagger-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/gps-tagger-suite/NOTES.md) | `privacy-nightmare.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`Cluster 30 notes`](cluster-30-privacy-honeypot-evasion/NOTES.md) | `wd_honey_Pot.py`, `neurolyzer.py`, `mac_randomizer.py` | DEFERRED - left on the list, decisions pending |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

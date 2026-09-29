@@ -20,6 +20,27 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 45 (Cluster 30 - Attack/Capture, continued):** `privacy-nightmare.py`
+moved to `plugins-wip` as `gps-tagger-suite` (renamed `GPSTaggerNG`) - nine
+source-verified bugs fixed (see `plugins-wip:gps-tagger-suite/NOTES.md`),
+plus the distance-filter/no-GPS-log-limit/manage_gps improvements approved
+for this cluster; also fixed two additional bugs found only during the
+rebuild (invalid multi-object JSON output files, and a hostname-only
+filename collision risk between different APs sharing an SSID).
+`wd_honey_Pot.py` - **decision deferred, left on the list**: calls a
+nonexistent `self.register_event()` and listens for event names that never
+fire on this fork (same "imagined API" class as the already-removed
+`bluetooth_scanner.py`), not fixable with a patch; options presented
+(full rewrite from scratch / drop entirely / fold a lightweight decoy-AP
+feature into another plugin) - revisit later. `neurolyzer.py` -
+**decision deferred, left on the list**: well-engineered, no bugs found,
+several improvements suggested (per-measure config toggles, a cooldown on
+the evasion protocol, on-screen stealth-level display) but not yet built;
+flagged as directly overlapping `mac_randomizer.py` (Network/Security
+analysis category) over control of the interface's MAC - `mac_randomizer.py`
+annotated in place with the same cross-reference; both plugins' fates
+will be decided together in a future pass.
+
 **Group 1 - hardware you don't own:** partial pass. Removed the Waveshare
 e-paper family (5: `Pwnagotchi_Waveshare_2.66inch`, `Pwnagotchi-on-waveshare-v4`,
 `Pwnagotchi-WS-V3-V4`, `Pwnagotchi-Waveshare-V3-Fix`, `waveshare_v3_touch.py` -
@@ -740,15 +761,15 @@ repo).
 - **instattack.py** - Launches an immediate associate/deauth attack the instant a device is spotted
 - **meshpwnstic.py** - Remote deauth/assoc/status control over a Meshtastic LoRa radio
 - **mycracked_pw.py** - Grabs all cracked passwords, generates WiFi QR codes and a wordlist
-- **neurolyzer.py** - MAC randomization, WIDS/WIPS evasion
+- **neurolyzer.py** - MAC randomization, WIDS/WIPS evasion; well-engineered, no bugs found, but directly overlaps `mac_randomizer.py` (below) - both would fight over the interface's MAC if both are enabled; decision on both deferred, see Cluster 30 notes
 - **nextcloud.py** - Auto-uploads handshakes to a Nextcloud WebDAV endpoint
 - **onlinehashcrack_ng.py** - Uploads handshakes to onlinehashcrack.com (another alternate implementation, alongside better_onlinehashcrack.py; shares the same `.pcap`-only backlog-scan bug, but uses a possibly-more-current download endpoint and the device's real global whitelist)
 - **potfilesorter.py** - Sorts a hashcat potfile into a usable wpa_supplicant.conf
-- **privacy-nightmare.py** - Passive metadata "eavesdropping" plugin - provocatively named, read the source before trusting
+- **privacy-nightmare.py** - **IN PROGRESS, moved to `plugins-wip`** as `gps-tagger-suite` (renamed `GPSTaggerNG`) - GPS-tags every AP seen and writes a `.gps.json` sidecar next to each handshake, interoperating with `handshakes_dl_ng.py`'s existing sidecar support; see Cluster 30 notes
 - **probenpwn.py** - Aggressive handshake/PMKID capture, quiet assoc attacks, WPS PIN extraction, adaptive rate limiting
 - **pwn2crack.py** (aka pwnagotchi-to-hashtopolis-plugin) - Converts handshakes to Hashcat 22000 and creates a hashlist in Hashtopolis
 - **quick_rides_to_jail.py** / **quick_rides_to_jail_ng.py** - Dictionary-cracks handshakes, then auto-updates wpa_supplicant with results, **but neither form is functional as shipped**: `quick_rides_to_jail.py` has no `class X(plugins.Plugin):` wrapper at all, so it never registers as a plugin and silently never runs; `quick_rides_to_jail_ng.py` fixes that registration but has a second, independent bug (a module-level `OPTIONS` dict that's declared but never populated), so it registers and then `KeyError`s on first real use. See Cluster 20 notes for both fixes.
-- **wd_honey_Pot.py** - Honeypot that detects OTHER pwnagotchis performing deauths nearby (defensive, not an attack tool)
+- **wd_honey_Pot.py** - Honeypot that detects OTHER pwnagotchis performing deauths nearby (defensive, not an attack tool); **not fixable as-is** - calls a nonexistent `self.register_event()` and listens for made-up event names that never fire on this fork, same root-cause class as the already-removed `bluetooth_scanner.py`; decision deferred (rewrite from scratch / drop / fold into another plugin), see Cluster 30 notes
 - **woop_woop.py** - Auto-authenticates to known networks, performs internal recon, saves wifi info to wpa_supplicant
 - **wpa-cracking-project-with-pwnagotchi** - Uploads handshakes to a companion university-thesis Hashcat web app
 
@@ -853,7 +874,7 @@ repo).
 - **beacons.py** - Advertises pwnagotchi state via valid WiFi beacon frames
 - **dns_spoof_detector.py** - Detects DNS spoofing/poisoning attempts
 - **mac_adress_logger.py** - Logs MAC addresses seen on the network
-- **mac_randomizer.py** - Randomizes the device's own MAC address
+- **mac_randomizer.py** - Randomizes the device's own MAC address; overlaps `neurolyzer.py`'s MAC rotation (Attack/Capture category) - would conflict if both enabled; not yet independently reviewed, decision deferred alongside neurolyzer.py, see Cluster 30 notes
 - **network_intrusion_detector.py** - Detects potential network intrusion attempts
 - **network_mapper.py** - Maps/enumerates devices on the local network
 - **network_packet_sniffer.py** - Sniffs and logs network packets
