@@ -20,6 +20,69 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 57 (Cluster 35, Notifications/Social/Webhooks):** the full
+14-entry cluster reviewed. `pwnspeaker.py`, `rss_voice.py`, and
+`speak_to_me.py` turned out to be duplicate listings of plugins already
+fully reviewed under Cluster 13 (TTS/voice) - no new action taken on
+them here. `Discord v3.0.1` and `TelePwn v2.0` are the *kept* survivors
+of an early duplicate-elimination pass (Group 2), so this review read
+their real (larger) source rather than the dropped `discord.py`/
+`telegram.py`. REMOVED at the user's request: `twitter.py` (missing
+`os` import plus a nonexistent `display.block_update()` call - the
+tweet-with-picture feature never worked), `TelePwn v2.0` (`telegram.py`
+- `last_session.started_at()` and `self.send_notification(...)` are
+both calls to things that don't exist, breaking its session-report
+feature; `on_agent` isn't a real hook either, though `on_internet_available`
+still covers the same ground on its own), `sound.py` + its
+`sound/shutdown_button.py` companion (missing `__defaults__` for
+required options, a dead `on_cracked` hook, and the companion script is
+RaspiAudio-button-specific hardware, not a plugin at all), `PwnSpotify`
+(no source locatable anywhere), `mqtt_plugin.py` (fatal load-time crash
+- connects to a hardcoded `localhost:1883` synchronously in `__init__`
+with no error handling, so `Plugin.__init_subclass__` calling `cls()`
+with no try/except could take plugin loading down with it), `slack.py`
+(crashes attempting to send - `self.option`/`self.channel` typos for
+`self.options[...]`, plus a wrong pip dependency declared), `mastodon.py`
+(an unvalidated empty `instance_url` reaches `Mastodon.create_app()`
+unguarded), `ntfy_msg.py` (its own exception handler references
+`self._log`, which isn't a real `Plugin` attribute - masks the real
+error). `spotify_now_playing.py` (calls a nonexistent
+`pwnagotchi.Config()` and a nonexistent `ui.display.draw_text(...)` -
+needs a full rewrite against the real options/UI-element APIs) is left
+on the list, decision deferred. `Showerthoughts` (no source locatable
+anywhere - a from-scratch build, not a fix) and the remaining 4 -
+`apprise-notify.py`, `Discord v3.0.1`, `terminal2.py` - are fixed/built
+and moved to `plugins-wip`:
+`apprise-notify.py` -> `apprise-notify-suite` (`AppriseNotifyNG`) - the
+original crashed at plugin-load time itself (`__init__` references an
+undefined `title` variable, present in every one of its ~30 methods);
+rebuilt around only the hooks confirmed real on this fork, a
+Discord-v3.0.1-style background worker queue instead of a per-hook
+blocking `time.sleep(1)`, and configurable event/cooldown/screenshot
+options. `Discord v3.0.1` -> `discord-suite` (`DiscordNG`) - already the
+best-engineered plugin found in this entire audit; its one bug
+(`getattr(last_session, 'deauths', 0)` reading a real attribute that's
+actually named `deauthed`, so the previous-session Deauths field
+silently never appeared) is fixed, plus new `disable_wigle_lookup`/
+`attachment_mode`/`include_session_stats` options. `terminal2.py` ->
+`terminal-suite` (`TerminalNG`) - missing `re` and `time` imports broke
+its own first-run service-verification loop every time; fixed, plus its
+hardcoded two-IP webhook allowlist is now a configurable CIDR list
+(default: the standard private ranges) instead. `Showerthoughts` ->
+`showerthoughts-suite` (`ShowerThoughtsNG`) - built from scratch (no
+source existed anywhere), pulling from r/Showerthoughts' public JSON
+endpoint on a throttled background fetch, cached to disk, rotating
+on-screen while idle. A correction surfaced during this review: earlier
+in this same cluster review `display.image()` was initially flagged as
+a nonexistent call on `twitter.py`/`slack.py`/`mastodon.py` - that was
+incomplete. `agent.view()` actually returns the live `Display` object,
+which subclasses `View` and does add `.image()` (confirmed via the real
+cloned framework); those three plugins' actual crash points are
+elsewhere in their code, as detailed above. Doesn't change their
+disposition (all three were already dropped), just corrects the record.
+See `plugin-upgrade-proposals/cluster-35-notifications-social-webhooks/NOTES.md`
+for the full writeup.
+
 **Group 56 (Cluster 34, continued):** the last of Cluster 34's
 kept-as-is plugins were revisited for improvement suggestions.
 `darkmode.py`, `themes.py`, and `faces.py` (the itsdarklikehell
@@ -1112,21 +1175,21 @@ repo).
 
 ## Notifications / Social / Webhooks
 
-- **apprise-notify.py** - Multi-service notification plugin, covers dozens of destinations via Apprise
-- **Discord v3.0.1** - Uploads pcaps, maps locations, tracks sessions, posts to Discord
-- **mastodon.py** - Periodically posts status updates to Mastodon
-- **mqtt_plugin.py** - Sends pwnagotchi info to an MQTT broker
-- **ntfy_msg.py** - Sends push notifications via ntfy
-- **PwnSpotify** / **spotify_now_playing.py** - Displays the currently-playing Spotify track
-- **pwnspeaker.py** - Text-to-speech announcements of pwning events
-- **rss_voice.py** - Replaces canned voice lines with RSS feed content
-- **Showerthoughts** - Displays random r/Showerthoughts headlines while idle
-- **slack.py** - Posts recent activity to a Slack channel via webhook
-- **sound.py** (+ **sound/shutdown_button.py**) - Plays a WAV file on events, plus a shutdown-button companion
-- **speak_to_me.py** - Text-to-speech announcements of pwning events
-- **TelePwn v2.0** - Advanced Telegram control and notifications
-- **terminal2.py** - Browser-based terminal access (WebSSH2)
-- **twitter.py** - Posts tweets about recent activity
+- **apprise-notify.py** - Multi-service notifications via Apprise; reviewed in Cluster 35 - crashed at plugin-load time itself (`__init__` references an undefined `title` variable, present in every method); **IN PROGRESS, moved to `plugins-wip`** as `apprise-notify-suite` (`AppriseNotifyNG`) - rebuilt around real hooks only, a background worker queue, and configurable events/cooldown/screenshot options; see Cluster 35 notes
+- **Discord v3.0.1** - Uploads pcaps, maps locations, tracks sessions, posts to Discord; reviewed in Cluster 35 - the best-engineered plugin found in this whole audit, one small bug (`deauths` vs the real `deauthed` attribute silently dropping the Deauths field from session reports); **IN PROGRESS, moved to `plugins-wip`** as `discord-suite` (`DiscordNG`) - fixed, plus `disable_wigle_lookup`/`attachment_mode`/`include_session_stats` options added; see Cluster 35 notes
+- **mastodon.py** - Periodically posts status updates to Mastodon; reviewed in Cluster 35 - REMOVED at the user's request: an unvalidated empty `instance_url` reaches `Mastodon.create_app()` unguarded
+- **mqtt_plugin.py** - Sends pwnagotchi info to an MQTT broker; reviewed in Cluster 35 - REMOVED at the user's request: `__init__` connects to a hardcoded `localhost:1883` synchronously with no error handling, a fatal load-time crash risk since nothing wraps `cls()` in the loader
+- **ntfy_msg.py** - Sends push notifications via ntfy; reviewed in Cluster 35 - REMOVED at the user's request: its own exception handler references `self._log`, which isn't a real `Plugin` attribute, masking the real error
+- **PwnSpotify** / **spotify_now_playing.py** - Displays the currently-playing Spotify track; reviewed in Cluster 35 - PwnSpotify REMOVED at the user's request (no source locatable anywhere); `spotify_now_playing.py` left on the list, decision deferred - calls a nonexistent `pwnagotchi.Config()` and a nonexistent `ui.display.draw_text(...)`, needs a full rewrite against the real options/UI-element APIs
+- **pwnspeaker.py** - Text-to-speech announcements of pwning events; already fully reviewed in Cluster 13 (TTS/voice), kept as-is with documented bugs - no new action taken in Cluster 35
+- **rss_voice.py** - Replaces canned voice lines with RSS feed content; already fully reviewed in Cluster 13 (TTS/voice), kept as-is - no new action taken in Cluster 35
+- **Showerthoughts** - Displays random r/Showerthoughts headlines while idle; reviewed in Cluster 35 - no source locatable anywhere; **IN PROGRESS, moved to `plugins-wip`** as `showerthoughts-suite` (`ShowerThoughtsNG`) - built from scratch (reddit JSON endpoint, throttled fetch, disk cache, idle rotation); see Cluster 35 notes
+- **slack.py** - Posts recent activity to a Slack channel via webhook; reviewed in Cluster 35 - REMOVED at the user's request: `self.option`/`self.channel` typos for `self.options[...]` plus a wrong pip dependency declared
+- **sound.py** (+ **sound/shutdown_button.py**) - Plays a WAV file on events, plus a shutdown-button companion; reviewed in Cluster 35 - REMOVED at the user's request: missing `__defaults__` for required options, a dead `on_cracked` hook, and the companion script is RaspiAudio-button-specific hardware, not a plugin
+- **speak_to_me.py** - Text-to-speech announcements of pwning events; already fully reviewed in Cluster 13 (TTS/voice), kept as-is, no bugs found - no new action taken in Cluster 35
+- **TelePwn v2.0** - Advanced Telegram control and notifications; reviewed in Cluster 35 - REMOVED at the user's request: `last_session.started_at()` and `self.send_notification(...)` are both calls to things that don't exist, breaking its session-report feature (`on_agent` also isn't a real hook, though `on_internet_available` covers the same ground on its own)
+- **terminal2.py** - Browser-based terminal access (WebSSH2); reviewed in Cluster 35 - missing `re`/`time` imports broke its first-run service-verification loop, plus a hardcoded two-IP webhook allowlist; **IN PROGRESS, moved to `plugins-wip`** as `terminal-suite` (`TerminalNG`) - fixed, allowlist now a configurable CIDR list; see Cluster 35 notes
+- **twitter.py** - Posts tweets about recent activity; reviewed in Cluster 35 - REMOVED at the user's request: missing `os` import plus a nonexistent `display.block_update()` call, the tweet-with-picture feature never worked
 
 ## Novelty / Games / Personality
 

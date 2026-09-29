@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (69)
+## Exact match - real config found and copied (65)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -74,7 +74,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `age.py` | [`age.toml`](age.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/age.toml` |
 | `agev2.py` | [`agev2.toml`](agev2.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/agev2.toml` |
 | `aircrackonly.py` | [`aircrackonly.toml`](aircrackonly.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/aircrackonly.toml` |
-| `apprise-notify.py` | [`apprise-notify.toml`](apprise-notify.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/apprise-notify.toml` |
 | `auto-hotspot.py` | [`auto-hotspot.toml`](auto-hotspot.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/auto-hotspot.toml` |
 | `away_base.py` | [`away_base.toml`](away_base.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/away_base.toml` |
 | `basiclight.py` | [`basiclight.toml`](basiclight.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/basiclight.toml` |
@@ -113,7 +112,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `hulk.py` | [`hulk.toml`](hulk.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/hulk.toml` |
 | `instattack.py` | [`instattack.toml`](instattack.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/instattack.toml` |
 | `IPDisplay.py` | [`IPDisplay.toml`](IPDisplay.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/IPDisplay.toml` |
-| `mastodon.py` | [`mastodon.toml`](mastodon.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/mastodon.toml` |
 | `memtemp-plus.py` | [`memtemp-plus.toml`](memtemp-plus.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/memtemp-plus.toml` |
 | `mycracked_pw.py` | [`mycracked_pw.toml`](mycracked_pw.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/mycracked_pw.toml` |
 | `mygps.py` | [`mygps.toml`](mygps.toml) | `itsdarklikehell/pwnagotchi-plugins/mygps.toml` |
@@ -128,9 +126,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `quick_rides_to_jail.py` | [`quick_rides_to_jail.toml`](quick_rides_to_jail.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/quick_rides_to_jail.toml` |
 | `rtc_grid.py` | [`rtc_grid.yml`](rtc_grid.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/rtc_grid.yml` |
 | `show_password.py` | [`show_password.toml`](show_password.toml) | `itsdarklikehell/pwnagotchi-plugins/show_password.toml` |
-| `sound.py` | [`sound.toml`](sound.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/sound.toml` |
 | `spotify_now_playing.py` | [`spotify_now_playing.toml`](spotify_now_playing.toml) | `itsdarklikehell/pwnagotchi-plugins/spotify_now_playing.toml` |
-| `twitter.py` | [`twitter.toml`](twitter.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/twitter.toml` |
 | `wardrive.py` | [`wardrive.toml`](wardrive.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wardrive.toml` |
 | `warwalking_trails_kml.py` | [`warwalking_trails_kml.yml`](warwalking_trails_kml.yml) | `pwnagotchi-unofficial/plugins_archive/jd-2006/pwnagotchi-plugins-scripts_JD-2006/warwalking_trails_kml/warwalking_trails_kml.yml` |
 | `warwalking_trails_kml_single.py` | [`warwalking_trails_kml_single.yml`](warwalking_trails_kml_single.yml) | `pwnagotchi-unofficial/plugins_archive/jd-2006/pwnagotchi-plugins-scripts_JD-2006/warwalking_trails_kml_single/warwalking_trails_kml_single.yml` |
@@ -139,13 +135,12 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `xp.py` | [`xp.yml`](xp.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp.yml` |
 | `xp_grid.py` | [`xp_grid.yml`](xp_grid.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp_grid.yml` |
 
-## Partial match - closest sibling config found, verify by hand (31)
+## Partial match - closest sibling config found, verify by hand (29)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `aircrackonly_ng.py` | [`aircrackonly_ng.toml`](aircrackonly_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/aircrackonly.toml` |
 | `auto-update_ng.py` | [`auto-update_ng.toml`](auto-update_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/auto-update.toml` |
 | `AutoBackup v2.0` | [`AutoBackup_v2.0.toml`](AutoBackup_v2.0.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/auto_backup.toml` |
-| `Discord v3.0.1` | [`Discord_v3.0.1.toml`](Discord_v3.0.1.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/discord.toml` |
 | `display-password-qr.py` | [`display-password-qr.toml`](display-password-qr.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-password.toml` |
 | `gpio_buttons_ng.py` | [`gpio_buttons_ng.toml`](gpio_buttons_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gpio_buttons.toml` |
 | `gps_error.py` | [`gps_error.toml`](gps_error.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps.toml` |
@@ -165,7 +160,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `pwnagotchi_GPSD-ng` | [`pwnagotchi_GPSD-ng.toml`](pwnagotchi_GPSD-ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps.toml` |
 | `pwnmenucmd.py` | [`pwnmenucmd.toml`](pwnmenucmd.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pwnmenu.toml` |
 | `quick_rides_to_jail_ng.py` | [`quick_rides_to_jail_ng.toml`](quick_rides_to_jail_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/quick_rides_to_jail.toml` |
-| `sound/shutdown_button.py` | [`sound-shutdown_button.toml`](sound-shutdown_button.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/sound.toml` |
 | `wardriver-pwnagotchi-plugin` | [`wardriver-pwnagotchi-plugin.toml`](wardriver-pwnagotchi-plugin.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wardrive.toml` |
 | `wardriver_ng.py` | [`wardriver_ng.toml`](wardriver_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wardrive.toml` |
 | `webcfg_ng.py` | [`webcfg_ng.toml`](webcfg_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/webcfg.toml` |
@@ -174,26 +168,24 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `WigleLocator` | [`WigleLocator.toml`](WigleLocator.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wigle.toml` |
 | `wpa-sec_ng.py` | [`wpa-sec_ng.toml`](wpa-sec_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wpa-sec.toml` |
 
-## Generated from the plugin's own `__defaults__` dict (15)
+## Generated from the plugin's own `__defaults__` dict (13)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `educational-purposes-exclusively.py` | [`educational-purposes-exclusively.toml`](educational-purposes-exclusively.toml) | `itsdarklikehell/pwnagotchi-plugins/educational-purposes-exclusively.py` |
 | `mad_hatter.py` | [`mad_hatter.toml`](mad_hatter.toml) | `alienmajik/pwnagotchi_plugins/mad_hatter.py` |
 | `miyagi.py` | [`miyagi.toml`](miyagi.toml) | `itsdarklikehell/pwnagotchi-plugins/miyagi.py` |
-| `mqtt_plugin.py` | [`mqtt_plugin.toml`](mqtt_plugin.toml) | `itsdarklikehell/pwnagotchi-plugins/mqtt_plugin.py` |
 | `partymode.py` | [`partymode.toml`](partymode.toml) | `itsdarklikehell/pwnagotchi-plugins/partymode.py` |
 | `pwnaware.py` | [`pwnaware.toml`](pwnaware.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnaware.py` |
 | `pwnmothership` | [`pwnmothership.toml`](pwnmothership.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnmothership.py` |
 | `rgb.py` | [`rgb.toml`](rgb.toml) | `itsdarklikehell/pwnagotchi-plugins/rgb.py` |
 | `rss_voice.py` | [`rss_voice.toml`](rss_voice.toml) | `itsdarklikehell/pwnagotchi-plugins/rss_voice.py` |
 | `show_pwd.py` | [`show_pwd.toml`](show_pwd.toml) | `itsdarklikehell/pwnagotchi-plugins/show_pwd.py` |
-| `slack.py` | [`slack.toml`](slack.toml) | `itsdarklikehell/pwnagotchi-plugins/slack.py` |
 | `test_security.py` | [`test_security.toml`](test_security.toml) | `itsdarklikehell/pwnagotchi-plugins/test_security.py` |
 | `tracker.py` | [`tracker.toml`](tracker.toml) | `itsdarklikehell/pwnagotchi-plugins/tracker.py` |
 | `wd_honey_Pot.py` | [`wd_honey_Pot.toml`](wd_honey_Pot.toml) | `itsdarklikehell/pwnagotchi-plugins/wd_honey_Pot.py` |
 | `wifi_adventures.py` | [`wifi_adventures.toml`](wifi_adventures.toml) | `itsdarklikehell/pwnagotchi-plugins/wifi_adventures.py` |
 
-## Generated from a scan of `self.options` usage (no `__defaults__`) (17)
+## Generated from a scan of `self.options` usage (no `__defaults__`) (15)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `adsbsniffer.py` | [`adsbsniffer.toml`](adsbsniffer.toml) | `alienmajik/pwnagotchi_plugins/adsbsniffer.py` |
@@ -201,7 +193,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `console.py` | [`console.toml`](console.toml) | `sniffleupagus/pwnagotchi_plugins/console.py` |
 | `meshpwnstic.py` | [`meshpwnstic.toml`](meshpwnstic.toml) | `sniffleupagus/pwnagotchi_plugins/meshpwnstic.py` |
 | `neurolyzer.py` | [`neurolyzer.toml`](neurolyzer.toml) | `alienmajik/pwnagotchi_plugins/neurolyzer.py` |
-| `ntfy_msg.py` | [`ntfy_msg.toml`](ntfy_msg.toml) | `itsdarklikehell/pwnagotchi-plugins/ntfy_msg.py` |
 | `pwn2crack.py` | [`pwn2crack.toml`](pwn2crack.toml) | `pwnagotchi-unofficial/plugins_archive/Brets0150/pwnagotchi-to-hashtopolis-plugin/pwn2crack.py` |
 | `pwnwatch.py` | [`pwnwatch.toml`](pwnwatch.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnwatch.py` |
 | `Pwny-Tailscale` | [`Pwny-Tailscale.toml`](Pwny-Tailscale.toml) | `wpa-2/pwnagotchi-plugins/tailscale.py` |
@@ -209,12 +200,11 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `spam_peers.py` | [`spam_peers.toml`](spam_peers.toml) | `pwnagotchi-unofficial/plugins_archive/Sniffleupagus/pwnagotchi_plugins/spam_peers.py` |
 | `speak_to_me.py` | [`speak_to_me.toml`](speak_to_me.toml) | `sniffleupagus/pwnagotchi_plugins/speak_to_me.py` |
 | `state-api.py` | [`state-api.toml`](state-api.toml) | `pwnagotchi-unofficial/plugins_archive/dipsylala/pwnagotchi-state-api/state-api.py` |
-| `TelePwn v2.0` | [`TelePwn_v2.0.toml`](TelePwn_v2.0.toml) | `wpa-2/pwnagotchi-plugins/TelePwn/telepwn.py` |
 | `web2ssh` | [`web2ssh.toml`](web2ssh.toml) | `wpa-2/pwnagotchi-plugins/web2ssh.py` |
 | `wof.py` | [`wof.toml`](wof.toml) | `itsdarklikehell/pwnagotchi-plugins/wof.py` |
 | `woop_woop.py` | [`woop_woop.toml`](woop_woop.toml) | `itsdarklikehell/pwnagotchi-plugins/woop_woop.py` |
 
-## No configurable options detected - `enabled = true` only (12)
+## No configurable options detected - `enabled = true` only (11)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `cmd_server.py` | [`cmd_server.toml`](cmd_server.toml) | `sniffleupagus/pwnagotchi_plugins/cmd_server.py` |
@@ -227,10 +217,9 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `RaspiSyncedTime.py` | [`RaspiSyncedTime.toml`](RaspiSyncedTime.toml) | `pwnagotchi-unofficial/plugins_archive/xenDE/pwnagotchi-plugin-timesync/RaspiSyncedTime.py` |
 | `sigstr.py` | [`sigstr.toml`](sigstr.toml) | `pwnagotchi-unofficial/plugins_archive/bryzz42o/Pwnagotchi-fsociety-plugins/sigstr.py` |
 | `snoopr.py` | [`snoopr.toml`](snoopr.toml) | `alienmajik/pwnagotchi_plugins/snoopr.py` |
-| `terminal2.py` | [`terminal2.toml`](terminal2.toml) | `itsdarklikehell/pwnagotchi-plugins/terminal2.py` |
 | `theylive.py` | [`theylive.toml`](theylive.toml) | `alienmajik/pwnagotchi_plugins/theylive.py` |
 
-## Not found - no config or source located in this environment (12)
+## Not found - no config or source located in this environment (10)
 | Plugin |
 |---|
 | `envtune` |
@@ -241,18 +230,18 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `pwnagotchi-http-module` |
 | `pwnagotchi-WittyPi4L3V7-plugin` |
 | `pwndroid.py` |
-| `PwnSpotify` |
 | `Pwny-WG` |
-| `Showerthoughts` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (18)
+## Already handled - moved to `plugins-wip`, not duplicated here (22)
 | Plugin | Where |
 |---|---|
+| `apprise-notify.py` | `plugins-wip` suite (apprise-notify-suite, AppriseNotifyNG) |
 | `banthex-de.py` | `plugins-wip` suite |
 | `clock.py` | `plugins-wip` suite (clock-suite, ClockNG) |
 | `crack_house.py` | `plugins-wip` suite (crack-house-suite, CrackHouseNG) |
 | `discoBoss.py` | `plugins-wip` suite |
+| `Discord v3.0.1` | `plugins-wip` suite (discord-suite, DiscordNG) |
 | `display-aircrack.py` | `plugins-wip` suite (display-aircrack-suite, DisplayAircrackNG) |
 | `display_version.py` | `plugins-wip` suite (display-version-suite, DisplayVersionNG) |
 | `DiscoHash` | `plugins-wip` suite |
@@ -262,6 +251,8 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `internet-connection.py` (+ `wanmon.py`, `internet-conection.py`) | `plugins-wip` suite (internet-connection-suite, InternetConnectionNG) |
 | `more_uptime.py` | `plugins-wip` suite (more-uptime-suite, MoreUptimeNG) |
 | `privacy-nightmare.py` | `plugins-wip` suite |
+| `Showerthoughts` | `plugins-wip` suite (showerthoughts-suite, ShowerThoughtsNG - built from scratch, no source existed) |
+| `terminal2.py` | `plugins-wip` suite (terminal-suite, TerminalNG) |
 | `timer.py` | `plugins-wip` suite (timer-suite, TimerNG) |
 | `Touch_UI` | `plugins-wip` suite (touch-ui-suite, TouchUING) |
 | `tweak_view.py` | `plugins-wip` suite (tweak-view-suite, TweakViewNG) |

@@ -721,5 +721,56 @@ fake hook name, unlike Cluster 33.
 | [`plugins-wip: display-version-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/display-version-suite/NOTES.md) | `display_version.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
 | [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 11 REMOVED (including `screen_refresh.py`, `darkmode.py`, `themes.py`, `faces.py`, all removed after review), 10 fix/improvement candidates fixed/extended and moved to `plugins-wip`, `console.py` kept as-is (documented cosmetic bug), 3 custom hardware/theme mod repos untouched pending a scope decision |
 
+### Cluster 35 - Notifications / Social / Webhooks
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 57. Full
+14-entry category reviewed. Three (`pwnspeaker.py`, `rss_voice.py`,
+`speak_to_me.py`) turned out to be duplicate listings already fully
+reviewed under Cluster 13 (TTS/voice) - no new action. `Discord v3.0.1`
+and `TelePwn v2.0` are the *kept* survivors of an early
+duplicate-elimination pass (Group 2) - this review read their real,
+correct source rather than the already-dropped `discord.py`/
+`telegram.py`. 8 removed at the user's request: `twitter.py` (missing
+`os` import, plus a nonexistent `display.block_update()` call),
+`TelePwn v2.0` (`last_session.started_at()` and `self.send_notification`
+both call things that don't exist), `sound.py` + `sound/shutdown_button.py`
+(missing `__defaults__`, a dead `on_cracked` hook, and a hardware-only
+companion script), `PwnSpotify` (no source locatable anywhere),
+`mqtt_plugin.py` (fatal load-time crash - synchronous, hardcoded,
+unguarded broker connect in `__init__`), `slack.py` (`self.option`/
+`self.channel` typos, wrong dependency declared), `mastodon.py`
+(unvalidated empty `instance_url` reaches the Mastodon API unguarded),
+and `ntfy_msg.py` (its own exception handler references a nonexistent
+`self._log`, masking the real error). `spotify_now_playing.py` is left
+on the list with its fate undecided - calls a nonexistent
+`pwnagotchi.Config()` and a nonexistent `ui.display.draw_text(...)`,
+would need a full rewrite. 4 fixed/built and moved to `plugins-wip`:
+`apprise-notify.py` (crashed at plugin-load time itself via an
+undefined `title` variable, present in every one of its ~30 mostly-dead
+callback methods) -> `apprise-notify-suite` (`AppriseNotifyNG`);
+`Discord v3.0.1` (already the best-engineered plugin found in this
+whole audit, one small `deauths`-vs-`deauthed` attribute bug) ->
+`discord-suite` (`DiscordNG`); `terminal2.py` (missing `re`/`time`
+imports broke its first-run service verification, plus a hardcoded
+two-IP webhook allowlist) -> `terminal-suite` (`TerminalNG`); and
+`Showerthoughts` (no source existed anywhere - built from scratch
+against reddit's public JSON endpoint) -> `showerthoughts-suite`
+(`ShowerThoughtsNG`). A correction surfaced mid-review: `agent.view().image()`
+is actually a real, working call (confirmed via the real framework -
+`Display` subclasses `View` and adds `.image()`) - the earlier finding
+that `twitter.py`/`slack.py`/`mastodon.py` crashed at that specific call
+was incomplete; their real crash points are elsewhere in their code, as
+detailed in the cluster notes. Doesn't change any of their
+already-decided dispositions. All 4 builds have real sandbox test
+suites (100 tests total) passing against the real cloned framework.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`plugins-wip: apprise-notify-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/apprise-notify-suite/NOTES.md) | `apprise-notify.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: discord-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/discord-suite/NOTES.md) | `Discord v3.0.1` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: terminal-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/terminal-suite/NOTES.md) | `terminal2.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: showerthoughts-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/showerthoughts-suite/NOTES.md) | `Showerthoughts` | IN PROGRESS - moved to `plugins-wip` (built from scratch, no source existed), not yet tested on real hardware |
+| [`Cluster 35 notes`](cluster-35-notifications-social-webhooks/NOTES.md) | all 14 plugins in this category | 8 REMOVED, 4 fixed/built and moved to `plugins-wip`, 1 DEFERRED (`spotify_now_playing.py`), 3 already handled in Cluster 13 (no new action), `Discord v3.0.1`/`TelePwn v2.0` correctly sourced from the Group 2 kept survivors |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
