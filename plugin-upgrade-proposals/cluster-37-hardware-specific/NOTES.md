@@ -96,7 +96,7 @@ user does not own, so they were removed rather than fixed:
 
 ## Feature-upgraded and moved to `plugins-wip` (1 plugin)
 
-### mad_hatter.py -> MadHatterNG (`mad-hatter-suite`, file `mad_hatterNG.py`)
+### mad_hatter.py -> MadHatterNG (`mad-hatter-suite`, file `MadHatterNG.py`)
 
 Universal UPS/battery monitor supporting MAX17040/17048 fuel gauges,
 all INA219-based HATs (explicitly including Waveshare, per its own
@@ -118,16 +118,16 @@ on-screen positioning (`ui_position_x`/`ui_position_y`, including the
 negative-x-means-"pixels in from the right edge" convention - this
 plugin was already user-positionable before the rebuild).
 
-**Naming note:** the file is `mad_hatterNG.py` (capital NG, no
+**Naming note:** the file is `MadHatterNG.py` (capital NG, no
 underscore) per the user's explicit request, but the `config.toml`
-section is `[main.plugins.mad_hatterNG]` - NOT snake_case
+section is `[main.plugins.MadHatterNG]` - NOT snake_case
 `mad_hatter_ng` - because this fork's loader
 (`pwnagotchi/plugins/__init__.py`, `load_from_file()`) registers and
 looks up every plugin by the plugin file's exact basename, case
 included (`plugin_name = os.path.basename(filename.replace(".py",
 ""))`, confirmed by reading and running that function against this
 file). A `mad_hatter_ng` config section for a file named
-`mad_hatterNG.py` would never appear in the framework's "enabled"
+`MadHatterNG.py` would never appear in the framework's "enabled"
 list - not an options bug, a total no-load. Documented prominently in
 the suite's `config.toml` header, `README.md`, and its own `NOTES.md`.
 

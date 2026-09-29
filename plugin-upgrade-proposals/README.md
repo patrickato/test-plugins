@@ -853,7 +853,7 @@ nothing in it is approved for building yet.
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
 | [`plugins-wip: bluetooth-recon-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/bluetooth-recon-suite/NOTES.md) | `blemon_plugin.py`, `bluetoothsniffer.py` | IN PROGRESS - merged into one plugin (`BluetoothReconNG`) and moved to `plugins-wip`, not yet tested on real hardware; originals preserved in `cluster-37-hardware-specific/originals/` |
-| [`plugins-wip: mad-hatter-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/mad-hatter-suite/NOTES.md) | `mad_hatter.py` | IN PROGRESS - feature-upgraded (no bugs found) into `MadHatterNG` (file `mad_hatterNG.py`) and moved to `plugins-wip`, not yet tested on real hardware; matches the user's actual Waveshare UPS 3S hardware; original preserved in `cluster-37-hardware-specific/originals/` |
+| [`plugins-wip: mad-hatter-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/mad-hatter-suite/NOTES.md) | `mad_hatter.py` | IN PROGRESS - feature-upgraded (no bugs found) into `MadHatterNG` (file `MadHatterNG.py`) and moved to `plugins-wip`, not yet tested on real hardware; matches the user's actual Waveshare UPS 3S hardware; original preserved in `cluster-37-hardware-specific/originals/` |
 | [`Cluster 37 notes`](cluster-37-hardware-specific/NOTES.md) | Hardware-specific category (in progress) | 10 REMOVED, 3 fixed/upgraded and moved to `plugins-wip` (2 merged, 1 feature-upgraded), 5 pending decision |
 
 ---

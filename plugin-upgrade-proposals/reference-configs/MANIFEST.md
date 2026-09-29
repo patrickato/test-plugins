@@ -218,7 +218,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `birthday.py` | `plugins-wip` suite (birthday-suite, BirthdayNG) |
 | `blemon_plugin.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with bluetoothsniffer.py) |
 | `bluetoothsniffer.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with blemon_plugin.py) |
-| `mad_hatter.py` | `plugins-wip` suite (mad-hatter-suite, MadHatterNG - feature upgrade, file mad_hatterNG.py) |
+| `mad_hatter.py` | `plugins-wip` suite (mad-hatter-suite, MadHatterNG - feature upgrade, file MadHatterNG.py) |
 | `clock.py` | `plugins-wip` suite (clock-suite, ClockNG) |
 | `crack_house.py` | `plugins-wip` suite (crack-house-suite, CrackHouseNG) |
 | `discoBoss.py` | `plugins-wip` suite |
