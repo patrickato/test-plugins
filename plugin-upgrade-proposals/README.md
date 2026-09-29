@@ -555,5 +555,19 @@ status commands). Full research and design-decision writeup in
 |---|---|---|
 | [`plugins-wip: discohash-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/discohash-suite/NOTES.md) | `DiscoHash`, `discoBoss.py`, `hashbot.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
 
+### Cluster 29 - handshake download web-UI plugins
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 44.
+`handshakes-dl.py` removed as a redundant subset of
+`handshakes-dl-hashie.py` (same author, same `.pcap`-only bug, but the
+hashie version also surfaces already-converted `.2500`/`.16800`/`.22000`
+hash files per capture). Notably, even jayofelony's own official plugin
+repo distributes `handshakes-dl.py` with this same unfixed bug.
+`handshakes-dl-hashie.py` moved to `plugins-wip` for a full rebuild.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`handshakes-dl cluster notes`](cluster-29-handshakes-dl/NOTES.md) | `handshakes-dl.py`, `handshakes-dl-hashie.py` | 1 REMOVED (redundant subset), 1 IN PROGRESS - moved to `plugins-wip` |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

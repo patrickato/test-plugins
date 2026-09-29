@@ -76,6 +76,23 @@ file); highest-risk item on the list for silently breaking plugin loading
 on a fork with its own modified internals, no diff could be confirmed
 compatible.
 
+**Group 44 - cluster 29 (handshake download web-UI plugins):** removed
+`handshakes-dl.py` (1) - both it and `handshakes-dl-hashie.py` share the
+same author, the same code skeleton, and the same `.pcap`-only bug
+(glob filter, filename-length math, and hardcoded download extension all
+assume a 5-character `.pcap` extension - none match this fork's real
+`.pcapng` captures). `handshakes-dl-hashie.py` is a strict superset -
+same capture-download page, plus it also surfaces already-converted
+`.2500`/`.16800`/`.22000` hash files per capture - so `handshakes-dl.py`
+was removed as a redundant subset rather than reviewed as a separate
+option. Notably, even jayofelony's own official plugin repo
+(`jayofelony/pwnagotchi-torch-plugins`) distributes `handshakes-dl.py`
+with this exact same unfixed bug. `handshakes-dl-hashie.py` marked
+**IN PROGRESS, moved to `plugins-wip`** for a full rebuild (same new
+workflow as Cluster 28's DiscoHash Suite). See
+`plugin-upgrade-proposals/cluster-29-handshakes-dl/NOTES.md` for the
+full writeup.
+
 **Group 43 - cluster 28 (Discord hash-dump ecosystem): moved to
 `plugins-wip` for a full rebuild, not removed or kept as-is.** New
 workflow starting here: rather than a binary keep/remove, a plugin can
@@ -713,8 +730,7 @@ repo).
 - **dropbox_ul.py** - Auto-uploads handshakes to a Dropbox app
 - **educational-purposes-exclusively.py** / **educational-purposes-only.py** - Auto-authenticates to known networks and performs internal network recon (no target scoping)
 - **enterprise.py** - Attempts to obtain credentials from enterprise networks when bored
-- **handshakes-dl-hashie.py** - Downloads handshake captures from the web UI and converts them in one step
-- **handshakes-dl.py** - Downloads handshake captures from the web UI (also distributed as jayofelony's official installer plugin)
+- **handshakes-dl-hashie.py** - **IN PROGRESS, moved to `plugins-wip`** - web-UI handshake download page, also surfaces already-converted `.2500`/`.16800`/`.22000` hash files per capture; broken as shipped (the recurring `.pcap`-only bug in its glob filter, filename math, and download handler); being rebuilt; see `plugins-wip` repo
 - **hashbot.py** - **IN PROGRESS, moved to `plugins-wip`** - not actually a pwnagotchi plugin (standalone script meant to run off-pi); consolidated into the DiscoHash Suite as the sole Discord-command bot (absorbing `discoBoss.py`'s control functions too); see `plugins-wip` repo, `discohash-suite/`
 - **hashespwnagotchi.py** - Uploads handshakes to hashes.pw
 - **hashie-hcxpcapngtool.py** - Converts pcaps to crackable hash formats via hcxpcapngtool, updated for modern hcxtools/hashcat formats
