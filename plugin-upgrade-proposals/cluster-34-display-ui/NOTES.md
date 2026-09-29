@@ -1,16 +1,30 @@
 # Notes: Display / UI cluster
 
-**Status: 8 of 19 REMOVED. 7 fix candidates fixed/extended and moved
-to `plugins-wip` (`internet-connection.py`'s three-way group ->
-`InternetConnectionNG`, `tweak_view.py` -> `TweakViewNG`, `timer.py` ->
-`TimerNG`, `crack_house.py` -> `CrackHouseNG`, `more_uptime.py` ->
-`MoreUptimeNG`, `viz.py` -> `VizNG`, `Touch_UI.py` -> `TouchUING` - all
-seven built, documented, and sandbox-tested; none tested on real
-hardware yet). `screen_refresh.py`/`ScreenRefreshNG` was also fixed and
-briefly moved, then removed at the user's request after reviewing the
+**Status: 10 fix/improvement candidates fixed/extended and moved to
+`plugins-wip` (`internet-connection.py`'s three-way group ->
+`InternetConnectionNG`, `tweak_view.py` -> `TweakViewNG`, `timer.py`
+-> `TimerNG`, `crack_house.py` -> `CrackHouseNG`, `more_uptime.py` ->
+`MoreUptimeNG`, `viz.py` -> `VizNG`, `Touch_UI.py` -> `TouchUING`,
+`clock.py` -> `ClockNG`, `display-aircrack.py` -> `DisplayAircrackNG`,
+`display_version.py` -> `DisplayVersionNG` - all ten built,
+documented, and sandbox-tested; none tested on real hardware yet).
+`screen_refresh.py`/`ScreenRefreshNG` was also fixed and briefly
+moved, then removed at the user's request after reviewing the
 build - not needed on a TFT/LCD screen (its whole purpose is clearing
-e-ink ghosting). Only 4 kept-as-is plugins remain pending formal
-confirmation - left on the master list.**
+e-ink ghosting). `darkmode.py`, `themes.py`, and
+`extras/facemod/faces.py` were removed at the user's request after
+real findings on a closer read (see below), rather than fixed. Plus
+the earlier removal pass covering `printp.py`,
+`PwnagotchiCharacterPlugin`/`Pwan-Girl`/`screen_color_invert`,
+`Bat-Trinity`, `display-text.py`, and `sprite_faces.py` (see below).
+`console.py` remains formally kept-as-is with its one documented
+cosmetic bug (Cluster 24). `PWNAGOTCHI-CUSTOM-FACES-MOD`,
+`pwnagotchi_LCD_colorized_darkmode`, and `pwnagotchi-fallout-faces-mod`
+appear to be the same underlying sources as the now-removed
+`faces.py`/`darkmode.py` (re-hosted as fuller hardware/theme mod
+repos rather than single-file plugins) - not separately reconciled
+against the master list's own dedup convention, left untouched
+pending a scope decision.**
 
 All source read from `itsdarklikehell/pwnagotchi-plugins/` unless
 otherwise noted, checked against the real cloned
@@ -256,18 +270,75 @@ otherwise noted, checked against the real cloned
   improvements to this project's judgment - see "Fixed and moved to
   `plugins-wip`" above; this section is kept for history.
 
-## Reviewed, no bugs found (kept as-is)
+## Reviewed, no bugs found and fixed/extended anyway (moved to plugins-wip)
 
-- **`clock.py`**, **`darkmode.py`** (same source as
-  `pwnagotchi_LCD_colorized_darkmode`), **`display-aircrack.py`**,
-  **`display_version.py`**, **`themes.py`** (depends on external shell
-  scripts existing, a deployment concern rather than a code bug),
-  **`extras/facemod/faces.py`** (the shared source behind both
-  `PWNAGOTCHI-CUSTOM-FACES-MOD` and `pwnagotchi-fallout-faces-mod` - a
-  trivial constants module). `internet-connection.py` itself was also
-  clean, but its whole three-way group is being consolidated and
-  rebuilt anyway (see "In progress" above), so it's no longer tracked
-  separately here.
+Like `timer.py` above, these three were originally confirmed clean on
+a first read and left kept-as-is. When the user asked for improvement
+suggestions on the remaining kept-as-is plugins in this cluster, all
+three were approved for a pure feature/efficiency rebuild (no bugs to
+fix, just additions) and moved to `plugins-wip`:
+
+- **`clock.py`** -> `clock-suite` (`ClockNG`). Adds configurable
+  positions (were hardcoded) and configurable `strftime` date/time
+  format strings (the original hardcoded 12-hour time with no way to
+  get a 24-hour clock without editing the source), with a validating
+  fallback for a bad format string. 16 tests passing.
+- **`display-aircrack.py`** -> `display-aircrack-suite`
+  (`DisplayAircrackNG`). The original shelled out to `ps -A` on
+  *every single UI render tick* just to check one boolean status -
+  now throttled via a configurable `check_interval` (default 3s),
+  with the displayed value still updating every tick from the last
+  known state. Also adds configurable position and status text
+  (was a bare `"(1)"`/`"(0)"`), and drops an unused `scapy`
+  dependency. 13 tests passing.
+- **`display_version.py`** -> `display-version-suite`
+  (`DisplayVersionNG`). Adds a configurable position (was hardcoded)
+  and drops an unused `scapy` dependency. 7 tests passing.
+
+All three sandbox-tested against the real cloned framework; none
+tested on real hardware yet. See each suite's own
+`plugins-wip:*-suite/NOTES.md` for full detail.
+
+## Reviewed, real findings on a closer look (REMOVED at the user's request)
+
+These three were also on the "kept as-is" list after the first pass,
+but reading the source in full while gathering improvement
+suggestions for the group above surfaced real problems in each - the
+user chose to drop all three rather than fix them:
+
+- **`darkmode.py`** (same source as `pwnagotchi_LCD_colorized_darkmode`) -
+  hardcodes `pwnagotchi.ui.view.BLACK = 0xFF` / `WHITE = 0x00` on
+  load (and the reverse on unload) without reading
+  `config['ui']['invert']` - the exact setting `View.__init__` itself
+  uses to decide which BLACK/WHITE pair is "native" for a given
+  display (confirmed in `pwnagotchi/ui/view.py`). On a device
+  configured with `invert = true`, darkmode's hardcoded values may
+  not compose correctly with the display's actual native state - a
+  real, previously undocumented gap, not just a style nit. Also
+  declares an unused `scapy` pip dependency.
+- **`themes.py`** - `get_html()`'s `except` branch logs the read
+  error but falls through to `return html_data`, a name that was
+  never assigned in that branch - `UnboundLocalError` (not the
+  original's own logged error) if `themes.html` is ever
+  missing/unreadable next to the plugin file. Also hardcodes three
+  absolute script paths (`/root/flip_col.sh`, `/root/flip_faces.sh`,
+  `/root/flip_led.sh`) with no existence check, and swallows a
+  missing-script `FileNotFoundError` into a bare `return` (`None`)
+  with no real error surfaced to the browser. Plus an unused `scapy`
+  dependency.
+- **`extras/facemod/faces.py`** (the shared source behind both
+  `PWNAGOTCHI-CUSTOM-FACES-MOD` and `pwnagotchi-fallout-faces-mod`) -
+  not actually a plugin at all (no `Plugin` subclass, so this fork's
+  loader never registers it). Diffed byte-for-byte against the real
+  framework's own `pwnagotchi/ui/faces.py` - it's an exact copy. Face
+  customization is already natively supported via `config['ui']
+  ['faces']` (confirmed: `View.__init__` calls
+  `faces.load_from_config(config['ui']['faces'])`), so this file adds
+  nothing the framework doesn't already do built-in.
+
+`internet-connection.py` itself was also clean on its own read, but
+its whole three-way group was consolidated and rebuilt anyway (see
+"In progress" above), so it was never tracked separately here.
 
 ## Real vs. imagined hooks confirmed this cluster
 

@@ -20,6 +20,42 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 56 (Cluster 34, continued):** the last of Cluster 34's
+kept-as-is plugins were revisited for improvement suggestions.
+`darkmode.py`, `themes.py`, and `faces.py` (the itsdarklikehell
+extras/facemod copy) are REMOVED, at the user's request, after real
+findings on closer reading: `darkmode.py` hardcodes its BLACK/WHITE
+swap without reading `config['ui']['invert']` (the same setting the
+framework itself uses to pick the native pair), so it may not compose
+correctly with an already-inverted display, plus an unused `scapy`
+dependency; `themes.py`'s `get_html()` falls through to `return
+html_data` in its `except` branch, `UnboundLocalError`-crashing if
+`themes.html` is ever missing/unreadable, plus hardcoded `/root/
+flip_*.sh` script paths and silent failures with no error surfaced to
+the browser; `faces.py` isn't a plugin at all (no `Plugin` subclass)
+and is a byte-for-byte copy of the framework's own built-in
+`pwnagotchi/ui/faces.py` - config.toml's `[ui.faces]` already
+provides everything it does natively. The other 3 kept-as-is
+candidates are fixed/extended and moved to `plugins-wip`, even though
+none had actual bugs (pure feature/efficiency rebuilds):
+`clock.py` -> `clock-suite` (`ClockNG`) - adds configurable
+positions and configurable `strftime` date/time formats (the
+original hardcoded 12-hour time with no way to get a 24-hour clock).
+`display-aircrack.py` -> `display-aircrack-suite`
+(`DisplayAircrackNG`) - throttles its `ps -A` process check (was
+shelled out on every single UI render tick) via a configurable
+interval, adds configurable position and status text, drops an
+unused `scapy` dependency. `display_version.py` ->
+`display-version-suite` (`DisplayVersionNG`) - adds a configurable
+position, drops an unused `scapy` dependency. **All 8 of Cluster
+34's original fix/improvement candidates are now done** (5 from
+Group 54/55, 3 here). `console.py` remains formally confirmed
+kept-as-is with its one documented cosmetic bug (see Cluster 24
+notes); `PWNAGOTCHI-CUSTOM-FACES-MOD`, `pwnagotchi_LCD_colorized_darkmode`,
+and `pwnagotchi-fallout-faces-mod` (whole hardware/theme mods rather
+than single-file plugins) remain untouched pending a decision on
+whether they're in scope for this audit at all.
+
 **Group 55 (Cluster 34, continued):** after reviewing the 5 fix-candidate
 builds from Group 54, `screen_refresh.py`/`ScreenRefreshNG` is REMOVED
 (superseding Group 54's note below) - not needed: it exists to force an
@@ -980,20 +1016,20 @@ repo).
 
 ## Display / UI
 
-- **clock.py** - Clock/calendar display
+- **clock.py** - **IN PROGRESS, moved to `plugins-wip`** as `clock-suite` (`ClockNG`) - no bugs found; adds (user-approved) configurable positions and configurable `strftime` date/time formats (the original hardcoded a 12-hour time format with no way to get a 24-hour clock); see Cluster 34 notes
 - **console.py** - Scrolling status-update console display (one cosmetic bug: a broken diagnostic log line that silently drops its intended content, no functional impact; see Cluster 24 notes)
 - **crack_house.py** (+ a "-dev" variant) - **IN PROGRESS, moved to `plugins-wip`** as `crack-house-suite` (`CrackHouseNG`) - fixes a guaranteed on-load `AttributeError` crash (`on_ui_setup` called `ui.is_waveshare_v2()`-style methods that only exist on `Display`, never on the plain `View` plugin hooks actually receive), a hidden `UnboundLocalError` behind it, a missing-config-file crash on load, a hardcoded interface, and an inconsistent hardcoded-file fallback for the "no match nearby" display; also adds (user-approved) case-insensitive hostname matching and cross-reboot persistence of the merged cracked list via its own `saving_path` output; see Cluster 34 notes
-- **darkmode.py** - Dark theme
-- **display-aircrack.py** - Shows whether aircrack is currently running
+- **darkmode.py** - REMOVED. Its BLACK/WHITE color swap is hardcoded and doesn't read `config['ui']['invert']` (the same setting the framework itself uses to pick the native color pair for a given display), so it may not compose correctly with an already-inverted display; also declared an unused `scapy` dependency. Removed at the user's request rather than fixed; see Cluster 34 notes
+- **display-aircrack.py** - **IN PROGRESS, moved to `plugins-wip`** as `display-aircrack-suite` (`DisplayAircrackNG`) - no bugs found; adds (user-approved) a throttled/configurable process-check interval (the original shelled out to `ps -A` on every single UI render tick), configurable position, configurable status text, and drops an unused `scapy` dependency; see Cluster 34 notes
 - **display-password.py** / **display-password-qr.py** / **show_password.py** / **show_pwd.py** - Displays recently cracked passwords (QR variant adds a QR code; show_password.py/show_pwd.py are a separate mirror reading a WPA-SEC potfile rather than a hashcat potfile - show_password.py has a missing-defaults gap on `orientation`, show_pwd.py fixes that but changes "most recent" to mean each network's first-ever crack rather than the literal last line, and drops the empty-result fallback message; see Cluster 22 notes)
-- **display_version.py** - Adds the pwnagotchi software version to the display
+- **display_version.py** - **IN PROGRESS, moved to `plugins-wip`** as `display-version-suite` (`DisplayVersionNG`) - no bugs found; adds (user-approved) a configurable position and drops an unused `scapy` dependency; see Cluster 34 notes
 - **internet-connection.py** - **IN PROGRESS, moved to `plugins-wip`** as `internet-connection-suite` (`InternetConnectionNG`) - consolidates all three sibling implementations (`internet-connection.py`, `wanmon.py`, `internet-conection.py`) into one plugin: keeps `internet-connection.py`'s real `internet_available` hook (event-driven, no polling), fixes `wanmon.py`'s `KeyError`-on-load bug and its never-reset connected/dns-resolving flags, and drops `internet-conection.py`'s blocking-network-call-on-render-path design entirely, replacing it with an optional lightweight `on_epoch` re-check so the icon can actually go back to "disconnected"; see Cluster 34 notes
 - **more_uptime.py** - **IN PROGRESS, moved to `plugins-wip`** as `more-uptime-suite` (`MoreUptimeNG`) - fixes an indentation bug that silently disabled its one configurable option (a custom position), and a stray undefined-variable reference that could mask the real error in its update handler; also adds (user-approved) a configurable cycle interval and a configurable subset/order of which states (instance/process/system uptime) cycle; see Cluster 34 notes
 - **PWNAGOTCHI-CUSTOM-FACES-MOD** - Custom PNG faces with transparency
 - **pwnagotchi_LCD_colorized_darkmode** - Colorized dark-mode LCD/web UI mod
 - **pwnagotchi-fallout-faces-mod** - Fallout Vault-Boy themed faces
 - **screen_refresh.py** - REMOVED. Was fixed and briefly moved to `plugins-wip` as `ScreenRefreshNG`, then removed at the user's request - not needed, since it exists to force an e-ink display refresh and clear ghosting, which doesn't apply to a TFT/LCD screen; see Cluster 34 notes
-- **themes.py** - Theme/script kicker plugin
+- **themes.py** - REMOVED. `get_html()`'s `except` branch logs an error but falls through to `return html_data`, a name that was never assigned when the read failed - `UnboundLocalError` if `themes.html` is ever missing/unreadable; also hardcodes three absolute `/root/flip_*.sh` script paths with no existence check and no real error surfaced to the browser on failure, plus an unused `scapy` dependency. Removed at the user's request rather than fixed; see Cluster 34 notes
 - **timer.py** - **IN PROGRESS, moved to `plugins-wip`** as `timer-suite` (`TimerNG`) - fixes a dependency-declaration bug (declared unused `scapy`, undeclared used `pandas` - now drops `pandas` for stdlib `csv`), the hardcoded `/home/pi/data/...` output path (now configurable), and the unbounded full-file rewrite on every handshake (now `max_rows`-based rotation); adds an optional on-screen time-to-handshake element, per-network best/worst capture-time tracking, and a real webhook summary page; see Cluster 34 notes
 - **tweak_view.py** - **IN PROGRESS, moved to `plugins-wip`** as `tweak-view-suite` (`TweakViewNG`) - fixes the hook-ordering bug where tweaks loaded in `on_ready` but `on_ui_setup` (which runs earlier) tried to apply them first, plus two real bugs in its webhook editor (a swallowed JSON-preview crash, an undefined-variable bug masking save failures), and adds load-time validation of the saved tweaks file; see Cluster 34 notes
 - **viz.py** - **IN PROGRESS, moved to `plugins-wip`** as `viz-suite` (`VizNG`) - fixes a fatal import-time crash (imported from `pwnagotchi.wifi`, a module path that doesn't exist anywhere on this fork - the real module is `pwnagotchi.mesh.wifi`, so this plugin could never even be imported) and the previously-flagged uninitialized `self.channel`; also adds (user-approved) a last-updated timestamp on the webhook page, cross-referencing already-cracked networks from CrackHouseNG's saving_path (marked with a star and label on the graph), and a configurable poll interval; see Cluster 34 notes

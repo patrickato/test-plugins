@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (73)
+## Exact match - real config found and copied (69)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -89,13 +89,9 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `bluetoothsniffer.py` | [`bluetoothsniffer.toml`](bluetoothsniffer.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/bluetoothsniffer.toml` |
 | `bt-tether.py` | [`bt-tether.toml`](bt-tether.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/bt-tether.toml` |
 | `christmas.py` | [`christmas.toml`](christmas.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/christmas.toml` |
-| `clock.py` | [`clock.toml`](clock.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/clock.toml` |
 | `counter.py` | [`counter.toml`](counter.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/counter.toml` |
-| `darkmode.py` | [`darkmode.toml`](darkmode.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/darkmode.toml` |
 | `deauth.py` | [`deauth.toml`](deauth.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/deauth.toml` |
-| `display-aircrack.py` | [`display-aircrack.toml`](display-aircrack.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-aircrack.toml` |
 | `display-password.py` | [`display-password.toml`](display-password.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-password.toml` |
-| `display_version.py` | [`display_version.toml`](display_version.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display_version.toml` |
 | `educational-purposes-only.py` | [`educational-purposes-only.toml`](educational-purposes-only.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/educational-purposes-only.toml` |
 | `enterprise.py` | [`enterprise.toml`](enterprise.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/enterprise.toml` |
 | `expv2.py` | [`expv2.toml`](expv2.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/expv2.toml` |
@@ -143,7 +139,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `xp.py` | [`xp.yml`](xp.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp.yml` |
 | `xp_grid.py` | [`xp_grid.yml`](xp_grid.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp_grid.yml` |
 
-## Partial match - closest sibling config found, verify by hand (32)
+## Partial match - closest sibling config found, verify by hand (31)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `aircrackonly_ng.py` | [`aircrackonly_ng.toml`](aircrackonly_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/aircrackonly.toml` |
@@ -167,7 +163,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `pwnagotchi-plugin-pisugar2` | [`pwnagotchi-plugin-pisugar2.toml`](pwnagotchi-plugin-pisugar2.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pisugar2.toml` |
 | `pwnagotchi-plugin-pisugar3` | [`pwnagotchi-plugin-pisugar3.toml`](pwnagotchi-plugin-pisugar3.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pisugar3.toml` |
 | `pwnagotchi_GPSD-ng` | [`pwnagotchi_GPSD-ng.toml`](pwnagotchi_GPSD-ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps.toml` |
-| `pwnagotchi_LCD_colorized_darkmode` | [`pwnagotchi_LCD_colorized_darkmode.toml`](pwnagotchi_LCD_colorized_darkmode.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/darkmode.toml` |
 | `pwnmenucmd.py` | [`pwnmenucmd.toml`](pwnmenucmd.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pwnmenu.toml` |
 | `quick_rides_to_jail_ng.py` | [`quick_rides_to_jail_ng.toml`](quick_rides_to_jail_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/quick_rides_to_jail.toml` |
 | `sound/shutdown_button.py` | [`sound-shutdown_button.toml`](sound-shutdown_button.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/sound.toml` |
@@ -179,7 +174,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `WigleLocator` | [`WigleLocator.toml`](WigleLocator.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wigle.toml` |
 | `wpa-sec_ng.py` | [`wpa-sec_ng.toml`](wpa-sec_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wpa-sec.toml` |
 
-## Generated from the plugin's own `__defaults__` dict (16)
+## Generated from the plugin's own `__defaults__` dict (15)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `educational-purposes-exclusively.py` | [`educational-purposes-exclusively.toml`](educational-purposes-exclusively.toml) | `itsdarklikehell/pwnagotchi-plugins/educational-purposes-exclusively.py` |
@@ -194,7 +189,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `show_pwd.py` | [`show_pwd.toml`](show_pwd.toml) | `itsdarklikehell/pwnagotchi-plugins/show_pwd.py` |
 | `slack.py` | [`slack.toml`](slack.toml) | `itsdarklikehell/pwnagotchi-plugins/slack.py` |
 | `test_security.py` | [`test_security.toml`](test_security.toml) | `itsdarklikehell/pwnagotchi-plugins/test_security.py` |
-| `themes.py` | [`themes.toml`](themes.toml) | `itsdarklikehell/pwnagotchi-plugins/themes.py` |
 | `tracker.py` | [`tracker.toml`](tracker.toml) | `itsdarklikehell/pwnagotchi-plugins/tracker.py` |
 | `wd_honey_Pot.py` | [`wd_honey_Pot.toml`](wd_honey_Pot.toml) | `itsdarklikehell/pwnagotchi-plugins/wd_honey_Pot.py` |
 | `wifi_adventures.py` | [`wifi_adventures.toml`](wifi_adventures.toml) | `itsdarklikehell/pwnagotchi-plugins/wifi_adventures.py` |
@@ -252,12 +246,15 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Showerthoughts` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (15)
+## Already handled - moved to `plugins-wip`, not duplicated here (18)
 | Plugin | Where |
 |---|---|
 | `banthex-de.py` | `plugins-wip` suite |
+| `clock.py` | `plugins-wip` suite (clock-suite, ClockNG) |
 | `crack_house.py` | `plugins-wip` suite (crack-house-suite, CrackHouseNG) |
 | `discoBoss.py` | `plugins-wip` suite |
+| `display-aircrack.py` | `plugins-wip` suite (display-aircrack-suite, DisplayAircrackNG) |
+| `display_version.py` | `plugins-wip` suite (display-version-suite, DisplayVersionNG) |
 | `DiscoHash` | `plugins-wip` suite |
 | `handshakes-dl-hashie.py` | `plugins-wip` suite |
 | `hashbot.py` | `plugins-wip` suite |

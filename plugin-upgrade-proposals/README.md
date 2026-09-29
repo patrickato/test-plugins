@@ -686,9 +686,26 @@ persistence), `MoreUptimeNG` (configurable cycle interval and
 state subset/order), `VizNG` (last-updated timestamp, cracked-node
 cross-referencing against CrackHouseNG, configurable poll interval),
 and `TouchUING` (a real webhook status page, long-press detection) -
-see each suite's own NOTES.md for detail. Several more plugins in this
-category are kept as-is pending formal confirmation. No plugin in this
-batch invented a fake hook name, unlike Cluster 33.
+see each suite's own NOTES.md for detail. The user then asked for
+improvement suggestions on the remaining kept-as-is plugins in this
+category. Three more (`clock.py`, `display-aircrack.py`,
+`display_version.py`) had no bugs but were approved for pure
+feature/efficiency rebuilds and moved to `plugins-wip`:
+`clock-suite` (`ClockNG` - configurable position and `strftime`
+date/time formats), `display-aircrack-suite` (`DisplayAircrackNG` -
+throttled/configurable process-check interval, was shelled out on
+every UI render tick), and `display-version-suite`
+(`DisplayVersionNG` - configurable position). Three others
+(`darkmode.py`, `themes.py`, `extras/facemod/faces.py`) turned out to
+have real issues on a closer read - `darkmode.py` hardcodes its
+BLACK/WHITE swap without reading the display's own `invert` config
+setting, `themes.py`'s `get_html()` can `UnboundLocalError` if its
+template file goes missing, and `faces.py` turned out to be a
+byte-for-byte copy of the framework's own built-in faces module,
+already redundant - and were removed at the user's request rather
+than fixed. `console.py` remains formally kept-as-is (one documented
+cosmetic bug, Cluster 24 notes). No plugin in this batch invented a
+fake hook name, unlike Cluster 33.
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
@@ -699,7 +716,10 @@ batch invented a fake hook name, unlike Cluster 33.
 | [`plugins-wip: more-uptime-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/more-uptime-suite/NOTES.md) | `more_uptime.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
 | [`plugins-wip: viz-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/viz-suite/NOTES.md) | `viz.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
 | [`plugins-wip: touch-ui-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/touch-ui-suite/NOTES.md) | `Touch_UI.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
-| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 8 REMOVED (including `screen_refresh.py`, removed after review), 7 fix candidates fixed/extended and moved to `plugins-wip`, remaining plugins kept as-is pending formal confirmation |
+| [`plugins-wip: clock-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/clock-suite/NOTES.md) | `clock.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: display-aircrack-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/display-aircrack-suite/NOTES.md) | `display-aircrack.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: display-version-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/display-version-suite/NOTES.md) | `display_version.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 11 REMOVED (including `screen_refresh.py`, `darkmode.py`, `themes.py`, `faces.py`, all removed after review), 10 fix/improvement candidates fixed/extended and moved to `plugins-wip`, `console.py` kept as-is (documented cosmetic bug), 3 custom hardware/theme mod repos untouched pending a scope decision |
 
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
