@@ -20,6 +20,22 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 48 (Cluster 32 - Attack/Capture, last two unreviewed):**
+`potfilesorter.py` removed - its `on_webhook()` signature can never match
+the framework's real call, so the entire advertised sort/backup feature
+is unreachable dead code; separately, `on_loaded()` calls a nonexistent
+`self.load_data()`, `readpotfiledata()` references an undefined
+`handshake_dir`, and - most seriously - `copy_config()`'s error branches
+call bare `exit()`, which raises `SystemExit`, a `BaseException` the
+framework's plugin dispatcher does NOT catch (it only catches
+`Exception`) - meaning this could have crashed the whole pwnagotchi
+daemon, not just the plugin, had the broken webhook signature ever been
+"fixed" without also removing that. `meshpwnstic.py` saved for later -
+functional Meshtastic LoRa remote-control concept, but ships with zero
+sender authentication on its `/bcap`/`/deauth`/`/assoc`/`/restart`
+commands (any device on the mesh can run them) plus four smaller bugs;
+fix candidate, not removed. See Cluster 32 notes.
+
 **Group 47 (Cluster 31, continued - fixing what was kept):**
 `banthex-de.py` moved to `plugins-wip` as `banthex-suite` (`BanthexNG`) -
 the shared `.pcap`/`.pcapng` bug fixed, plus a permanent-skip-on-failure
@@ -795,11 +811,10 @@ repo).
 - **hashieclean.py** - hashie variant that also purges pcaps that can't be converted to a hash
 - **hulk.py** - Puts pwnagotchi into an "always aggressive" attack mode
 - **instattack.py** - Launches an immediate associate/deauth attack the instant a device is spotted
-- **meshpwnstic.py** - Remote deauth/assoc/status control over a Meshtastic LoRa radio
+- **meshpwnstic.py** - Remote deauth/assoc/status control over a Meshtastic LoRa radio; **fix candidate, saved for later** - real functionality, but ships with no sender authentication at all on `/bcap`/`/deauth`/`/assoc`/`/restart` (any device on the mesh can run them), plus a `.pcap`-vs-`.pcapng` GPS-sidecar bug, a `self.nodes['num']` literal-key bug, two non-callable `logging(e)` calls, and an unguarded `self.interface.sendText()`; see Cluster 32 notes
 - **mycracked_pw.py** - Grabs all cracked passwords, generates WiFi QR codes and a wordlist
 - **neurolyzer.py** - MAC randomization, WIDS/WIPS evasion; well-engineered, no bugs found, but directly overlaps `mac_randomizer.py` (below) - both would fight over the interface's MAC if both are enabled; decision on both deferred, see Cluster 30 notes
 - **onlinehashcrack_ng.py** - Uploads handshakes to onlinehashcrack.com (another alternate implementation, alongside better_onlinehashcrack.py; shares the same `.pcap`-only backlog-scan bug, but uses a possibly-more-current download endpoint and the device's real global whitelist)
-- **potfilesorter.py** - Sorts a hashcat potfile into a usable wpa_supplicant.conf
 - **privacy-nightmare.py** - **IN PROGRESS, moved to `plugins-wip`** as `gps-tagger-suite` (renamed `GPSTaggerNG`) - GPS-tags every AP seen and writes a `.gps.json` sidecar next to each handshake, interoperating with `handshakes_dl_ng.py`'s existing sidecar support; see Cluster 30 notes
 - **probenpwn.py** - Aggressive handshake/PMKID capture, quiet assoc attacks, WPS PIN extraction, adaptive rate limiting
 - **pwn2crack.py** (aka pwnagotchi-to-hashtopolis-plugin) - Converts handshakes to Hashcat 22000 and creates a hashlist in Hashtopolis

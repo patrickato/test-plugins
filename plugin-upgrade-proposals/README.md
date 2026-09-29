@@ -590,5 +590,23 @@ over MAC control - both flagged, decision on both deferred.
 | [`plugins-wip: gps-tagger-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/gps-tagger-suite/NOTES.md) | `privacy-nightmare.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
 | [`Cluster 30 notes`](cluster-30-privacy-honeypot-evasion/NOTES.md) | `wd_honey_Pot.py`, `neurolyzer.py`, `mac_randomizer.py` | DEFERRED - left on the list, decisions pending |
 
+### Cluster 32 - Attack/Capture: last two unreviewed (mesh control, potfile sorting)
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 48.
+`potfilesorter.py` removed - its `on_webhook()` signature can never be
+called by the real framework, making its whole advertised feature
+unreachable dead code, and it separately contains a bare `exit()` in an
+error branch that could have crashed the entire pwnagotchi daemon (raises
+`SystemExit`, which the framework's plugin dispatcher does not catch) had
+that path ever become reachable. `meshpwnstic.py` (Meshtastic LoRa mesh
+remote control) saved for later - functional concept, but ships with no
+sender authentication at all on its `/bcap`/`/deauth`/`/assoc`/`/restart`
+mesh commands, plus four smaller bugs; flagged as a fix candidate rather
+than fixed this pass.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`Cluster 32 notes`](cluster-32-mesh-potfile/NOTES.md) | `potfilesorter.py`, `meshpwnstic.py` | 1 REMOVED (`potfilesorter.py`), 1 SAVED FOR LATER (`meshpwnstic.py`, fix candidate) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
