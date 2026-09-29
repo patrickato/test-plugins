@@ -887,15 +887,23 @@ execution, and a blocking `Flask.run()` would have hung the device at
 startup); rebuilt with mandatory real credentials (no default fallback
 at all), an easy-to-use Tailscale-aware `bind_scope` option, and a
 `command_mode` option defaulting to an allowlist of the original's
-shortcut commands. `handshaker.py` is approved to be fixed and rebuilt
-next. Being worked through the remaining 3 in groups of 5 at the
-user's request (group 1 deferred at 2: `Pwny-Tailscale`,
+shortcut commands. **`handshaker.py` fixed and moved to `plugins-wip`**
+as `HandshakerNG` (file `handshaker_ng.py`) - `load_data()` was called
+but never defined (guaranteed crash on every load) and its webhook, the
+plugin's whole purpose, did nothing; rebuilt with a real `.pcapng`-only
+handshake scanner, a JSON/HTML status endpoint, the same `bind_scope`
+option as `Web2SSHNG`, a per-file download deliberately scoped narrower
+than the existing `handshakes-dl-suite`, and a live on-screen handshake
+count - no authentication was added (declined this round), so
+`bind_scope` is the only access control. Only Group 1 remains, deferred
+at the user's request (`Pwny-Tailscale`,
 `httpserver.py`).
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
 | [`plugins-wip: web2ssh-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/web2ssh-suite/NOTES.md) | `web2ssh.py` | IN PROGRESS - fixed into `Web2SSHNG` (file `web2ssh_ng.py`) and moved to `plugins-wip`, not yet tested on real hardware; original preserved in `cluster-38-web-ui-api-remote-control/originals/` |
-| [`Cluster 38 notes`](cluster-38-web-ui-api-remote-control/NOTES.md) | Web UI/API/Remote control category (in progress) | 4 REMOVED, 1 fixed/upgraded and moved to `plugins-wip`, `handshaker.py` approved for rebuild, 2 pending/deferred (`Pwny-Tailscale`, `httpserver.py`) |
+| [`plugins-wip: handshaker-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/handshaker-suite/NOTES.md) | `handshaker.py` | IN PROGRESS - fixed into `HandshakerNG` (file `handshaker_ng.py`) and moved to `plugins-wip`, not yet tested on real hardware; original preserved in `cluster-38-web-ui-api-remote-control/originals/` |
+| [`Cluster 38 notes`](cluster-38-web-ui-api-remote-control/NOTES.md) | Web UI/API/Remote control category (in progress) | 4 REMOVED, 2 fixed/upgraded and moved to `plugins-wip`, 2 pending/deferred (`Pwny-Tailscale`, `httpserver.py`) |
 
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

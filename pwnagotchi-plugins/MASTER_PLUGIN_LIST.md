@@ -55,10 +55,25 @@ clearly bannered when active). **REMOVED** at the user's request:
 module import time with no guard, crashing plugin load if missing;
 only functions on `displayhatmini` hardware, not the user's actual
 touchscreen; companion CLI script calls `logging.info(...)` without
-importing `logging`). Remaining pending decisions, being worked
-through in groups of 5 (group 1 now down to 2: `Pwny-Tailscale`,
-`httpserver.py`; group 2 now down to 1: `handshaker.py`, being fixed
-and rebuilt).
+importing `logging`). **Fixed and moved to `plugins-wip`**:
+`handshaker.py` -> `HandshakerNG` (`handshaker-suite`, file
+`handshaker_ng.py`) - `on_loaded()` called a `load_data()` method that
+was never defined anywhere in the class (guaranteed `AttributeError`
+on every load), and its webhook - the plugin's entire stated purpose
+("access pwnagotchi info when SSH is down") - only logged and returned
+nothing. Rebuilt with a real handshake scanner (globs `*.pcapng` only,
+never `*.pcap`), a JSON status endpoint plus an HTML status page
+sharing one code path, the same easy `bind_scope` option as
+`Web2SSHNG` (its own dedicated background-thread server, no blocking
+call), per-file `.pcapng` download deliberately scoped narrower than
+the existing `handshakes-dl-suite` (no ZIP/hash/GPS extras - that
+stays the other suite's job), and a live handshake count on the
+device's own screen. No authentication was added (declined this
+round) - `bind_scope` is the only access control. The original's
+boot-sync behavior (`on_ready`/`on_unload` rsync-to-`/boot` and log
+copies) was preserved, now with a configurable data path and an opt-
+out toggle. Remaining pending decisions, deferred at the user's
+request: `Pwny-Tailscale`, `httpserver.py`.
 
 **Group 59 (Cluster 37, Hardware-specific, in progress):** excluded
 from new review since they already carry cluster references:
@@ -1341,7 +1356,7 @@ repo).
 ## Web UI / API / Remote control
 
 - **cmd_server.py** - Command-control plugin for pwnagotchi (a Unix-socket command shell; two real bugs - a NameError on a narrow cleanup-failure path, and a reply-misdirection bug with multiple simultaneous clients; unauthenticated local socket; see Cluster 24 notes)
-- **handshaker.py** - **IN PROGRESS, being fixed and moved to `plugins-wip`** - Access key pwnagotchi info over an alternate channel when SSH is down; `on_loaded()` calls `self.load_data(...)`, a method never defined anywhere in the class (guaranteed `AttributeError` on every load); the webhook (its entire purpose) is a no-op that only logs and returns nothing; declares an unused `scapy` dependency; see Cluster 38 notes
+- **handshaker.py** - **IN PROGRESS, moved to `plugins-wip`** as `handshaker-suite` (`HandshakerNG`, file `handshaker_ng.py`) - `on_loaded()` called a `load_data()` method never defined anywhere in the class (guaranteed `AttributeError` on every load); the webhook (its entire purpose) was a no-op; declared an unused `scapy` dependency; fixed with a real `.pcapng`-only handshake scanner, a JSON/HTML status endpoint, a `bind_scope` option matching `Web2SSHNG`, scoped-down per-file download, and a live on-screen handshake count; see Cluster 38 notes
 - **httpserver.py** - Simple HTTP server for serving files
 - **pwmenu** - Mobile-first field console for captures/cracking/exports/whitelists
 - **pwnagotchi-http-module** - Serves handshake pcaps via a simple HTTP server (targets the Bookworm image)

@@ -1,11 +1,9 @@
 # Cluster 38 - Web UI / API / Remote control
 
-Status: **IN PROGRESS** - 4 removed, 1 fixed/upgraded and moved to
-`plugins-wip`, `handshaker.py` approved to be fixed/rebuilt next,
-being worked through the remaining 3 in groups of 5 per the user's
-request (group 1 now down to 2: `Pwny-Tailscale`, `httpserver.py`;
-group 2 resolved - `pwnmenu.py`/`pwnmenucmd.py` removed, `handshaker.py`
-approved for rebuild).
+Status: **IN PROGRESS** - 4 removed, 2 fixed/upgraded and moved to
+`plugins-wip`, being worked through in groups of 5 per the user's
+request. Only Group 1 remains, deferred at the user's request:
+`Pwny-Tailscale`, `httpserver.py`.
 
 Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, "## Web UI / API /
 Remote control" section, Group 60 in the elimination log.
@@ -70,7 +68,7 @@ Remote control" section, Group 60 in the elimination log.
   importing `logging`, crashing immediately on use. Dropped at the
   user's request rather than fixed.
 
-## Fixed and moved to `plugins-wip` (1 plugin)
+## Fixed and moved to `plugins-wip` (2 plugins)
 
 ### web2ssh.py -> Web2SSHNG (`web2ssh-suite`, file `web2ssh_ng.py`)
 
@@ -186,24 +184,95 @@ the same verified framework fact used throughout this project. NOT
 the class name (`Web2SSHNG`) and NOT the original's section name
 (`web2ssh`).
 
-## Approved to be fixed and rebuilt (1 plugin, in progress)
+### handshaker.py -> HandshakerNG (`handshaker-suite`, file `handshaker_ng.py`)
 
-- **handshaker.py** -> planned `handshaker-suite` (rebuild not yet
-  built as of this note). `on_loaded()` calls `self.load_data(...)`, a
-  method that is never defined anywhere in the class - guaranteed
-  `AttributeError` on every load; its webhook (the plugin's entire
-  "access info without SSH" purpose) is a no-op that only logs and
-  returns nothing; declares an unused `scapy` dependency. User
-  approved fixing and rebuilding it, with a request for suggestions on
-  making it as good as it can be. See suite's own NOTES.md once built
-  for the final feature list.
+`on_loaded()` called `self.load_data(...)`, a method that was never
+defined anywhere in the class - guaranteed `AttributeError` on every
+load. Its webhook - the plugin's entire "access pwnagotchi info
+without SSH" purpose - only logged and returned nothing. It also
+declared an unused `scapy` dependency.
+
+**Fixed:** a real `load_data()`/`scan_handshakes()` implementation
+that globs the handshakes directory for `*.pcapng` files only (never
+`*.pcap` - this fork only ever writes `.pcapng`, a previously-found
+bug class in this same project), re-scanning on each request rather
+than only once at startup so counts stay current without a plugin
+reload. `on_webhook` now honestly points at the plugin's real feature
+(the dedicated status server below) instead of doing nothing. The
+unused `scapy` dependency was removed.
+
+**Preserved unchanged:** the original's `on_ready`/`on_unload` boot-
+sync behavior (rsync handshakes to `/boot/handshakes`, log file
+copies, `/boot/custom_plugins` migration) - now with a configurable
+data-path option, each `os.system()` call isolated in its own
+try/except so one failing step can't crash the sequence, and a new
+`sync_to_boot` toggle (default `true`) to opt out entirely.
+
+**User approved 5 of 7 proposed improvements (items 1, 2, 4, 5, 7):**
+
+1. **A real JSON status endpoint** (`/status.json`) and an **HTML
+   status page** (`/`) sharing one code path, so they can't drift -
+   handshake count, capture names, most recent capture time, total
+   size. `?format=json` on the HTML route returns the identical
+   payload for scripting.
+2. Built together with #1 above.
+4. **The same `bind_scope` option as `Web2SSHNG`** (`auto`/
+   `tailscale`/`localhost`/`lan`, same Tailscale auto-detection and
+   fail-safe semantics), served via `werkzeug.serving.make_server` in
+   a background daemon thread - never a blocking call. `on_unload`
+   shuts the server down cleanly.
+5. **Per-file `.pcapng` download**, deliberately scoped *narrower*
+   than the existing `handshakes-dl-suite` (which already lists
+   handshakes with hash/GPS companion files and a bulk ZIP download,
+   served through the shared pwnagotchi web UI) - no ZIP, no hash/GPS
+   extras here, just the raw capture files themselves through this
+   plugin's own separately-network-restrictable channel. Downloads go
+   through a single choke-point function that sanitizes the requested
+   filename (`os.path.basename()`), verifies the resolved path is
+   actually inside the configured data directory, and requires the
+   `.pcapng` extension - 404 on anything else (traversal, absolute
+   paths, wrong extension, missing file).
+7. **Live handshake count on the pwnagotchi's own screen**, copied
+   from `sigstr_ng.py`'s `on_ui_setup`/`on_ui_update` + `LabeledValue`
+   convention, re-scanning only on a configurable refresh interval
+   (default 30s) rather than every UI tick.
+
+**Explicitly not built this round** (items 3 and 6 of the original 7
+proposed, presented as options, not approved): HTTP Basic Auth on the
+status server, and "since last check" delta tracking. **No
+authentication of any kind exists on this plugin's server** - since
+item 3 was declined, `bind_scope` is the only access control. Anyone
+who can reach the bound address can see the handshake count/list and
+download raw capture files; `"auto"`/`"tailscale"` keeps this off the
+open LAN by default, `"lan"` is an explicit, loudly-logged opt-in.
+Documented clearly in the suite's own `config.toml`/`README.md`/
+`NOTES.md`.
+
+**Testing:** real tests against the real installed Flask/Werkzeug (not
+mocked) - a real end-to-end server test (status page, JSON endpoint,
+`?format=json` parity, real file download, 404 on traversal/missing/
+wrong-extension, and a real port-close check after `on_unload`), the
+scanner's `.pcap`-vs-`.pcapng` exclusion, `bind_scope` resolution for
+all 4 scopes, the UI element, and the boot-sync methods with mocked
+`os.system`. All passing, re-run and independently verified (not just
+the build report). **Not tested on real hardware.**
+
+**Original preserved:** an exact copy of `handshaker.py` is kept in
+[`originals/`](originals/) (the itsdarklikehell version; an earlier,
+functionally-identical mirror also exists under Allordacia's name and
+was not separately preserved). Its real upstream `config.toml` was
+already an exact-match find in `reference-configs/handshaker.toml`.
+
+**Naming note:** file `handshaker_ng.py` (snake_case), config section
+`[main.plugins.handshaker_ng]` - matching the file's exact basename,
+same convention used throughout this project.
 
 ## Still pending decisions - working through in groups of 5
 
 Full findings for all 7 remaining plugins were presented to the user
-in this session's findings table. Group 2 is now resolved
-(`pwnmenu.py`/`pwnmenucmd.py` removed, `handshaker.py` approved for
-rebuild). Only Group 1 remains, deferred at the user's request:
+in this session's findings table. Groups 1 and 2 are both now
+resolved except for Group 1's final 2 items, deferred at the user's
+request:
 
 **Group 1 (2, deferred):** `Pwny-Tailscale` (`tailscale.py`),
 `httpserver.py`.

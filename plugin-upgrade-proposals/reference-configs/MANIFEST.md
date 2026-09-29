@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (51)
+## Exact match - real config found and copied (50)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -96,7 +96,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `gps_fix.py` | [`gps_fix.yml`](gps_fix.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/gps_fix.yml` |
 | `gps_led.py` | [`gps_led.yml`](gps_led.yml) | `pwnagotchi-unofficial/plugins_archive/jd-2006/pwnagotchi-plugins-scripts_JD-2006/gps_led/gps_led.yml` |
 | `gps_sat.py` | [`gps_sat.yml`](gps_sat.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/gps_sat.yml` |
-| `handshaker.py` | [`handshaker.toml`](handshaker.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/handshaker.toml` |
 | `hashie-hcxpcapngtool.py` | [`hashie-hcxpcapngtool.toml`](hashie-hcxpcapngtool.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/hashie-hcxpcapngtool.toml` |
 | `hashieclean.py` | [`hashieclean.toml`](hashieclean.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/hashieclean.toml` |
 | `home_base.py` | [`home_base.toml`](home_base.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/home_base.toml` |
@@ -202,10 +201,11 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Pwny-WG` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (33)
+## Already handled - moved to `plugins-wip`, not duplicated here (34)
 | Plugin | Where |
 |---|---|
 | `apprise-notify.py` | `plugins-wip` suite (apprise-notify-suite, AppriseNotifyNG) |
+| `handshaker.py` | `plugins-wip` suite (handshaker-suite, HandshakerNG, file handshaker_ng.py) |
 | `banthex-de.py` | `plugins-wip` suite |
 | `birthday.py` | `plugins-wip` suite (birthday-suite, BirthdayNG) |
 | `blemon_plugin.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with bluetoothsniffer.py) |
