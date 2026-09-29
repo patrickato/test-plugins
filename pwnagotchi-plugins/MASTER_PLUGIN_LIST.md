@@ -20,6 +20,28 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 58 (Cluster 36, Novelty/Games/Personality - partial, 5 removed so far):**
+Findings for the full 13-entry cluster (after excluding 6 duplicate
+listings already handled in Clusters 16/17) were presented; the user
+has so far decided on 5. REMOVED at the user's request: `bitcoin.py`
+(`on_sleep(self)` was missing the real `agent, t` params - TypeError
+every sleep cycle, so the price-fetch feature, its whole purpose,
+never worked at all), `christmas.py` (no bugs found, dropped anyway),
+`envtune` (no source locatable anywhere), `miyagi.py` (built entirely
+around an `[ai]` self-play training subsystem that doesn't exist on
+this fork at all - no `[ai]` config section, none of the `on_ai_*`
+hooks ever fire - `on_ready` unconditionally indexed
+`agent._config["ai"]["path"]` with no guard, a guaranteed `KeyError`
+every startup), `partymode.py` (monkeypatched the shared global
+`pwnagotchi.ui.view.BLACK`/`WHITE` constants to random hex strings
+instead of ints, breaking rendering globally, not just for this
+plugin's own elements). The remaining 8 (`achievements.py`,
+`birthday.py`, `counter.py`, `fortune_cookie.py`, `IPDisplay.py`,
+`spam_peers.py`, `Weather.py`, `wifi_adventures.py`) are still
+awaiting a decision - see the category bullets below for each one's
+findings. Full detail in
+`plugin-upgrade-proposals/cluster-36-novelty-games-personality/NOTES.md`.
+
 **Group 57 (Cluster 35, Notifications/Social/Webhooks):** the full
 14-entry cluster reviewed. `pwnspeaker.py`, `rss_voice.py`, and
 `speak_to_me.py` turned out to be duplicate listings of plugins already
@@ -1193,23 +1215,18 @@ repo).
 
 ## Novelty / Games / Personality
 
-- **achievements.py** - Collects achievements for daily challenges
-- **age.py** / **agev2.py** - Tracks device "age"/strength stats based on epochs
-- **age.py** (AlienMajik variant) - Narrative "cyber-legend" prestige/lore system - same filename, unrelated plugin, naming collision
-- **birthday.py** - Shows the age/birthday of your pwnagotchi
-- **bitcoin.py** - Displays the current bitcoin price
-- **christmas.py** - Holiday countdown theme
-- **counter.py** - Tallies assoc/deauth attempts
-- **envtune** - Environment-aware personality tuner (EMA smoothing, best-settings memory)
-- **expv2.py** - Awards XP for each captured handshake
-- **fortune_cookie.py** - Displays random fortune-cookie messages
-- **IPDisplay.py** - Displays the device's IP address
-- **miyagi.py** - "Training module" novelty plugin, manages brain backups
-- **partymode.py** - Novelty party mode
-- **spam_peers.py** - Auto-messages newly discovered grid peers
-- **Weather.py** - Displays the weather forecast
-- **wifi_adventures.py** - Achievement system themed around "WiFi adventures"
-- **xp.py** / **xp_grid.py** - XP/leveling system with peer level-sharing (separate implementation from exp.py)
+- **achievements.py** - Collects achievements for daily challenges; reviewed in Cluster 36 - `on_unfiltered_ap_list` has the wrong signature (missing `access_points`), permanently soft-locking the "new network" challenge type; fix/rebuild decision pending
+- **age.py** / **agev2.py** - Tracks device "age"/strength stats based on epochs; already reviewed in Cluster 16/17, no new action
+- **age.py** (AlienMajik variant) - Narrative "cyber-legend" prestige/lore system - same filename, unrelated plugin, naming collision; already reviewed in Cluster 16/17, no new action
+- **birthday.py** - Shows the age/birthday of your pwnagotchi; reviewed in Cluster 36 - missing `__defaults__` for several options (KeyError on load if unset), missing `python-dateutil` dependency declaration, malformed `brain.json` could silently show a wildly wrong age; fix/rebuild decision pending
+- **counter.py** - Tallies assoc/deauth attempts; reviewed in Cluster 36 - no fatal bugs found; decision pending
+- **expv2.py** - Awards XP for each captured handshake; already reviewed in Cluster 16/17, no new action
+- **fortune_cookie.py** - Displays random fortune-cookie messages; reviewed in Cluster 36 - no `__defaults__` at all, direct indexing of `orientation`/`enabled` (KeyError on load/update if unset), `orientation` option is a no-op; fix/rebuild decision pending
+- **IPDisplay.py** - Displays the device's IP address; reviewed in Cluster 36 - no fatal bugs found; decision pending
+- **spam_peers.py** - Auto-messages newly discovered grid peers; reviewed in Cluster 36 - unguarded `os.listdir("/root/peers")` in `__init__` crashes plugin loading entirely on a fresh install, plus raw `peer.adv['identity']` indexing bypasses the framework's own defensive accessor; fix/rebuild decision pending
+- **Weather.py** - Displays the weather forecast; reviewed in Cluster 36 - hardcoded, exposed API key and hardcoded location with zero config options, wrong dependency declaration; fix/rebuild-or-remove decision pending
+- **wifi_adventures.py** - Achievement system themed around "WiFi adventures"; reviewed in Cluster 36 - 4 of its 6 "adventure" hooks aren't real framework hooks at all (~600 lines of dead code), both real hooks have real bugs; remove-or-rewrite decision pending
+- **xp.py** / **xp_grid.py** - XP/leveling system with peer level-sharing (separate implementation from exp.py); already reviewed in Cluster 16/17, no new action
 
 ## Original evilsocket bundled (remainder - not superseded by anything jayofelony bundles)
 

@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (65)
+## Exact match - real config found and copied (63)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -83,11 +83,9 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `better_onlinehashcrack.py` | [`better_onlinehashcrack.toml`](better_onlinehashcrack.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/better_onlinehashcrack.toml` |
 | `better_quickdic.py` | [`better_quickdic.toml`](better_quickdic.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/better_quickdic.toml` |
 | `birthday.py` | [`birthday.toml`](birthday.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/birthday.toml` |
-| `bitcoin.py` | [`bitcoin.toml`](bitcoin.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/bitcoin.toml` |
 | `blemon_plugin.py` | [`blemon_plugin.toml`](blemon_plugin.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/blemon_plugin.toml` |
 | `bluetoothsniffer.py` | [`bluetoothsniffer.toml`](bluetoothsniffer.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/bluetoothsniffer.toml` |
 | `bt-tether.py` | [`bt-tether.toml`](bt-tether.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/bt-tether.toml` |
-| `christmas.py` | [`christmas.toml`](christmas.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/christmas.toml` |
 | `counter.py` | [`counter.toml`](counter.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/counter.toml` |
 | `deauth.py` | [`deauth.toml`](deauth.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/deauth.toml` |
 | `display-password.py` | [`display-password.toml`](display-password.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-password.toml` |
@@ -168,13 +166,11 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `WigleLocator` | [`WigleLocator.toml`](WigleLocator.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wigle.toml` |
 | `wpa-sec_ng.py` | [`wpa-sec_ng.toml`](wpa-sec_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wpa-sec.toml` |
 
-## Generated from the plugin's own `__defaults__` dict (13)
+## Generated from the plugin's own `__defaults__` dict (11)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `educational-purposes-exclusively.py` | [`educational-purposes-exclusively.toml`](educational-purposes-exclusively.toml) | `itsdarklikehell/pwnagotchi-plugins/educational-purposes-exclusively.py` |
 | `mad_hatter.py` | [`mad_hatter.toml`](mad_hatter.toml) | `alienmajik/pwnagotchi_plugins/mad_hatter.py` |
-| `miyagi.py` | [`miyagi.toml`](miyagi.toml) | `itsdarklikehell/pwnagotchi-plugins/miyagi.py` |
-| `partymode.py` | [`partymode.toml`](partymode.toml) | `itsdarklikehell/pwnagotchi-plugins/partymode.py` |
 | `pwnaware.py` | [`pwnaware.toml`](pwnaware.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnaware.py` |
 | `pwnmothership` | [`pwnmothership.toml`](pwnmothership.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnmothership.py` |
 | `rgb.py` | [`rgb.toml`](rgb.toml) | `itsdarklikehell/pwnagotchi-plugins/rgb.py` |
@@ -219,10 +215,9 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `snoopr.py` | [`snoopr.toml`](snoopr.toml) | `alienmajik/pwnagotchi_plugins/snoopr.py` |
 | `theylive.py` | [`theylive.toml`](theylive.toml) | `alienmajik/pwnagotchi_plugins/theylive.py` |
 
-## Not found - no config or source located in this environment (10)
+## Not found - no config or source located in this environment (9)
 | Plugin |
 |---|
-| `envtune` |
 | `fix_brcmfmac.py` |
 | `GitHub_Backups` |
 | `pwmenu` |

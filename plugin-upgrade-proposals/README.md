@@ -772,5 +772,35 @@ suites (100 tests total) passing against the real cloned framework.
 | [`plugins-wip: showerthoughts-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/showerthoughts-suite/NOTES.md) | `Showerthoughts` | IN PROGRESS - moved to `plugins-wip` (built from scratch, no source existed), not yet tested on real hardware |
 | [`Cluster 35 notes`](cluster-35-notifications-social-webhooks/NOTES.md) | all 14 plugins in this category | 8 REMOVED, 4 fixed/built and moved to `plugins-wip`, 1 DEFERRED (`spotify_now_playing.py`), 3 already handled in Cluster 13 (no new action), `Discord v3.0.1`/`TelePwn v2.0` correctly sourced from the Group 2 kept survivors |
 
+### Cluster 36 - Novelty / Games / Personality (IN PROGRESS)
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 58. Full
+13-entry category reviewed (after excluding 6 duplicate listings
+already handled in Clusters 16/17: `age.py`/`agev2.py`/`age.py`
+AlienMajik variant/`expv2.py`/`xp.py`/`xp_grid.py`) and findings
+presented. So far 5 removed at the user's request: `bitcoin.py`
+(`on_sleep(self)` missing the real `agent, t` params - TypeError
+every sleep cycle, so the price-fetch feature, its whole purpose,
+never worked), `christmas.py` (no bugs found, dropped anyway),
+`envtune` (no source locatable anywhere), `miyagi.py` (built entirely
+around an `[ai]` self-play training subsystem that doesn't exist on
+this fork at all - guaranteed `KeyError` every startup), `partymode.py`
+(monkeypatched the shared global UI color constants to random hex
+strings instead of ints, breaking rendering globally). The remaining
+8 (`achievements.py`, `birthday.py`, `counter.py`, `fortune_cookie.py`,
+`IPDisplay.py`, `spam_peers.py`, `Weather.py`, `wifi_adventures.py`)
+have findings presented but no decision yet - nothing has been
+fixed/rebuilt/moved to `plugins-wip`. A correction surfaced mid-review:
+an earlier Cluster 34 finding claiming `ui.is_waveshare_v2()`/
+`ui.init_display()` crash inside `on_ui_setup`/`on_ui_update` was
+empirically disproved (both hooks' `ui` parameter is genuinely a
+`Display` instance) - written into `cluster-34-display-ui/NOTES.md`
+as a correction note; doesn't change either affected plugin's
+already-decided disposition.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`Cluster 36 notes`](cluster-36-novelty-games-personality/NOTES.md) | all 13 plugins in this category | 5 REMOVED, 8 decisions pending, 6 already handled in Clusters 16/17 (no new action) |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
