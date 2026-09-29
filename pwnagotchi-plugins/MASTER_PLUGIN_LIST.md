@@ -20,6 +20,22 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 53 (Cluster 34, continued):** the last kept-with-a-note
+Display/UI plugin is now also fixed and moved. `timer.py` is extended
+and moved to `plugins-wip` as `timer-suite` (`TimerNG`) - fixes a
+dependency-declaration bug (declared an unused `scapy` pip dependency,
+never declared the `pandas` it actually imports and uses), drops
+`pandas` entirely in favor of the stdlib `csv` module, fixes the
+hardcoded `/home/pi/data/...` output path (now `output_path`,
+configurable) and the unbounded full-file rewrite on every handshake
+(now `max_rows`-based CSV rotation), and adds bare-MAC-string AP
+handling. Also adds three improvements deferred to this project's
+judgment: an optional on-screen time-to-handshake element, per-network
+best/worst capture-time tracking, and a real webhook summary page (the
+original's webhook did nothing). Full detail in
+`plugins-wip:timer-suite/NOTES.md`. This closes out Cluster 34's three
+queued rebuilds (`InternetConnectionNG`, `TweakViewNG`, `TimerNG`).
+
 **Group 52 (Cluster 34, continued):** the two queued Display/UI
 rebuilds are done. `internet-connection.py`'s three-way group (itself,
 `wanmon.py`, `internet-conection.py`) is fixed and moved to
@@ -52,8 +68,10 @@ feature (sprite-based faces) isn't essential. `internet-connection.py`'s
 group (itself, `wanmon.py`, `internet-conection.py`) and `tweak_view.py`
 moved from "kept with documented bug" to fix-and-rebuild candidates -
 see `plugin-upgrade-proposals/cluster-34-display-ui/NOTES.md` for the
-rebuild proposals. `timer.py` remains kept as-is (its hardcoded-path
-note is a deployment detail, not a code bug worth fixing).
+rebuild proposals. `timer.py` was kept as-is at this point (its
+hardcoded-path note was judged a deployment detail, not a code bug
+worth fixing) - later revisited and fixed/extended anyway; see Group
+53.
 
 **Group 50 (Cluster 34 - Display/UI, removals so far):** 5 of 19
 plugins removed this pass, rest of the cluster's decisions still
@@ -933,7 +951,7 @@ repo).
 - **pwnagotchi-fallout-faces-mod** - Fallout Vault-Boy themed faces
 - **screen_refresh.py** - Forces a display refresh after X updates
 - **themes.py** - Theme/script kicker plugin
-- **timer.py** - Measures how long a handshake capture took; reviewed in Cluster 34, no framework-misuse bugs, kept with a documented note - writes to a hardcoded `/home/pi/data/...` path that may not exist on every setup
+- **timer.py** - **IN PROGRESS, moved to `plugins-wip`** as `timer-suite` (`TimerNG`) - fixes a dependency-declaration bug (declared unused `scapy`, undeclared used `pandas` - now drops `pandas` for stdlib `csv`), the hardcoded `/home/pi/data/...` output path (now configurable), and the unbounded full-file rewrite on every handshake (now `max_rows`-based rotation); adds an optional on-screen time-to-handshake element, per-network best/worst capture-time tracking, and a real webhook summary page; see Cluster 34 notes
 - **tweak_view.py** - **IN PROGRESS, moved to `plugins-wip`** as `tweak-view-suite` (`TweakViewNG`) - fixes the hook-ordering bug where tweaks loaded in `on_ready` but `on_ui_setup` (which runs earlier) tried to apply them first, plus two real bugs in its webhook editor (a swallowed JSON-preview crash, an undefined-variable bug masking save failures), and adds load-time validation of the saved tweaks file; see Cluster 34 notes
 - **viz.py** - Visualizes surrounding APs
 

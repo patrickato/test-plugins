@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (77)
+## Exact match - real config found and copied (76)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -137,7 +137,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `show_password.py` | [`show_password.toml`](show_password.toml) | `itsdarklikehell/pwnagotchi-plugins/show_password.toml` |
 | `sound.py` | [`sound.toml`](sound.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/sound.toml` |
 | `spotify_now_playing.py` | [`spotify_now_playing.toml`](spotify_now_playing.toml) | `itsdarklikehell/pwnagotchi-plugins/spotify_now_playing.toml` |
-| `timer.py` | [`timer.toml`](timer.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/timer.toml` |
 | `twitter.py` | [`twitter.toml`](twitter.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/twitter.toml` |
 | `wardrive.py` | [`wardrive.toml`](wardrive.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wardrive.toml` |
 | `warwalking_trails_kml.py` | [`warwalking_trails_kml.yml`](warwalking_trails_kml.yml) | `pwnagotchi-unofficial/plugins_archive/jd-2006/pwnagotchi-plugins-scripts_JD-2006/warwalking_trails_kml/warwalking_trails_kml.yml` |
@@ -258,7 +257,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Showerthoughts` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (10)
+## Already handled - moved to `plugins-wip`, not duplicated here (11)
 | Plugin | Where |
 |---|---|
 | `banthex-de.py` | `plugins-wip` suite |
@@ -269,6 +268,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `hashespwnagotchi.py` | `plugins-wip` suite |
 | `internet-connection.py` (+ `wanmon.py`, `internet-conection.py`) | `plugins-wip` suite (internet-connection-suite, InternetConnectionNG) |
 | `privacy-nightmare.py` | `plugins-wip` suite |
+| `timer.py` | `plugins-wip` suite (timer-suite, TimerNG) |
 | `tweak_view.py` | `plugins-wip` suite (tweak-view-suite, TweakViewNG) |
 | `wifi_jammer.py` | `plugins-wip` suite (wifi-jammer-suite, WifiJammerNG) |
 

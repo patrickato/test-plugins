@@ -1,11 +1,11 @@
 # Notes: Display / UI cluster
 
-**Status: 7 of 19 REMOVED. 2 fixed and moved to `plugins-wip`
+**Status: 7 of 19 REMOVED. 3 fixed/extended and moved to `plugins-wip`
 (`internet-connection.py`'s three-way group -> `InternetConnectionNG`,
-`tweak_view.py` -> `TweakViewNG` - both built, documented, and
-sandbox-tested; not yet tested on real hardware). 1 KEPT with a
-documented bug (`timer.py`). 9 remain reviewed with real findings but
-no keep/fix decision made yet (5 fix candidates, 4 kept-as-is pending
+`tweak_view.py` -> `TweakViewNG`, `timer.py` -> `TimerNG` - all three
+built, documented, and sandbox-tested; not yet tested on real
+hardware). 9 remain reviewed with real findings but no keep/fix
+decision made yet (5 fix candidates, 4 kept-as-is pending
 confirmation) - left on the master list, decisions pending.**
 
 All source read from `itsdarklikehell/pwnagotchi-plugins/` unless
@@ -111,6 +111,28 @@ otherwise noted, checked against the real cloned
     others).
   - 27 tests, all passing against the real framework. See
     `plugins-wip:tweak-view-suite/NOTES.md` for full detail.
+- **`timer.py`** - **-> `timer-suite` (`TimerNG`)**. Was initially
+  confirmed as "keep with a documented bug" (see the original note
+  below, kept for history), then revisited once the user deferred the
+  choice of improvements to build. Fixes a dependency-declaration bug
+  (declared an unused `scapy` pip dependency, never declared the
+  `pandas` it actually imports and uses to write the CSV), the
+  hardcoded `/home/pi/data/...` output path (now `output_path`,
+  configurable), and an unbounded full-DataFrame rewrite on every
+  single handshake (now bounded, stdlib-`csv`-based `max_rows`
+  rotation). Also adds bare-MAC-string AP handling (the same
+  `on_handshake` shape found earlier in `WifiJammerNG`), needed
+  because the new per-network tracking below reads AP fields the
+  original never touched.
+  - **Three additions built, deferred to this project's judgment**:
+    an optional on-screen time-to-handshake element (last value or
+    rolling average), per-network best/worst capture-time tracking
+    (the original had no per-network identity at all - every capture
+    landed in the same flat, unlabeled 3-column log), and a real
+    webhook summary page (the original's webhook did nothing but log
+    that it was pressed).
+  - 22 tests, all passing against the real framework. See
+    `plugins-wip:timer-suite/NOTES.md` for full detail.
 
 ## Reviewed, fix candidates (decision deferred)
 
@@ -154,17 +176,17 @@ otherwise noted, checked against the real cloned
   calls `check_output(None)` and crashes whenever connectivity comes
   up with `needsAptPackages` configured.
 
-## Kept with a documented (low-priority) bug (decision confirmed)
+## Kept with a documented (low-priority) bug (superseded)
 
-- **`timer.py`** - no framework-misuse bugs; correctly uses real hooks
+- **`timer.py`** - originally confirmed here as kept-as-is: no
+  framework-misuse bugs, correctly uses real hooks
   (`on_wifi_update`, `on_deauthentication`, `on_handshake`) to time
-  deauth-to-handshake duration and log it to CSV. Writes to a
-  hardcoded `/home/pi/data/...` path that may not exist on every setup
-  - a deployment detail (check/create that directory) rather than a
-  code bug worth fixing. Kept as-is: it's a small, working, genuinely
-  useful piece of telemetry (how long a capture actually takes, per
-  network) that nothing else on the list tracks, and the only issue is
-  a path assumption you control on your own hardware.
+  deauth-to-handshake duration and log it to CSV, with the only issue
+  being a hardcoded `/home/pi/data/...` output path judged a
+  deployment detail rather than a code bug. Later revisited and
+  fixed/extended anyway once the user deferred a set of proposed
+  improvements to this project's judgment - see "Fixed and moved to
+  `plugins-wip`" above; this section is kept for history.
 
 ## Reviewed, no bugs found (kept as-is)
 
