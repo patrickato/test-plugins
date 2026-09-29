@@ -1,12 +1,14 @@
 # Notes: Display / UI cluster
 
-**Status: 7 of 19 REMOVED. 3 fixed/extended and moved to `plugins-wip`
-(`internet-connection.py`'s three-way group -> `InternetConnectionNG`,
-`tweak_view.py` -> `TweakViewNG`, `timer.py` -> `TimerNG` - all three
-built, documented, and sandbox-tested; not yet tested on real
-hardware). 9 remain reviewed with real findings but no keep/fix
-decision made yet (5 fix candidates, 4 kept-as-is pending
-confirmation) - left on the master list, decisions pending.**
+**Status: 7 of 19 REMOVED. All 8 fix candidates fixed/extended and
+moved to `plugins-wip` (`internet-connection.py`'s three-way group ->
+`InternetConnectionNG`, `tweak_view.py` -> `TweakViewNG`, `timer.py` ->
+`TimerNG`, `crack_house.py` -> `CrackHouseNG`, `more_uptime.py` ->
+`MoreUptimeNG`, `screen_refresh.py` -> `ScreenRefreshNG`, `viz.py` ->
+`VizNG`, `Touch_UI.py` -> `TouchUING` - all eight built, documented,
+and sandbox-tested; none tested on real hardware yet). Only 4
+kept-as-is plugins remain pending formal confirmation - left on the
+master list.**
 
 All source read from `itsdarklikehell/pwnagotchi-plugins/` unless
 otherwise noted, checked against the real cloned
@@ -133,48 +135,95 @@ otherwise noted, checked against the real cloned
     that it was pressed).
   - 22 tests, all passing against the real framework. See
     `plugins-wip:timer-suite/NOTES.md` for full detail.
-
-## Reviewed, fix candidates (decision deferred)
-
-- **`crack_house.py`** (+ the V0r-T3x archive's "-dev" variant, which
-  is functionally identical - same logic, just missing the
-  itsdarklikehell version's extra logging/try-except/`__dependencies__`
-  block) - reads `self.options["files"]`,
-  `self.options["saving_path"]`, etc. via direct indexing with no
-  fallback. This fork never merges a plugin's `__defaults__` dict into
-  `self.options`, so any config.toml missing one of these keys
-  `KeyError`-crashes the plugin on load. Also hardcodes `iwconfig
-  wlan0` instead of reading the real interface from
-  `pwnagotchi.config['main']['iface']`.
-- **`more_uptime.py`** - real indentation bug in `on_ui_setup`: the
-  `ui.add_element("more_uptime", ...)` call is nested inside the branch
-  that only runs when the user has NOT set a custom `position` option.
-  Set `position` and the element is never created; every later
-  `on_ui_update` call then fails against a UI element that doesn't
-  exist.
-- **`screen_refresh.py`** - calls `ui.init_display()`, but that method
-  only exists on `Display` (`pwnagotchi/ui/display.py`) - the object
-  actually passed to `on_ui_update` hooks is `View`
-  (`pwnagotchi/ui/view.py`), which has no such method and no
-  delegation to one. The plugin's entire purpose (forcing a periodic
-  e-ink refresh) can never execute; always `AttributeError`.
-- **`viz.py`** - `self.channel` is never initialized in `__init__`,
-  only set inside `on_channel_hop`. Hitting the `/plugins/viz/update`
-  webhook before the first channel-hop event fires (plausible right
-  after boot) raises an unhandled `AttributeError` in
-  `Viz.create_graph()`, 500ing the request. `on_webhook` has no
-  try/except around the call.
-- **`Touch_UI.py`** - the plugin backing the master-list's `Touch_UI`
-  entry; relevant to this device since it has a real MPI3501 touchscreen.
-  Two real bugs: (1) `Touch_Button.draw()`'s except handler calls
-  `logging(repr(e))` - `logging` is the imported module, not callable,
-  so any exception during button drawing throws a *new*, unhandled
-  `TypeError` from inside the except block, which can kill the UI
-  render thread; (2) `on_internet_available` does
+- **`crack_house.py`** (+ the V0r-T3x archive's "-dev" variant,
+  functionally identical) - **-> `crack-house-suite` (`CrackHouseNG`)**.
+  Originally flagged only for direct-`self.options[...]` indexing and a
+  hardcoded `iwconfig wlan0` interface; reading the source in full for
+  the rebuild surfaced something much bigger underneath: `on_ui_setup`
+  called `ui.is_waveshare_v2()`, `ui.is_inky()`, `ui.is_lcdhat()`, and
+  similar display-detection methods - confirmed these only exist on
+  this fork's `Display` class, never on the plain `View` that plugin
+  hooks actually receive (`View.__init__`/`View.update()` always call
+  `plugins.on('ui_setup'/'ui_update', self)` with themselves). So this
+  plugin crashed with `AttributeError` on the very first line of
+  `on_ui_setup`, on every display type, on every load - it could never
+  load at all on this fork, before even reaching the originally-known
+  bug. A second `UnboundLocalError` (an `s_pos` variable only assigned
+  in one unreachable branch) sat behind that. Also fixed: a crash on
+  any missing configured potfile (the original's bare `open()` had no
+  error handling), and an inconsistent "nothing nearby" fallback that
+  shelled out to one hardcoded external file instead of the plugin's
+  own configured/merged data.
+  - Replaced the broken display-detection entirely with configurable
+    `position_x`/`position_y` (defaulting to the original's own
+    fallback values, so nothing changes for the common case).
+  - 16 tests, all passing against the real framework. See
+    `plugins-wip:crack-house-suite/NOTES.md` for full detail.
+- **`more_uptime.py`** - **-> `more-uptime-suite` (`MoreUptimeNG`)**.
+  Fixes the indentation bug: `ui.add_element(...)` was nested inside
+  the `else` branch of `if "position" in self.options`, so setting a
+  custom position (the entire point of the option) meant the element
+  was never created at all, while `on_ui_update` still unconditionally
+  tried to update it. Also fixes a masked-error bug: the update
+  handler's `except` block referenced `uiItems`, a variable only ever
+  assigned inside one conditional branch of the try block above it -
+  any exception raised earlier crashed the handler a second time with
+  `NameError`, hiding the real problem.
+  - 10 tests, all passing against the real framework. See
+    `plugins-wip:more-uptime-suite/NOTES.md` for full detail.
+- **`screen_refresh.py`** - **-> `screen-refresh-suite`
+  (`ScreenRefreshNG`)**. Fixes the confirmed bug: `ui.init_display()`
+  only exists on `Display`, never on the plain `View` plugin hooks
+  actually receive, so this crashed with `AttributeError` every
+  `refresh_interval` ticks, on every display type - the plugin's whole
+  purpose never once executed on this fork. There is no public `View`
+  API for forcing a hardware refresh, so this rebuild reaches into
+  `ui._implementation.initialize()` directly (the same call
+  `Display.init_display()` itself makes internally, and an attribute
+  that happens to be present on `View` too) - a disclosed exception to
+  normal practice, made only because no supported alternative exists.
+  - 12 tests, all passing against the real framework. This one's
+    actual on-screen effect can't be verified without physical e-ink
+    hardware - see `plugins-wip:screen-refresh-suite/NOTES.md`.
+- **`viz.py`** - **-> `viz-suite` (`VizNG`)**. Originally flagged only
+  for an uninitialized `self.channel`; reading the source in full
+  surfaced a bigger bug underneath: the file's import,
+  `from pwnagotchi.wifi import freq_to_channel`, points at a module
+  that does not exist anywhere on this fork (confirmed - there is no
+  `pwnagotchi/wifi.py`; the real module is `pwnagotchi/mesh/wifi.py`).
+  This plugin could never even be imported, let alone reach the
+  originally-known bug. Both are fixed: the import now points at
+  `pwnagotchi.mesh.wifi`, and `self.channel` is initialized to `None`
+  in `__init__` (the graph-building code already tolerated a falsy
+  channel gracefully - the bug was purely the missing attribute).
+  - 13 tests, all passing against the real framework except genuine
+    `plotly` itself, which wasn't installable in this build's sandbox
+    - a small local stand-in covers its public interface instead. See
+    `plugins-wip:viz-suite/NOTES.md` for full detail.
+- **`Touch_UI.py`** - **-> `touch-ui-suite` (`TouchUING`)**. Relevant
+  to this device since it has a real MPI3501 touchscreen, so this
+  rebuild deliberately stayed conservative - fixing only concrete,
+  provable bugs rather than a broader redesign. Fixes both
+  originally-flagged bugs: (1) `Touch_Button.draw()`'s except handler
+  called `logging(repr(e))` - `logging` is the module, not callable,
+  so a real drawing exception raised a second, unhandled `TypeError`
+  instead of being logged; (2) `on_internet_available` did
   `check_output(["apt", "install", "-y"].extend(self.needsAptPackages))`
   - `list.extend()` mutates in place and returns `None`, so this always
-  calls `check_output(None)` and crashes whenever connectivity comes
-  up with `needsAptPackages` configured.
+  crashed with `check_output(None)`. Two more bugs found during the
+  build: a bare `if reverse:` (undefined name, should be
+  `button.reverse`) that would `NameError` on any momentary+reverse
+  touch button; and a dead "missing evtest binary" check (`if not
+  evtest:` right after `Popen(...)` - a `Popen` object is always
+  truthy, so a genuinely missing binary instead raised
+  `FileNotFoundError` that was swallowed by a broader try/except much
+  further out, meaning the plugin's own auto-install-on-connectivity
+  feature could never actually trigger).
+  - 18 tests, all passing against the real framework. The core
+    touch-detection pipeline (spawning `evtest`/`ts_print`, parsing
+    real touch input) can't be exercised without physical touchscreen
+    hardware - **please test this one carefully on the real MPI3501
+    setup**. See `plugins-wip:touch-ui-suite/NOTES.md` for full detail.
 
 ## Kept with a documented (low-priority) bug (superseded)
 

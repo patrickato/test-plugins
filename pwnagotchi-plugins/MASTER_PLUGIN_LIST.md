@@ -20,6 +20,41 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 54 (Cluster 34, continued):** the 5 remaining fix candidates
+are done - all had crash bugs beyond what the earlier review first
+flagged, several fatal on-load/on-import crashes on this fork that the
+original pass understated. `crack_house.py` is fixed and moved to
+`plugins-wip` as `crack-house-suite` (`CrackHouseNG`) - its
+`on_ui_setup` called `ui.is_waveshare_v2()`-style display-detection
+methods that only exist on `Display`, never on the plain `View`
+plugin hooks actually receive, so it crashed with `AttributeError` on
+every single display type, on every load; a second `UnboundLocalError`
+sat behind that; plus a missing-config-file crash on load, a hardcoded
+interface, and an inconsistent hardcoded-file fallback for the "no
+match nearby" display. `more_uptime.py` is fixed and moved as
+`more-uptime-suite` (`MoreUptimeNG`) - an indentation bug meant its one
+configurable option (a custom position) silently disabled the whole
+element, and a stray undefined-variable reference could mask the real
+error in its update handler. `screen_refresh.py` is fixed and moved as
+`screen-refresh-suite` (`ScreenRefreshNG`) - called `ui.init_display()`,
+a `Display`-only method never available on the `View` plugins actually
+get, so it crashed every `refresh_interval` ticks, on every display
+type. `viz.py` is fixed and moved as `viz-suite` (`VizNG`) - imported
+from `pwnagotchi.wifi`, a module path that does not exist anywhere on
+this fork (the real module is `pwnagotchi.mesh.wifi`), so the plugin
+could never even be imported at all, let alone reach the
+previously-flagged uninitialized-`self.channel` bug (also fixed).
+`Touch_UI.py` is fixed and moved as `touch-ui-suite` (`TouchUING`) -
+fixes both originally-flagged bugs (a non-callable `logging()` call
+masking real errors, a `list.extend()`-returns-`None` bug that crashed
+every apt-install attempt) plus a `NameError` waiting on any
+momentary+reverse touch button and a dead missing-binary detection
+check that could never actually fire; kept deliberately conservative
+given this is the plugin tied to the real MPI3501 touchscreen. Full
+detail in each suite's `plugins-wip:*-suite/NOTES.md`. This closes out
+all 5 of Cluster 34's fix candidates; only kept-as-is confirmations
+remain in this category.
+
 **Group 53 (Cluster 34, continued):** the last kept-with-a-note
 Display/UI plugin is now also fixed and moved. `timer.py` is extended
 and moved to `plugins-wip` as `timer-suite` (`TimerNG`) - fixes a
@@ -939,21 +974,21 @@ repo).
 
 - **clock.py** - Clock/calendar display
 - **console.py** - Scrolling status-update console display (one cosmetic bug: a broken diagnostic log line that silently drops its intended content, no functional impact; see Cluster 24 notes)
-- **crack_house.py** (+ a "-dev" variant) - Displays the closest cracked network and its password
+- **crack_house.py** (+ a "-dev" variant) - **IN PROGRESS, moved to `plugins-wip`** as `crack-house-suite` (`CrackHouseNG`) - fixes a guaranteed on-load `AttributeError` crash (`on_ui_setup` called `ui.is_waveshare_v2()`-style methods that only exist on `Display`, never on the plain `View` plugin hooks actually receive), a hidden `UnboundLocalError` behind it, a missing-config-file crash on load, a hardcoded interface, and an inconsistent hardcoded-file fallback for the "no match nearby" display; see Cluster 34 notes
 - **darkmode.py** - Dark theme
 - **display-aircrack.py** - Shows whether aircrack is currently running
 - **display-password.py** / **display-password-qr.py** / **show_password.py** / **show_pwd.py** - Displays recently cracked passwords (QR variant adds a QR code; show_password.py/show_pwd.py are a separate mirror reading a WPA-SEC potfile rather than a hashcat potfile - show_password.py has a missing-defaults gap on `orientation`, show_pwd.py fixes that but changes "most recent" to mean each network's first-ever crack rather than the literal last line, and drops the empty-result fallback message; see Cluster 22 notes)
 - **display_version.py** - Adds the pwnagotchi software version to the display
 - **internet-connection.py** - **IN PROGRESS, moved to `plugins-wip`** as `internet-connection-suite` (`InternetConnectionNG`) - consolidates all three sibling implementations (`internet-connection.py`, `wanmon.py`, `internet-conection.py`) into one plugin: keeps `internet-connection.py`'s real `internet_available` hook (event-driven, no polling), fixes `wanmon.py`'s `KeyError`-on-load bug and its never-reset connected/dns-resolving flags, and drops `internet-conection.py`'s blocking-network-call-on-render-path design entirely, replacing it with an optional lightweight `on_epoch` re-check so the icon can actually go back to "disconnected"; see Cluster 34 notes
-- **more_uptime.py** - Cycling uptime stats display
+- **more_uptime.py** - **IN PROGRESS, moved to `plugins-wip`** as `more-uptime-suite` (`MoreUptimeNG`) - fixes an indentation bug that silently disabled its one configurable option (a custom position), and a stray undefined-variable reference that could mask the real error in its update handler; see Cluster 34 notes
 - **PWNAGOTCHI-CUSTOM-FACES-MOD** - Custom PNG faces with transparency
 - **pwnagotchi_LCD_colorized_darkmode** - Colorized dark-mode LCD/web UI mod
 - **pwnagotchi-fallout-faces-mod** - Fallout Vault-Boy themed faces
-- **screen_refresh.py** - Forces a display refresh after X updates
+- **screen_refresh.py** - **IN PROGRESS, moved to `plugins-wip`** as `screen-refresh-suite` (`ScreenRefreshNG`) - fixes a guaranteed crash every `refresh_interval` ticks (called `ui.init_display()`, a `Display`-only method never available on the `View` plugins actually get); see Cluster 34 notes
 - **themes.py** - Theme/script kicker plugin
 - **timer.py** - **IN PROGRESS, moved to `plugins-wip`** as `timer-suite` (`TimerNG`) - fixes a dependency-declaration bug (declared unused `scapy`, undeclared used `pandas` - now drops `pandas` for stdlib `csv`), the hardcoded `/home/pi/data/...` output path (now configurable), and the unbounded full-file rewrite on every handshake (now `max_rows`-based rotation); adds an optional on-screen time-to-handshake element, per-network best/worst capture-time tracking, and a real webhook summary page; see Cluster 34 notes
 - **tweak_view.py** - **IN PROGRESS, moved to `plugins-wip`** as `tweak-view-suite` (`TweakViewNG`) - fixes the hook-ordering bug where tweaks loaded in `on_ready` but `on_ui_setup` (which runs earlier) tried to apply them first, plus two real bugs in its webhook editor (a swallowed JSON-preview crash, an undefined-variable bug masking save failures), and adds load-time validation of the saved tweaks file; see Cluster 34 notes
-- **viz.py** - Visualizes surrounding APs
+- **viz.py** - **IN PROGRESS, moved to `plugins-wip`** as `viz-suite` (`VizNG`) - fixes a fatal import-time crash (imported from `pwnagotchi.wifi`, a module path that doesn't exist anywhere on this fork - the real module is `pwnagotchi.mesh.wifi`, so this plugin could never even be imported) and the previously-flagged uninitialized `self.channel`; see Cluster 34 notes
 
 ## GPS / Location
 
@@ -1008,7 +1043,7 @@ repo).
 - **pwndroid.py** - Android/phone tethering integration (jayofelony's official installer plugin)
 - **rgb.py** - RGB LED control
 - **sigstr.py** - Displays WiFi signal strength as an on-screen bar
-- **Touch_UI** - Touchscreen UI support
+- **Touch_UI** - **IN PROGRESS, moved to `plugins-wip`** as `touch-ui-suite` (`TouchUING`) - fixes a non-callable `logging()` call masking real errors, a `list.extend()`-returns-`None` bug that crashed every apt-install attempt, a `NameError` waiting on any momentary+reverse touch button, and a dead missing-binary detection check; kept deliberately conservative given this is the plugin tied to the real MPI3501 touchscreen; see Cluster 34 notes
 - **wof.py** - Detects other Flipper Zeros via "Wall of Flippers"
 
 ## Maintenance / Backup / Auto-update / Connectivity

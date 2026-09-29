@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (76)
+## Exact match - real config found and copied (73)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -91,7 +91,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `christmas.py` | [`christmas.toml`](christmas.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/christmas.toml` |
 | `clock.py` | [`clock.toml`](clock.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/clock.toml` |
 | `counter.py` | [`counter.toml`](counter.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/counter.toml` |
-| `crack_house.py` | [`crack_house.toml`](crack_house.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/crack_house.toml` |
 | `darkmode.py` | [`darkmode.toml`](darkmode.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/darkmode.toml` |
 | `deauth.py` | [`deauth.toml`](deauth.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/deauth.toml` |
 | `display-aircrack.py` | [`display-aircrack.toml`](display-aircrack.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/display-aircrack.toml` |
@@ -120,7 +119,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `IPDisplay.py` | [`IPDisplay.toml`](IPDisplay.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/IPDisplay.toml` |
 | `mastodon.py` | [`mastodon.toml`](mastodon.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/mastodon.toml` |
 | `memtemp-plus.py` | [`memtemp-plus.toml`](memtemp-plus.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/memtemp-plus.toml` |
-| `more_uptime.py` | [`more_uptime.toml`](more_uptime.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/more_uptime.toml` |
 | `mycracked_pw.py` | [`mycracked_pw.toml`](mycracked_pw.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/mycracked_pw.toml` |
 | `mygps.py` | [`mygps.toml`](mygps.toml) | `itsdarklikehell/pwnagotchi-plugins/mygps.toml` |
 | `net-pos.py` | [`net-pos.toml`](net-pos.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/net-pos.toml` |
@@ -133,7 +131,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `pwnspeaker.py` | [`pwnspeaker.toml`](pwnspeaker.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pwnspeaker.toml` |
 | `quick_rides_to_jail.py` | [`quick_rides_to_jail.toml`](quick_rides_to_jail.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/quick_rides_to_jail.toml` |
 | `rtc_grid.py` | [`rtc_grid.yml`](rtc_grid.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/rtc_grid.yml` |
-| `screen_refresh.py` | [`screen_refresh.toml`](screen_refresh.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/screen_refresh.toml` |
 | `show_password.py` | [`show_password.toml`](show_password.toml) | `itsdarklikehell/pwnagotchi-plugins/show_password.toml` |
 | `sound.py` | [`sound.toml`](sound.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/sound.toml` |
 | `spotify_now_playing.py` | [`spotify_now_playing.toml`](spotify_now_playing.toml) | `itsdarklikehell/pwnagotchi-plugins/spotify_now_playing.toml` |
@@ -182,7 +179,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `WigleLocator` | [`WigleLocator.toml`](WigleLocator.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wigle.toml` |
 | `wpa-sec_ng.py` | [`wpa-sec_ng.toml`](wpa-sec_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wpa-sec.toml` |
 
-## Generated from the plugin's own `__defaults__` dict (18)
+## Generated from the plugin's own `__defaults__` dict (16)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `educational-purposes-exclusively.py` | [`educational-purposes-exclusively.toml`](educational-purposes-exclusively.toml) | `itsdarklikehell/pwnagotchi-plugins/educational-purposes-exclusively.py` |
@@ -198,9 +195,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `slack.py` | [`slack.toml`](slack.toml) | `itsdarklikehell/pwnagotchi-plugins/slack.py` |
 | `test_security.py` | [`test_security.toml`](test_security.toml) | `itsdarklikehell/pwnagotchi-plugins/test_security.py` |
 | `themes.py` | [`themes.toml`](themes.toml) | `itsdarklikehell/pwnagotchi-plugins/themes.py` |
-| `Touch_UI` | [`Touch_UI.toml`](Touch_UI.toml) | `itsdarklikehell/pwnagotchi-plugins/Touch_UI.py` |
 | `tracker.py` | [`tracker.toml`](tracker.toml) | `itsdarklikehell/pwnagotchi-plugins/tracker.py` |
-| `viz.py` | [`viz.toml`](viz.toml) | `itsdarklikehell/pwnagotchi-plugins/viz.py` |
 | `wd_honey_Pot.py` | [`wd_honey_Pot.toml`](wd_honey_Pot.toml) | `itsdarklikehell/pwnagotchi-plugins/wd_honey_Pot.py` |
 | `wifi_adventures.py` | [`wifi_adventures.toml`](wifi_adventures.toml) | `itsdarklikehell/pwnagotchi-plugins/wifi_adventures.py` |
 
@@ -257,18 +252,23 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Showerthoughts` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (11)
+## Already handled - moved to `plugins-wip`, not duplicated here (16)
 | Plugin | Where |
 |---|---|
 | `banthex-de.py` | `plugins-wip` suite |
+| `crack_house.py` | `plugins-wip` suite (crack-house-suite, CrackHouseNG) |
 | `discoBoss.py` | `plugins-wip` suite |
 | `DiscoHash` | `plugins-wip` suite |
 | `handshakes-dl-hashie.py` | `plugins-wip` suite |
 | `hashbot.py` | `plugins-wip` suite |
 | `hashespwnagotchi.py` | `plugins-wip` suite |
 | `internet-connection.py` (+ `wanmon.py`, `internet-conection.py`) | `plugins-wip` suite (internet-connection-suite, InternetConnectionNG) |
+| `more_uptime.py` | `plugins-wip` suite (more-uptime-suite, MoreUptimeNG) |
 | `privacy-nightmare.py` | `plugins-wip` suite |
+| `screen_refresh.py` | `plugins-wip` suite (screen-refresh-suite, ScreenRefreshNG) |
 | `timer.py` | `plugins-wip` suite (timer-suite, TimerNG) |
+| `Touch_UI` | `plugins-wip` suite (touch-ui-suite, TouchUING) |
 | `tweak_view.py` | `plugins-wip` suite (tweak-view-suite, TweakViewNG) |
+| `viz.py` | `plugins-wip` suite (viz-suite, VizNG) |
 | `wifi_jammer.py` | `plugins-wip` suite (wifi-jammer-suite, WifiJammerNG) |
 

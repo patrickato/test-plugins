@@ -648,7 +648,7 @@ reviewed with real, fixable bugs found, decision deferred.
 
 ### Cluster 34 - Display / UI
 
-Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Groups 50-53. First
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Groups 50-54. First
 category-wide pass over Display/UI (19 plugins) - most of this
 category had never been reviewed in either the earlier duplicate-cluster
 round or the current category-by-category pass. 7 removed: `printp.py`
@@ -659,28 +659,39 @@ archives - record only), `Bat-Trinity` (Waveshare 3.7" driver that
 imports a module path that doesn't exist on this fork, so it can never
 load), `display-text.py` (no-op demo, nothing worth preserving), and
 `sprite_faces.py` (upstream author's own unfixed, self-flagged bug).
-`internet-connection.py`'s three-way group (itself, `wanmon.py`,
-`internet-conection.py`) is fixed and moved to `plugins-wip` as
+All 8 remaining fix candidates are now fixed/extended and moved to
+`plugins-wip`: `internet-connection.py`'s three-way group ->
 `internet-connection-suite` (`InternetConnectionNG`), `tweak_view.py`
-is fixed and moved as `tweak-view-suite` (`TweakViewNG`), and
-`timer.py` - initially kept as-is with a documented low-priority bug,
-then revisited once the user deferred a set of proposed improvements
-to this project's judgment - is fixed/extended and moved as
-`timer-suite` (`TimerNG`). All three are built, documented, and
-sandbox-tested against the real framework; none tested on real
-hardware yet. The rest of the cluster is reviewed with real findings
-but no keep/fix decision made yet: `crack_house.py`, `more_uptime.py`,
-`screen_refresh.py`, `viz.py`, and `Touch_UI.py` flagged as fix
-candidates (the last is especially relevant - a real MPI3501
-touchscreen is in use); several more kept as-is. No plugin in this
-batch invented a fake hook name, unlike Cluster 33.
+-> `tweak-view-suite` (`TweakViewNG`), `timer.py` -> `timer-suite`
+(`TimerNG`, initially kept as-is, revisited once the user deferred a
+set of proposed improvements to this project's judgment),
+`crack_house.py` -> `crack-house-suite` (`CrackHouseNG`),
+`more_uptime.py` -> `more-uptime-suite` (`MoreUptimeNG`),
+`screen_refresh.py` -> `screen-refresh-suite` (`ScreenRefreshNG`),
+`viz.py` -> `viz-suite` (`VizNG`), and `Touch_UI.py` ->
+`touch-ui-suite` (`TouchUING`, kept deliberately conservative - it's
+the plugin tied to the user's real MPI3501 touchscreen). Several of
+these turned out to have crash bugs worse than originally flagged -
+`crack_house.py`, `screen_refresh.py`, and `viz.py` all had a
+guaranteed on-load/on-import crash on every display type that the
+first-pass review hadn't caught (each assumed an API - a `Display`-only
+method, or an import path - that simply doesn't exist on this fork).
+All 8 suites are built, documented, and sandbox-tested against the
+real framework; none tested on real hardware yet. Several more plugins
+in this category are kept as-is pending formal confirmation. No plugin
+in this batch invented a fake hook name, unlike Cluster 33.
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
 | [`plugins-wip: internet-connection-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/internet-connection-suite/NOTES.md) | `internet-connection.py`, `wanmon.py`, `internet-conection.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
 | [`plugins-wip: tweak-view-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/tweak-view-suite/NOTES.md) | `tweak_view.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
 | [`plugins-wip: timer-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/timer-suite/NOTES.md) | `timer.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
-| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 7 REMOVED, 3 fixed/extended and moved to `plugins-wip` (`InternetConnectionNG`, `TweakViewNG`, `TimerNG`), 9 remaining reviewed with findings - decision pending |
+| [`plugins-wip: crack-house-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/crack-house-suite/NOTES.md) | `crack_house.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: more-uptime-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/more-uptime-suite/NOTES.md) | `more_uptime.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: screen-refresh-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/screen-refresh-suite/NOTES.md) | `screen_refresh.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: viz-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/viz-suite/NOTES.md) | `viz.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`plugins-wip: touch-ui-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/touch-ui-suite/NOTES.md) | `Touch_UI.py` | IN PROGRESS - moved to `plugins-wip`, not yet tested on real hardware |
+| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 7 REMOVED, all 8 fix candidates fixed/extended and moved to `plugins-wip`, remaining plugins kept as-is pending formal confirmation |
 
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*
