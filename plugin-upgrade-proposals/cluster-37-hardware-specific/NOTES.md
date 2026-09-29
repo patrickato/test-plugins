@@ -1,0 +1,221 @@
+# Cluster 37 - Hardware-specific
+
+Status: **IN PROGRESS** - 6 removed, 2 merged and moved to `plugins-wip`,
+10 still pending a decision.
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, "## Hardware-specific"
+section, Group 59 in the elimination log.
+
+## Excluded from this cluster (already handled elsewhere)
+
+- `memtemp-plus.py` / `memtemp_adv.py` / `memtemp_ng.py` - see Cluster 25
+- `prime_gsm_hat.py` - see Cluster 26
+- `Touch_UI` - see Cluster 34
+
+## Record-only, no action needed
+
+- `pwnagotchi-18650` - a battery case design (hardware, not software)
+- `pwnagotchi-plugin-pisugar2` / `pwnagotchi-plugin-pisugar3` - duplicate
+  listings of `pisugar2.py`/`pisugar3.py` below (still pending decision
+  themselves)
+- `pwnagotchi-WittyPi4L3V7-plugin` - searched exhaustively, not present
+  anywhere in this environment, could not be reviewed
+
+## Removed at the user's request (6)
+
+- **basiclight.py** - GPIO traffic-light-style signal lights. Dead
+  `on_ai_ready`/`on_ai_policy`/`on_ai_training_start/step/end`/
+  `on_ai_best_reward`/`on_ai_worst_reward` hooks (not real hooks on this
+  fork - no `[ai]` self-play subsystem exists here at all). Wrong
+  declared dependency (`pip: ["scapy"]`, file only imports `RPi.GPIO`,
+  which itself isn't declared).
+- **gpio_shutdown.py** - GPIO-triggered clean shutdown. Real `KeyError`
+  on load: `self.options["gpio"]` read with no guard, and the framework
+  never merges a plugin's `__defaults__` (confirmed via
+  `pwnagotchi/plugins/__init__.py`'s `load()` - it assigns
+  `plugin.options` straight from the user's own `config.toml` section).
+- **gsmfake.py** - claimed to feed bettercap fake GPS coordinates from a
+  GSM/GPRS modem. **Not actually a pwnagotchi plugin at all** - no
+  `plugins.Plugin` subclass anywhere in the file, so this fork's loader
+  never registers it. It's a verbatim copy of gpsd's own `gpsfake.py`
+  test harness with cosmetic plugin-style dunders (`__name__`,
+  `__defaults__`, `__help__`) added on top, but those never get read
+  because there's no `Plugin` subclass for the loader to find.
+- **img2xbm.py** - claimed to convert images to XBM format for a
+  Flipper Zero display. **Not a pwnagotchi plugin** - a standalone CLI
+  tool with no `plugins` import and no `Plugin` class. Its own
+  `main()` function body is literally `pass` - even as a standalone
+  tool it doesn't do anything when run.
+- **rgb.py** - claimed RGB LED control. **Not a real plugin** - the file
+  is a mismatched MicroPython/CircuitPython SPI display driver
+  (`import utime`, `import ustruct` - modules that don't exist in
+  standard CPython or on this pwnagotchi image), built around
+  `DisplaySPI`/`Display` base classes using MicroPython's pin API
+  (`.init(self.rst.OUT, value=1)`-style calls). No `Plugin` subclass
+  anywhere. Reads as a vendor driver file that ended up in the wrong
+  repository, not a pwnagotchi plugin at all.
+- **gpio_buttons_ng.py** - GPIO button-to-shell-command mapping.
+  Re-initializes GPIO pins 17/22/27 (Pimoroni display-hat LED pins)
+  inside the per-button `for` loop on every single iteration - if the
+  user's configured `gpios` list includes any of those three pins as a
+  button, this silently reconfigures that pin away from
+  `GPIO.IN, PUD_UP` + edge-detect right after setting it up, breaking
+  that button.
+
+## Merged and moved to `plugins-wip` (2 plugins -> 1 new plugin)
+
+### blemon_plugin.py + bluetoothsniffer.py -> BluetoothReconNG (`bluetooth-recon-suite`)
+
+Both were legitimate, correctly-framed plugins with real but fixable
+bugs - normally each would have been fixed and moved to `plugins-wip`
+as its own separate suite. Instead, **per the user's explicit
+direction**, they were merged into one plugin covering both radio
+types (BLE via bettercap's `ble.recon`, classic Bluetooth/BR-EDR via
+`hcitool scan`) under one unified device table, one config, one
+webhook page, and one persisted state file.
+
+**Bugs fixed:**
+
+- `blemon_plugin.py`:
+  - Dead `on_ai_ready`/`on_ai_policy`/`on_ai_training_start/step/end`/
+    `on_ai_best_reward`/`on_ai_worst_reward`/`on_free_channel` hooks -
+    none of these are real hooks on this fork, removed entirely.
+  - `ui.set("blecount", ...)` called in `on_bcap_ble_device_lost`, but
+    the element was registered under the key `"blemon_count"` - wrong
+    key, the count silently never updated on that event. BluetoothReconNG
+    computes both counts live from the device table instead of a
+    hand-maintained counter, so this class of bug can't recur.
+  - `name is ""` identity comparison bug - fixed to `==`.
+  - Wrong declared dependency (`pip: ["scapy"]`, unused) - removed.
+- `bluetoothsniffer.py`:
+  - Real load-time `KeyError`: `__init__` set `self.options` to a dict
+    of sensible defaults, but the framework completely overwrites
+    `self.options` with the raw `config['main']['plugins'][name]` dict
+    before `on_loaded` runs, and `__defaults__` is never merged either -
+    so `on_loaded`'s `self.options["devices_file"]` (and others) would
+    `KeyError` unless the user set every key explicitly in
+    `config.toml`. Fixed using the same `_opt()`/module-level `DEFAULTS`
+    pattern already established in `crack-house-suite`/`timer-suite`/
+    `gps-tagger-suite`.
+  - `on_unload` called `ui.remove_element("BluetoothSniffer")`, but the
+    element was registered under the key `"BtS"` - wrong key, would
+    raise `KeyError` from `State.remove_element()` (`del
+    self._state[key]` has no guard). BluetoothReconNG wraps every
+    `remove_element` call individually in try/except on unload.
+  - Unguarded missing-`hcitool`-binary crash (`FileNotFoundError` not
+    caught) - guarded.
+
+**All approved upgrades built:**
+
+- Unified BLE + classic device table, deduplicated by MAC, persisted to
+  disk as JSON and reloaded on `on_loaded` (counts/history survive a
+  reboot).
+- Configurable retention/expiry pruning (`retention_hours`, default 168
+  = 7 days) - stale entries dropped from both the in-memory table and
+  the persisted file.
+- Configurable `rssi_threshold` filtering and a `known_devices` MAC
+  allowlist (flags matches as `is_known` rather than dropping data).
+- Configurable `classic_scan_interval_seconds` for the `hcitool` loop
+  (BLE stays event-driven through bettercap, no polling needed).
+- Offline OUI/vendor lookup - a curated table of ~90 common
+  manufacturer prefixes (Apple, Samsung, Google, Amazon, Espressif,
+  Raspberry Pi Foundation, etc.), with graceful "Unknown" fallback and
+  an `oui_extra_path` option to load additional entries from a local
+  JSON file. This is a curated subset, not the full IEEE OUI registry -
+  no offline copy of that registry was available to build from, and the
+  entries chosen are ones that could be stated with reasonable
+  confidence rather than padded with guessed prefixes.
+- Best-effort tracker flagging (`is_tracker` + `tracker_type`) for
+  Apple Find My devices (company ID `0x004C`, payload type/length bytes
+  `[0x12, 0x19]` - a commonly-cited pattern from public
+  reverse-engineering, not an Apple-documented spec), Tile trackers
+  (company ID `0x0136` alone - Tile's BT SIG-assigned company ID; no
+  more specific payload pattern is publicly documented, so this is a
+  broader match than the other two), and Samsung SmartTag/SmartTag+
+  (service UUID containing `fd5a`, OR company ID `0x0075` with
+  `payload[0] == 0x01`). **These signatures are unverified against real
+  hardware** - the byte patterns come from public reverse-engineering
+  write-ups, not vendor documentation, and Apple/Tile/Samsung could
+  change them at any time. Treat tracker flags as a hint, not a
+  certainty, until confirmed against a real AirTag/Tile/SmartTag.
+- WiFi/Bluetooth correlation against **three** existing `plugins-wip`
+  data sources (all optional/best-effort - if a source's file/directory
+  doesn't exist, that part of the correlation is skipped silently, no
+  crash, no required config):
+  1. `crack-house-suite`'s `saving_path` potfile (`hostname:password`
+     lines) - which nearby networks have actually been cracked.
+  2. `timer-suite`'s `output_path` CSV (`timestamp`, `network`,
+     `time_to_deauth`, `time_to_handshake`,
+     `time_between_deauth_and_handshake`) - what WiFi networks were
+     active/captured at what times.
+  3. `gps-tagger-suite`'s `pn_output_path` directory (one
+     `pn_ap_<hostname>_<mac>.json` file per AP with GPS coordinates) -
+     location context for a correlated network, when available.
+  A Bluetooth device sighting is matched against WiFi network activity
+  within a configurable `correlation_window_minutes` (default 10); if
+  any of those networks are in the cracked list, the device record gets
+  `correlated_networks` (hostnames) and `any_cracked` (bool); if
+  GPS-tagger-suite has a location for one of those networks, it's
+  attached as `correlated_location`.
+- Webhook status page (`on_webhook`) showing total device count plus
+  **clearly labeled** BLE/Classic counts (e.g. "BLE: 5" / "Classic: 3",
+  never two bare unlabeled numbers), a full device table sorted by
+  last-seen, and a JSON export link.
+- JSON export route that takes **no user-supplied path parameter at
+  all** - it always serves exactly the one persisted device-table file
+  this plugin itself writes. This was a deliberate design choice after
+  this same project flagged a real path-traversal/arbitrary-file-
+  disclosure bug in `pwndroid.py`'s download handler (Cluster 37's own
+  findings table) - BluetoothReconNG's export has no equivalent attack
+  surface because it never accepts a path from the request.
+- Two independently user-configurable on-screen element positions
+  (`ble_position_x`/`ble_position_y`/`classic_position_x`/
+  `classic_position_y`, each defaulting to `None` = "use a sensible
+  built-in position"), following the exact pattern already established
+  in `crack-house-suite`'s `position_x`/`position_y`/
+  `stats_position_x`/`stats_position_y`.
+
+**Explicitly dropped from scope** (noted so it doesn't look like an
+oversight): `blemon_plugin.py`'s per-device `ble.enum` auto-GATT-
+enumeration, and both originals' chatty on-screen status-line
+messaging - neither fits a recon/tracking tool's actual purpose.
+
+**Originals preserved:** exact, unmodified copies of both source files
+(plus their real upstream `config.toml` samples, tagged
+`*.config.original.toml`) are kept in
+[`originals/`](originals/) specifically so they aren't lost if
+`BluetoothReconNG` needs to be abandoned or reverted for any reason.
+
+**Testing:** 84 automated tests passing against the real cloned
+framework conventions (options/defaults handling, UI element keys, OUI
+lookup, tracker-signature matching against known-good sample bytes,
+retention/expiry pruning, RSSI filtering, correlation logic against
+constructed sample source files, webhook rendering, export route).
+**Not tested on real hardware yet** - specifically still needs
+verification of: bettercap's real BLE event JSON schema (this sandbox
+had no bettercap Go source to confirm the exact manufacturer-data key
+names used, so `_extract_manufacturer_info` degrades to "no match"
+rather than guessing wrong and crashing - low risk, but real-hardware
+confirmation would let tracker flagging work reliably), `hcitool scan`
+output format on the actual image, and the tracker-flagging signatures
+themselves against a real AirTag/Tile/SmartTag.
+
+## Still pending a decision (10)
+
+`fix_region.py`, `flipperLink.py`, `mad_hatter.py` (no bugs found -
+likely keep-as-is), `pibat.py`, `pisugar2.py`, `pisugar3.py`,
+`pivoyager.py`, `pwndroid.py` (a real path-traversal/arbitrary-file-
+disclosure bug was found in its webhook download handler - flagged as
+a security priority), `sigstr.py`, `wof.py` (no bugs found - likely
+keep-as-is). Full per-plugin findings for these were presented to the
+user in this session's findings table; decisions not yet made.
+
+## Related
+
+An idea backlog for offensive/defensive Bluetooth plugins written up
+during this cluster's review (AirTag/Tile/SmartTag detector,
+BlueBorne-style passive fingerprinting, GATT service mapper, SDP
+scanner, WiFi/BT data fusion, BLE advertisement spam, and dongle-
+dependent ideas like raw BLE sniffing/crackle/GATT MITM) lives at the
+repo root: `OFFENSIVE_BLUETOOTH_IDEAS_2026-09-29.md`. Nothing in it is
+approved for building.

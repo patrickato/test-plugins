@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (58)
+## Exact match - real config found and copied (56)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -81,8 +81,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `better_apfaker.py` | [`better_apfaker.toml`](better_apfaker.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/better_apfaker.toml` |
 | `better_onlinehashcrack.py` | [`better_onlinehashcrack.toml`](better_onlinehashcrack.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/better_onlinehashcrack.toml` |
 | `better_quickdic.py` | [`better_quickdic.toml`](better_quickdic.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/better_quickdic.toml` |
-| `blemon_plugin.py` | [`blemon_plugin.toml`](blemon_plugin.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/blemon_plugin.toml` |
-| `bluetoothsniffer.py` | [`bluetoothsniffer.toml`](bluetoothsniffer.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/bluetoothsniffer.toml` |
 | `bt-tether.py` | [`bt-tether.toml`](bt-tether.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/bt-tether.toml` |
 | `counter.py` | [`counter.toml`](counter.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/counter.toml` |
 | `deauth.py` | [`deauth.toml`](deauth.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/deauth.toml` |
@@ -217,12 +215,14 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Pwny-WG` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (27)
+## Already handled - moved to `plugins-wip`, not duplicated here (29)
 | Plugin | Where |
 |---|---|
 | `apprise-notify.py` | `plugins-wip` suite (apprise-notify-suite, AppriseNotifyNG) |
 | `banthex-de.py` | `plugins-wip` suite |
 | `birthday.py` | `plugins-wip` suite (birthday-suite, BirthdayNG) |
+| `blemon_plugin.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with bluetoothsniffer.py) |
+| `bluetoothsniffer.py` | `plugins-wip` suite (bluetooth-recon-suite, BluetoothReconNG - merged with blemon_plugin.py) |
 | `clock.py` | `plugins-wip` suite (clock-suite, ClockNG) |
 | `crack_house.py` | `plugins-wip` suite (crack-house-suite, CrackHouseNG) |
 | `discoBoss.py` | `plugins-wip` suite |

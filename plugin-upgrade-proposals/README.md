@@ -820,5 +820,35 @@ real cloned framework.
 | [`plugins-wip: wifi-adventures-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/wifi-adventures-suite/NOTES.md) | `wifi_adventures.py` | IN PROGRESS - moved to `plugins-wip` (full rewrite), not yet tested on real hardware |
 | [`Cluster 36 notes`](cluster-36-novelty-games-personality/NOTES.md) | all 13 plugins in this category | 5 REMOVED, 5 fixed/rebuilt and moved to `plugins-wip`, 2 kept as-is (`counter.py`, `IPDisplay.py`), 1 DEFERRED (`achievements.py`), 6 already handled in Clusters 16/17 (no new action) |
 
+### Cluster 37 - Hardware-specific (in progress)
+
+Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, Group 59. Excluded
+as already handled elsewhere: `memtemp-plus.py`/`memtemp_adv.py`/
+`memtemp_ng.py` (Cluster 25), `prime_gsm_hat.py` (Cluster 26),
+`Touch_UI` (Cluster 34). Record-only: `pwnagotchi-18650` (hardware,
+not software), `pwnagotchi-plugin-pisugar2`/`pwnagotchi-plugin-pisugar3`
+(duplicate listings, pending), `pwnagotchi-WittyPi4L3V7-plugin` (not
+present in this environment). 6 removed at the user's request:
+`basiclight.py`, `gpio_shutdown.py`, `gsmfake.py` (not a real plugin),
+`img2xbm.py` (not a pwnagotchi plugin), `rgb.py` (not a real plugin),
+`gpio_buttons_ng.py`. `blemon_plugin.py` and `bluetoothsniffer.py`
+were merged into one new plugin, `BluetoothReconNG`, per the user's
+explicit direction, rather than kept as two separate fixed suites -
+see below. Remaining pending: `fix_region.py`, `flipperLink.py`,
+`mad_hatter.py` (no bugs), `pibat.py`, `pisugar2.py`, `pisugar3.py`,
+`pivoyager.py`, `pwndroid.py` (real path-traversal security bug
+flagged), `sigstr.py`, `wof.py` (no bugs).
+
+An idea backlog for offensive/defensive Bluetooth plugins (BLE tracker
+detection, BlueBorne fingerprinting, GATT mapping, BLE spam, etc.),
+written up during this cluster's review, lives at the repo root:
+[`OFFENSIVE_BLUETOOTH_IDEAS_2026-09-29.md`](../OFFENSIVE_BLUETOOTH_IDEAS_2026-09-29.md) -
+nothing in it is approved for building yet.
+
+| Proposal | Target plugin(s) | Status |
+|---|---|---|
+| [`plugins-wip: bluetooth-recon-suite/NOTES.md`](https://github.com/patrickato/plugins-wip/blob/main/bluetooth-recon-suite/NOTES.md) | `blemon_plugin.py`, `bluetoothsniffer.py` | IN PROGRESS - merged into one plugin (`BluetoothReconNG`) and moved to `plugins-wip`, not yet tested on real hardware; originals preserved in `cluster-37-hardware-specific/originals/` |
+| [`Cluster 37 notes`](cluster-37-hardware-specific/NOTES.md) | Hardware-specific category (in progress) | 6 REMOVED, 2 merged and moved to `plugins-wip`, 10 pending decision |
+
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

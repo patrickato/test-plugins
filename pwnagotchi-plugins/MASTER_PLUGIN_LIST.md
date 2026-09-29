@@ -20,6 +20,35 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 59 (Cluster 37, Hardware-specific, in progress):** excluded
+from new review since they already carry cluster references:
+memtemp-plus.py/memtemp_adv.py/memtemp_ng.py (Cluster 25),
+prime_gsm_hat.py (Cluster 26), Touch_UI (Cluster 34).
+Record-only/no action: pwnagotchi-18650 (hardware, not software),
+pwnagotchi-plugin-pisugar2/pisugar3 (duplicate listings of
+pisugar2.py/pisugar3.py, still pending decision below),
+pwnagotchi-WittyPi4L3V7-plugin (not present anywhere in this
+environment, could not be reviewed). **REMOVED** at the user's
+request: `basiclight.py` (dead `on_ai_*` hooks, wrong declared
+dependency), `gpio_shutdown.py` (unguarded `KeyError` on missing
+`gpio` option), `gsmfake.py` (not a real plugin - no `Plugin`
+subclass, a verbatim gpsd `gpsfake.py` test harness), `img2xbm.py`
+(not a pwnagotchi plugin - standalone tool, `main()` is a no-op),
+`rgb.py` (not a real plugin - mismatched MicroPython display driver
+file), `gpio_buttons_ng.py` (re-inits pins 17/22/27 every loop
+iteration, silently breaking a configured button on pin overlap).
+**Merged and moved to `plugins-wip`**: `blemon_plugin.py` +
+`bluetoothsniffer.py` -> `BluetoothReconNG` (`bluetooth-recon-suite`)
+- see the master list entry above and
+`plugin-upgrade-proposals/cluster-37-hardware-specific/NOTES.md` for
+full detail. Originals preserved verbatim in
+`plugin-upgrade-proposals/cluster-37-hardware-specific/originals/` in
+case the merge needs to be reverted. Remaining pending decisions:
+fix_region.py, flipperLink.py, mad_hatter.py (no bugs, likely
+keep-as-is), pibat.py, pisugar2.py, pisugar3.py, pivoyager.py,
+pwndroid.py (real path-traversal security bug flagged), sigstr.py,
+wof.py (no bugs, likely keep-as-is).
+
 **Group 58 (Cluster 36, Novelty/Games/Personality):** the full
 13-entry cluster (after excluding 6 duplicate listings already
 handled in Clusters 16/17) reviewed and decided. REMOVED at the
@@ -1162,8 +1191,7 @@ repo).
 ## Hardware-specific
 
 - **basiclight.py** - **REMOVED** - GPIO traffic-light-style signal lights; had dead `on_ai_*` hooks (no `[ai]` subsystem on this fork) and a wrong declared dependency (`scapy` instead of `RPi.GPIO`); user chose to drop rather than fix; see Cluster 37 notes
-- **blemon_plugin.py** - Counts/tracks max simultaneous BLE devices
-- **bluetoothsniffer.py** - Logs nearby Bluetooth MACs/names/counts to a JSON file
+- **blemon_plugin.py** / **bluetoothsniffer.py** - **IN PROGRESS, moved to `plugins-wip`** as `bluetooth-recon-suite` (`BluetoothReconNG`) - merged both plugins into one: fixes blemon's dead `on_ai_*`/`on_free_channel` hooks, wrong `blecount`/`blemon_count` UI key, `name is ""` bug, and wrong dependency; fixes bluetoothsniffer's real load-time `KeyError`, wrong `BtS`/`BluetoothSniffer` unload key, and unguarded missing-`hcitool` crash; adds OUI/vendor lookup, best-effort AirTag/Tile/SmartTag tracker flagging, WiFi/BT correlation against crack-house-suite/timer-suite/gps-tagger-suite, a webhook status page + JSON export, retention/expiry pruning, RSSI/known-device filtering, and independently user-positionable on-screen BLE/Classic counts; originals preserved verbatim in `plugin-upgrade-proposals/cluster-37-hardware-specific/originals/`; see Cluster 37 notes
 - **fix_region.py** - Changes the iw region to unlock additional channels
 - **flipperLink.py** - Connects pwnagotchi to a Flipper Zero
 - **gpio_buttons_ng.py** - **REMOVED** - GPIO button support (next-gen/torch variant); re-inits pins 17/22/27 every loop iteration, silently breaking a configured button on pin overlap; user chose to drop rather than fix; see Cluster 37 notes
