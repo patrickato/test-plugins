@@ -1,9 +1,11 @@
 # Cluster 38 - Web UI / API / Remote control
 
-Status: **IN PROGRESS** - 3 removed, 1 fixed/upgraded and moved to
-`plugins-wip`, being worked through the remaining 4 in groups of 5
-per the user's request (group 1 now down to 2: `Pwny-Tailscale`,
-`httpserver.py`).
+Status: **IN PROGRESS** - 4 removed, 1 fixed/upgraded and moved to
+`plugins-wip`, `handshaker.py` approved to be fixed/rebuilt next,
+being worked through the remaining 3 in groups of 5 per the user's
+request (group 1 now down to 2: `Pwny-Tailscale`, `httpserver.py`;
+group 2 resolved - `pwnmenu.py`/`pwnmenucmd.py` removed, `handshaker.py`
+approved for rebuild).
 
 Source: `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`, "## Web UI / API /
 Remote control" section, Group 60 in the elimination log.
@@ -21,7 +23,7 @@ Remote control" section, Group 60 in the elimination log.
   exists in this environment (`wpa-2/pwnagotchi-plugins/Pwny-WG/`), no
   actual plugin script anywhere
 
-## Removed at the user's request (3)
+## Removed at the user's request (4)
 
 - **pwnwatch.py** - meant to receive commands from a companion
   "pwnagotchi-watch" app and report session stats. `on_webhook`
@@ -52,6 +54,21 @@ Remote control" section, Group 60 in the elimination log.
   installed `pwnagotchi` package directory on a hardcoded Python-3.7-
   specific path. Dropped alongside pwnmothership.py rather than
   fixed/merged.
+- **pwnmenu.py** / **pwnmenucmd.py** - popup on-screen menu system
+  triggered by physical buttons, plus a companion CLI trigger script.
+  `on_loaded()` contains a `while self.running:` loop that blocks
+  forever on a socket `.accept()` call - hangs the whole device at
+  startup (same device-hanging bug class as httpserver.py and the
+  original web2ssh.py before its fix). Also reads a hardcoded file
+  (`/home/pi/scripts/pwnmenu.txt`) at **module import time** with no
+  guard - a missing file crashes the whole plugin load before anything
+  even runs. Only functions on `displayhatmini` hardware, not the
+  user's actual MPI3501 touchscreen, so even fixed it would be a
+  silent no-op on this device (Touch_UI/TouchUING from Cluster 34
+  already covers on-screen menu interaction for the real hardware).
+  Companion `pwnmenucmd.py` calls `logging.info(...)` without ever
+  importing `logging`, crashing immediately on use. Dropped at the
+  user's request rather than fixed.
 
 ## Fixed and moved to `plugins-wip` (1 plugin)
 
@@ -169,26 +186,31 @@ the same verified framework fact used throughout this project. NOT
 the class name (`Web2SSHNG`) and NOT the original's section name
 (`web2ssh`).
 
+## Approved to be fixed and rebuilt (1 plugin, in progress)
+
+- **handshaker.py** -> planned `handshaker-suite` (rebuild not yet
+  built as of this note). `on_loaded()` calls `self.load_data(...)`, a
+  method that is never defined anywhere in the class - guaranteed
+  `AttributeError` on every load; its webhook (the plugin's entire
+  "access info without SSH" purpose) is a no-op that only logs and
+  returns nothing; declares an unused `scapy` dependency. User
+  approved fixing and rebuilding it, with a request for suggestions on
+  making it as good as it can be. See suite's own NOTES.md once built
+  for the final feature list.
+
 ## Still pending decisions - working through in groups of 5
 
 Full findings for all 7 remaining plugins were presented to the user
-in this session's findings table. Being decided in two groups (group 1
-started at 5, dropped to 3 after pwnmothership.py/state-api.py were
-removed, and is now down to 2 after web2ssh.py was fixed and moved):
+in this session's findings table. Group 2 is now resolved
+(`pwnmenu.py`/`pwnmenucmd.py` removed, `handshaker.py` approved for
+rebuild). Only Group 1 remains, deferred at the user's request:
 
-**Group 1 (now 2):** `Pwny-Tailscale` (`tailscale.py`), `httpserver.py`.
-
-**Group 2 (2):** `pwnmenu.py`/`pwnmenucmd.py`, `handshaker.py`.
+**Group 1 (2, deferred):** `Pwny-Tailscale` (`tailscale.py`),
+`httpserver.py`.
 
 Key findings, summarized (see this session's findings table for full
 detail):
 
-- **pwnmothership.py** / **state-api.py** - near-identical code
-  lineage, same purpose (expose live pwnagotchi status as JSON for
-  external tools/dashboards), same real bug: an unguarded
-  `for peer in peers_response:` crashes with `TypeError` whenever the
-  local mesh-peers API call fails, since `peers_response` stays `None`
-  on failure. Flagged as a natural merge candidate.
 - **Pwny-Tailscale** (`tailscale.py`) - the best-engineered plugin in
   this batch (retry logic, config validation, a real webhook status
   page) but `self.last_sync_time` is only set if `on_loaded()`
@@ -202,16 +224,6 @@ detail):
   its request-handler subclass also has a broken `__init__` signature
   that would crash on every request even if the hang were fixed; no
   auth, serves the handshakes folder to the whole network.
-- **pwnmenu.py** / **pwnmenucmd.py** - `on_loaded()` blocks forever on
-  a socket `.accept()` loop (same device-hanging class of bug); reads
-  a hardcoded file path at module IMPORT time with no guard; only
-  functions on `displayhatmini` hardware (not the user's MPI3501
-  touchscreen); the companion CLI script calls `logging.info(...)`
-  without ever importing `logging`.
-- **handshaker.py** - `on_loaded()` calls `self.load_data(...)`, a
-  method that is never defined anywhere in the class - guaranteed
-  `AttributeError` on every load; its webhook (the plugin's entire
-  "access info without SSH" purpose) is a no-op.
 
 ## Related
 

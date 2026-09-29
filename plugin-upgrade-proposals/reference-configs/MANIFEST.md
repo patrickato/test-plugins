@@ -66,7 +66,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 
 ---
 
-## Exact match - real config found and copied (52)
+## Exact match - real config found and copied (51)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `achievements.py` | [`achievements.toml`](achievements.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/achievements.toml` |
@@ -109,7 +109,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `net-pos.py` | [`net-pos.toml`](net-pos.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/net-pos.toml` |
 | `powerutils.py` | [`powerutils.toml`](powerutils.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/powerutils.toml` |
 | `prime_gsm_hat.py` | [`prime_gsm_hat.toml`](prime_gsm_hat.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/prime_gsm_hat.toml` |
-| `pwnmenu.py` | [`pwnmenu.toml`](pwnmenu.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pwnmenu.toml` |
 | `pwnspeaker.py` | [`pwnspeaker.toml`](pwnspeaker.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pwnspeaker.toml` |
 | `quick_rides_to_jail.py` | [`quick_rides_to_jail.toml`](quick_rides_to_jail.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/quick_rides_to_jail.toml` |
 | `rtc_grid.py` | [`rtc_grid.yml`](rtc_grid.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/rtc_grid.yml` |
@@ -122,7 +121,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `xp.py` | [`xp.yml`](xp.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp.yml` |
 | `xp_grid.py` | [`xp_grid.yml`](xp_grid.yml) | `pwnagotchi-unofficial/plugins_archive/Sliim/pwnagotchi-plugins/xp_grid.yml` |
 
-## Partial match - closest sibling config found, verify by hand (27)
+## Partial match - closest sibling config found, verify by hand (26)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `aircrackonly_ng.py` | [`aircrackonly_ng.toml`](aircrackonly_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/aircrackonly.toml` |
@@ -143,7 +142,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `pwnagotchi-plugin-pisugar2` | [`pwnagotchi-plugin-pisugar2.toml`](pwnagotchi-plugin-pisugar2.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pisugar2.toml` |
 | `pwnagotchi-plugin-pisugar3` | [`pwnagotchi-plugin-pisugar3.toml`](pwnagotchi-plugin-pisugar3.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pisugar3.toml` |
 | `pwnagotchi_GPSD-ng` | [`pwnagotchi_GPSD-ng.toml`](pwnagotchi_GPSD-ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/gps.toml` |
-| `pwnmenucmd.py` | [`pwnmenucmd.toml`](pwnmenucmd.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/pwnmenu.toml` |
 | `quick_rides_to_jail_ng.py` | [`quick_rides_to_jail_ng.toml`](quick_rides_to_jail_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/quick_rides_to_jail.toml` |
 | `wardriver-pwnagotchi-plugin` | [`wardriver-pwnagotchi-plugin.toml`](wardriver-pwnagotchi-plugin.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wardrive.toml` |
 | `wardriver_ng.py` | [`wardriver_ng.toml`](wardriver_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wardrive.toml` |
@@ -153,19 +151,18 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `WigleLocator` | [`WigleLocator.toml`](WigleLocator.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wigle.toml` |
 | `wpa-sec_ng.py` | [`wpa-sec_ng.toml`](wpa-sec_ng.toml) | `itsdarklikehell/pwnagotchi-plugins/configs/wpa-sec.toml` |
 
-## Generated from the plugin's own `__defaults__` dict (8)
+## Generated from the plugin's own `__defaults__` dict (7)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `educational-purposes-exclusively.py` | [`educational-purposes-exclusively.toml`](educational-purposes-exclusively.toml) | `itsdarklikehell/pwnagotchi-plugins/educational-purposes-exclusively.py` |
 | `pwnaware.py` | [`pwnaware.toml`](pwnaware.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnaware.py` |
-| `pwnmothership` | [`pwnmothership.toml`](pwnmothership.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnmothership.py` |
 | `rss_voice.py` | [`rss_voice.toml`](rss_voice.toml) | `itsdarklikehell/pwnagotchi-plugins/rss_voice.py` |
 | `show_pwd.py` | [`show_pwd.toml`](show_pwd.toml) | `itsdarklikehell/pwnagotchi-plugins/show_pwd.py` |
 | `test_security.py` | [`test_security.toml`](test_security.toml) | `itsdarklikehell/pwnagotchi-plugins/test_security.py` |
 | `tracker.py` | [`tracker.toml`](tracker.toml) | `itsdarklikehell/pwnagotchi-plugins/tracker.py` |
 | `wd_honey_Pot.py` | [`wd_honey_Pot.toml`](wd_honey_Pot.toml) | `itsdarklikehell/pwnagotchi-plugins/wd_honey_Pot.py` |
 
-## Generated from a scan of `self.options` usage (no `__defaults__`) (13)
+## Generated from a scan of `self.options` usage (no `__defaults__`) (11)
 | Plugin | Reference config | Source |
 |---|---|---|
 | `adsbsniffer.py` | [`adsbsniffer.toml`](adsbsniffer.toml) | `alienmajik/pwnagotchi_plugins/adsbsniffer.py` |
@@ -174,11 +171,9 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `meshpwnstic.py` | [`meshpwnstic.toml`](meshpwnstic.toml) | `sniffleupagus/pwnagotchi_plugins/meshpwnstic.py` |
 | `neurolyzer.py` | [`neurolyzer.toml`](neurolyzer.toml) | `alienmajik/pwnagotchi_plugins/neurolyzer.py` |
 | `pwn2crack.py` | [`pwn2crack.toml`](pwn2crack.toml) | `pwnagotchi-unofficial/plugins_archive/Brets0150/pwnagotchi-to-hashtopolis-plugin/pwn2crack.py` |
-| `pwnwatch.py` | [`pwnwatch.toml`](pwnwatch.toml) | `itsdarklikehell/pwnagotchi-plugins/pwnwatch.py` |
 | `Pwny-Tailscale` | [`Pwny-Tailscale.toml`](Pwny-Tailscale.toml) | `wpa-2/pwnagotchi-plugins/tailscale.py` |
 | `skyhigh.py` | [`skyhigh.toml`](skyhigh.toml) | `alienmajik/pwnagotchi_plugins/skyhigh.py` |
 | `speak_to_me.py` | [`speak_to_me.toml`](speak_to_me.toml) | `sniffleupagus/pwnagotchi_plugins/speak_to_me.py` |
-| `state-api.py` | [`state-api.toml`](state-api.toml) | `pwnagotchi-unofficial/plugins_archive/dipsylala/pwnagotchi-state-api/state-api.py` |
 | `wof.py` | [`wof.toml`](wof.toml) | `itsdarklikehell/pwnagotchi-plugins/wof.py` |
 | `woop_woop.py` | [`woop_woop.toml`](woop_woop.toml) | `itsdarklikehell/pwnagotchi-plugins/woop_woop.py` |
 

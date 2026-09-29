@@ -49,10 +49,16 @@ clear explanation of the alternatives - `"lan"` mode remains available
 but is an explicit, loudly-logged opt-in), and a `command_mode` option
 defaulting to an allowlist of the original's own shortcut commands
 (free-text arbitrary commands remain available as an explicit opt-in,
-clearly bannered when active). Remaining pending decisions, being
-worked through in groups of 5 (group 1 now down to 2: `Pwny-Tailscale`,
-`httpserver.py`; group 2 unchanged: `handshaker.py`,
-`pwnmenu.py`/`pwnmenucmd.py`).
+clearly bannered when active). **REMOVED** at the user's request:
+`pwnmenu.py`/`pwnmenucmd.py` (`on_loaded()` blocks forever on a socket
+`.accept()` loop - device-hanging bug; reads a hardcoded file path at
+module import time with no guard, crashing plugin load if missing;
+only functions on `displayhatmini` hardware, not the user's actual
+touchscreen; companion CLI script calls `logging.info(...)` without
+importing `logging`). Remaining pending decisions, being worked
+through in groups of 5 (group 1 now down to 2: `Pwny-Tailscale`,
+`httpserver.py`; group 2 now down to 1: `handshaker.py`, being fixed
+and rebuilt).
 
 **Group 59 (Cluster 37, Hardware-specific, in progress):** excluded
 from new review since they already carry cluster references:
@@ -1335,11 +1341,11 @@ repo).
 ## Web UI / API / Remote control
 
 - **cmd_server.py** - Command-control plugin for pwnagotchi (a Unix-socket command shell; two real bugs - a NameError on a narrow cleanup-failure path, and a reply-misdirection bug with multiple simultaneous clients; unauthenticated local socket; see Cluster 24 notes)
-- **handshaker.py** - Access key pwnagotchi info over an alternate channel when SSH is down
+- **handshaker.py** - **IN PROGRESS, being fixed and moved to `plugins-wip`** - Access key pwnagotchi info over an alternate channel when SSH is down; `on_loaded()` calls `self.load_data(...)`, a method never defined anywhere in the class (guaranteed `AttributeError` on every load); the webhook (its entire purpose) is a no-op that only logs and returns nothing; declares an unused `scapy` dependency; see Cluster 38 notes
 - **httpserver.py** - Simple HTTP server for serving files
 - **pwmenu** - Mobile-first field console for captures/cracking/exports/whitelists
 - **pwnagotchi-http-module** - Serves handshake pcaps via a simple HTTP server (targets the Bookworm image)
-- **pwnmenu.py** / **pwnmenucmd.py** - Popup on-screen menu system, plus a CLI client
+- **pwnmenu.py** / **pwnmenucmd.py** - **REMOVED** - Popup on-screen menu system, plus a CLI client; `on_loaded()` blocks forever on a socket `.accept()` loop (device-hanging bug, same class as httpserver.py/original web2ssh.py); reads a hardcoded file path at module import time with no guard (missing file crashes plugin load); only functions on `displayhatmini` hardware, not the user's actual MPI3501 touchscreen (Touch_UI/TouchUING from Cluster 34 already covers on-screen menu interaction for the real hardware); companion `pwnmenucmd.py` calls `logging.info(...)` without ever importing `logging`; user chose to drop rather than fix; see Cluster 38 notes
 - **pwnmothership** - **REMOVED** - Pushes JSON state data to a "pwnmothership" host on every screen update; unguarded `for peer in peers_response:` crashes with `TypeError` on every UI update whenever the local mesh-peers API call fails; blocks the UI thread up to 30s per POST attempt; disables TLS cert verification on the outbound POST; near-identical code lineage to state-api.py; user chose to drop rather than fix/merge; see Cluster 38 notes
 - **pwnwatch.py** - **REMOVED** - Meant to receive commands from a companion "pwnagotchi-watch" app; `self.ready` referenced but never set (guaranteed crash on first webhook call); its one real response is built but never returned (always falls through to a 404); depends on an unrelated, unreviewed "session-stats" plugin; never actually implements any command-receiving logic despite that being its stated purpose; user chose to drop rather than fix; see Cluster 38 notes
 - **Pwny-Tailscale** - Tailscale remote connectivity, no port-forwarding needed
