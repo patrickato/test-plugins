@@ -667,7 +667,7 @@ hook name, unlike Cluster 33.
 
 | Proposal | Target plugin(s) | Status |
 |---|---|---|
-| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 5 REMOVED, 14 reviewed with findings - decision pending |
+| [`Cluster 34 notes`](cluster-34-display-ui/NOTES.md) | all 19 plugins in this category | 5 REMOVED, 5 KEPT (documented bugs: `display-text.py`, `internet-conection.py`, `timer.py`, `tweak_view.py`, `sprite_faces.py`), 9 remaining reviewed with findings - decision pending |
 
 ---
 *Started by Claude Sonnet 5 · 2026-09-28 · open for any AI or human to continue*

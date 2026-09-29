@@ -1,8 +1,9 @@
 # Notes: Display / UI cluster
 
-**Status: 5 of 19 REMOVED this pass. The rest of the cluster is
-reviewed with real findings, but no keep/fix decision has been made
-yet - left on the master list, decisions pending.**
+**Status: 5 of 19 REMOVED, 5 KEPT with a documented bug (decision
+confirmed). 9 remain reviewed with real findings but no keep/fix
+decision made yet (6 fix candidates, 3 kept as-is pending
+confirmation) - left on the master list, decisions pending.**
 
 All source read from `itsdarklikehell/pwnagotchi-plugins/` unless
 otherwise noted, checked against the real cloned
@@ -81,7 +82,7 @@ otherwise noted, checked against the real cloned
   calls `check_output(None)` and crashes whenever connectivity comes
   up with `needsAptPackages` configured.
 
-## Reviewed, kept with a documented (low-priority) bug
+## Kept with a documented (low-priority) bug (decision confirmed)
 
 - **`display-text.py`** - no bug, but it's a pure demo: always shows
   a hardcoded "Hello World!" string, not configurable.

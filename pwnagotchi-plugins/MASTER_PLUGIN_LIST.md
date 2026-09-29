@@ -890,18 +890,18 @@ repo).
 - **darkmode.py** - Dark theme
 - **display-aircrack.py** - Shows whether aircrack is currently running
 - **display-password.py** / **display-password-qr.py** / **show_password.py** / **show_pwd.py** - Displays recently cracked passwords (QR variant adds a QR code; show_password.py/show_pwd.py are a separate mirror reading a WPA-SEC potfile rather than a hashcat potfile - show_password.py has a missing-defaults gap on `orientation`, show_pwd.py fixes that but changes "most recent" to mean each network's first-ever crack rather than the literal last line, and drops the empty-result fallback message; see Cluster 22 notes)
-- **display-text.py** - Displays custom text on a Waveshare 1.44" LCD screen
+- **display-text.py** - Displays custom text on a Waveshare 1.44" LCD screen; reviewed in Cluster 34, no bugs but functionally a no-op demo (always shows a hardcoded "Hello World!", no config option to change it); kept as documented
 - **display_version.py** - Adds the pwnagotchi software version to the display
-- **internet-connection.py** - Displays internet connectivity status (also distributed as `wanmon.py` / `internet-conection.py`)
+- **internet-connection.py** - Displays internet connectivity status (also distributed as `wanmon.py` / `internet-conection.py`); reviewed in Cluster 34 - `internet-connection.py` itself is clean (uses the real `internet_available` hook); `wanmon.py` is a **fix candidate** (reads options with no fallback, `KeyError`-crashes on load, see Cluster 34 notes); `internet-conection.py` kept with a documented bug - makes a blocking `urllib.request.urlopen()` call synchronously inside `on_ui_update`, stuttering the display when offline/slow
 - **more_uptime.py** - Cycling uptime stats display
 - **PWNAGOTCHI-CUSTOM-FACES-MOD** - Custom PNG faces with transparency
 - **pwnagotchi_LCD_colorized_darkmode** - Colorized dark-mode LCD/web UI mod
 - **pwnagotchi-fallout-faces-mod** - Fallout Vault-Boy themed faces
 - **screen_refresh.py** - Forces a display refresh after X updates
-- **sprite_faces.py** - Cute sprite-based face graphics widget
+- **sprite_faces.py** - Cute sprite-based face graphics widget; reviewed in Cluster 34, kept with a documented bug - author's own code admits it's broken (`# TODO: Something is wrong with this but I can't currently fix it`) at the sprite face-lookup step
 - **themes.py** - Theme/script kicker plugin
-- **timer.py** - Measures how long a handshake capture took
-- **tweak_view.py** - Live UI element repositioning/fonts (no guardrails - be careful)
+- **timer.py** - Measures how long a handshake capture took; reviewed in Cluster 34, no framework-misuse bugs, kept with a documented note - writes to a hardcoded `/home/pi/data/...` path that may not exist on every setup
+- **tweak_view.py** - Live UI element repositioning/fonts (no guardrails - be careful); reviewed in Cluster 34, kept with a documented bug - tweaks are read in `on_ready`, but `on_ui_setup` (which runs earlier) tries to apply them first, so tweaks are silently delayed by one refresh cycle at boot rather than applying immediately
 - **viz.py** - Visualizes surrounding APs
 
 ## GPS / Location
