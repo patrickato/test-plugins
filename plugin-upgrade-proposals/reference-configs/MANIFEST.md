@@ -252,7 +252,7 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `Showerthoughts` |
 | `wpa-cracking-project-with-pwnagotchi` |
 
-## Already handled - moved to `plugins-wip`, not duplicated here (16)
+## Already handled - moved to `plugins-wip`, not duplicated here (15)
 | Plugin | Where |
 |---|---|
 | `banthex-de.py` | `plugins-wip` suite |
@@ -265,7 +265,6 @@ copied as invalid syntax) - every `.toml` file here parses cleanly.
 | `internet-connection.py` (+ `wanmon.py`, `internet-conection.py`) | `plugins-wip` suite (internet-connection-suite, InternetConnectionNG) |
 | `more_uptime.py` | `plugins-wip` suite (more-uptime-suite, MoreUptimeNG) |
 | `privacy-nightmare.py` | `plugins-wip` suite |
-| `screen_refresh.py` | `plugins-wip` suite (screen-refresh-suite, ScreenRefreshNG) |
 | `timer.py` | `plugins-wip` suite (timer-suite, TimerNG) |
 | `Touch_UI` | `plugins-wip` suite (touch-ui-suite, TouchUING) |
 | `tweak_view.py` | `plugins-wip` suite (tweak-view-suite, TweakViewNG) |

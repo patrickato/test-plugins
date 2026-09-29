@@ -1,14 +1,16 @@
 # Notes: Display / UI cluster
 
-**Status: 7 of 19 REMOVED. All 8 fix candidates fixed/extended and
-moved to `plugins-wip` (`internet-connection.py`'s three-way group ->
+**Status: 8 of 19 REMOVED. 7 fix candidates fixed/extended and moved
+to `plugins-wip` (`internet-connection.py`'s three-way group ->
 `InternetConnectionNG`, `tweak_view.py` -> `TweakViewNG`, `timer.py` ->
 `TimerNG`, `crack_house.py` -> `CrackHouseNG`, `more_uptime.py` ->
-`MoreUptimeNG`, `screen_refresh.py` -> `ScreenRefreshNG`, `viz.py` ->
-`VizNG`, `Touch_UI.py` -> `TouchUING` - all eight built, documented,
-and sandbox-tested; none tested on real hardware yet). Only 4
-kept-as-is plugins remain pending formal confirmation - left on the
-master list.**
+`MoreUptimeNG`, `viz.py` -> `VizNG`, `Touch_UI.py` -> `TouchUING` - all
+seven built, documented, and sandbox-tested; none tested on real
+hardware yet). `screen_refresh.py`/`ScreenRefreshNG` was also fixed and
+briefly moved, then removed at the user's request after reviewing the
+build - not needed on a TFT/LCD screen (its whole purpose is clearing
+e-ink ghosting). Only 4 kept-as-is plugins remain pending formal
+confirmation - left on the master list.**
 
 All source read from `itsdarklikehell/pwnagotchi-plugins/` unless
 otherwise noted, checked against the real cloned
@@ -16,7 +18,7 @@ otherwise noted, checked against the real cloned
 `pwnagotchi/automata.py`, `pwnagotchi/plugins/__init__.py`,
 `pwnagotchi/ui/view.py`, `pwnagotchi/ui/display.py`, `pwnagotchi/cli.py`).
 
-## Removed this pass (5)
+## Removed this pass (6)
 
 - **`printp.py`** - REMOVED. Explicitly an example/demo plugin per its
   own docstring. Has no `__defaults__` block at all and reads every UI
@@ -49,6 +51,17 @@ otherwise noted, checked against the real cloned
   inheriting an unfixed upstream bug for a non-essential feature
   (sprite-based faces) when nothing here was independently diagnosed
   as fixable.
+- **`screen_refresh.py`** - REMOVED (revised after review - was
+  fixed and briefly moved to `plugins-wip` as `ScreenRefreshNG` in the
+  same pass that produced the other 4 fix-candidate suites below,
+  then removed once the user reviewed it: not needed on a TFT/LCD
+  screen, since its entire purpose is clearing e-ink ghosting. The
+  underlying bug it fixed was real and confirmed - `ui.init_display()`
+  only exists on `Display`, never on the plain `View` plugin hooks
+  actually receive, so it crashed with `AttributeError` every
+  `refresh_interval` ticks, on every display type - but the feature
+  itself has no use case on the target hardware, so it's removed
+  rather than kept around unused).
 
 ## Fixed and moved to `plugins-wip` (built, documented, sandbox-tested)
 
@@ -171,20 +184,6 @@ otherwise noted, checked against the real cloned
   `NameError`, hiding the real problem.
   - 10 tests, all passing against the real framework. See
     `plugins-wip:more-uptime-suite/NOTES.md` for full detail.
-- **`screen_refresh.py`** - **-> `screen-refresh-suite`
-  (`ScreenRefreshNG`)**. Fixes the confirmed bug: `ui.init_display()`
-  only exists on `Display`, never on the plain `View` plugin hooks
-  actually receive, so this crashed with `AttributeError` every
-  `refresh_interval` ticks, on every display type - the plugin's whole
-  purpose never once executed on this fork. There is no public `View`
-  API for forcing a hardware refresh, so this rebuild reaches into
-  `ui._implementation.initialize()` directly (the same call
-  `Display.init_display()` itself makes internally, and an attribute
-  that happens to be present on `View` too) - a disclosed exception to
-  normal practice, made only because no supported alternative exists.
-  - 12 tests, all passing against the real framework. This one's
-    actual on-screen effect can't be verified without physical e-ink
-    hardware - see `plugins-wip:screen-refresh-suite/NOTES.md`.
 - **`viz.py`** - **-> `viz-suite` (`VizNG`)**. Originally flagged only
   for an uninitialized `self.channel`; reading the source in full
   surfaced a bigger bug underneath: the file's import,

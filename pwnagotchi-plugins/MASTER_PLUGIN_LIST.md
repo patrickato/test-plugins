@@ -20,6 +20,13 @@ work-in-progress rebuilds and `complete-plugins` for finished ones.
 
 ## Elimination log
 
+**Group 55 (Cluster 34, continued):** after reviewing the 5 fix-candidate
+builds from Group 54, `screen_refresh.py`/`ScreenRefreshNG` is REMOVED
+(superseding Group 54's note below) - not needed: it exists to force an
+e-ink display refresh and clear ghosting, which doesn't apply to a
+TFT/LCD screen. The other 4 (`CrackHouseNG`, `MoreUptimeNG`, `VizNG`,
+`TouchUING`) are confirmed kept.
+
 **Group 54 (Cluster 34, continued):** the 5 remaining fix candidates
 are done - all had crash bugs beyond what the earlier review first
 flagged, several fatal on-load/on-import crashes on this fork that the
@@ -35,11 +42,12 @@ match nearby" display. `more_uptime.py` is fixed and moved as
 `more-uptime-suite` (`MoreUptimeNG`) - an indentation bug meant its one
 configurable option (a custom position) silently disabled the whole
 element, and a stray undefined-variable reference could mask the real
-error in its update handler. `screen_refresh.py` is fixed and moved as
+error in its update handler. `screen_refresh.py` was fixed and moved as
 `screen-refresh-suite` (`ScreenRefreshNG`) - called `ui.init_display()`,
 a `Display`-only method never available on the `View` plugins actually
 get, so it crashed every `refresh_interval` ticks, on every display
-type. `viz.py` is fixed and moved as `viz-suite` (`VizNG`) - imported
+type - **later removed in Group 55 (not needed on a TFT screen)**.
+`viz.py` is fixed and moved as `viz-suite` (`VizNG`) - imported
 from `pwnagotchi.wifi`, a module path that does not exist anywhere on
 this fork (the real module is `pwnagotchi.mesh.wifi`), so the plugin
 could never even be imported at all, let alone reach the
@@ -984,7 +992,7 @@ repo).
 - **PWNAGOTCHI-CUSTOM-FACES-MOD** - Custom PNG faces with transparency
 - **pwnagotchi_LCD_colorized_darkmode** - Colorized dark-mode LCD/web UI mod
 - **pwnagotchi-fallout-faces-mod** - Fallout Vault-Boy themed faces
-- **screen_refresh.py** - **IN PROGRESS, moved to `plugins-wip`** as `screen-refresh-suite` (`ScreenRefreshNG`) - fixes a guaranteed crash every `refresh_interval` ticks (called `ui.init_display()`, a `Display`-only method never available on the `View` plugins actually get); see Cluster 34 notes
+- **screen_refresh.py** - REMOVED. Was fixed and briefly moved to `plugins-wip` as `ScreenRefreshNG`, then removed at the user's request - not needed, since it exists to force an e-ink display refresh and clear ghosting, which doesn't apply to a TFT/LCD screen; see Cluster 34 notes
 - **themes.py** - Theme/script kicker plugin
 - **timer.py** - **IN PROGRESS, moved to `plugins-wip`** as `timer-suite` (`TimerNG`) - fixes a dependency-declaration bug (declared unused `scapy`, undeclared used `pandas` - now drops `pandas` for stdlib `csv`), the hardcoded `/home/pi/data/...` output path (now configurable), and the unbounded full-file rewrite on every handshake (now `max_rows`-based rotation); adds an optional on-screen time-to-handshake element, per-network best/worst capture-time tracking, and a real webhook summary page; see Cluster 34 notes
 - **tweak_view.py** - **IN PROGRESS, moved to `plugins-wip`** as `tweak-view-suite` (`TweakViewNG`) - fixes the hook-ordering bug where tweaks loaded in `on_ready` but `on_ui_setup` (which runs earlier) tried to apply them first, plus two real bugs in its webhook editor (a swallowed JSON-preview crash, an undefined-variable bug masking save failures), and adds load-time validation of the saved tweaks file; see Cluster 34 notes
