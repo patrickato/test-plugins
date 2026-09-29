@@ -340,6 +340,60 @@ user chose to drop all three rather than fix them:
 its whole three-way group was consolidated and rebuilt anyway (see
 "In progress" above), so it was never tracked separately here.
 
+## Correction (added during Cluster 36 review, 2026-09-29)
+
+Two claims in this document turn out to be based on an incorrect
+premise about what `on_ui_setup`/`on_ui_update`'s `ui` parameter
+actually is, and both are corrected here:
+
+- The `crack_house.py` writeup above states that `ui.is_waveshare_v2()`,
+  `ui.is_inky()`, `ui.is_lcdhat()`, and similar display-detection
+  methods "only exist on this fork's `Display` class, never on the
+  plain `View` that plugin hooks actually receive," and that this
+  crashed `crack_house.py` with `AttributeError` on the very first
+  line of `on_ui_setup`, on every display type, on every load.
+- The `screen_refresh.py` writeup above makes the same claim about
+  `ui.init_display()`, used inside `on_ui_update`.
+
+Both are **wrong**. This was re-checked empirically while researching
+Cluster 36 (a different plugin, `bitcoin.py`, uses the same
+`is_waveshare_v2()`-style pattern in `on_ui_setup`): a real `Display`
+object was constructed in the sandbox from the real
+`pwnagotchi/defaults.toml`, and `plugins.on` was instrumented to
+capture exactly what `on_ui_setup` receives. The result confirmed the
+`ui` parameter genuinely is a `Display` instance, not a bare `View`.
+The reason is in `pwnagotchi/ui/view.py`: `View.__init__` sets
+`self._implementation = impl` and then calls
+`plugins.on('ui_setup', self)` — and since `Display.__init__` calls
+`super(Display, self).__init__(...)` first, `self` is genuinely
+Display-typed for the whole time `View.__init__` (and by extension
+`View.update()`, which fires `on_ui_update` the same way) is running.
+Python's object type is fixed at construction, independent of which
+class's `__init__` happens to be executing. So `is_waveshare_v2()`,
+`is_inky()`, `init_display()`, and the rest of `Display`'s
+hardware-detection methods are all genuinely callable from either
+hook, on every display type, with no crash.
+
+**What this does and doesn't change:**
+
+- It does **not** change `CrackHouseNG`'s disposition — the rebuild
+  fixed several other independently-real bugs in `crack_house.py`
+  (the `UnboundLocalError`, the missing-potfile crash, the
+  inconsistent fallback source), so the fix was still warranted; only
+  the "crashed on every load" framing for this one specific cause was
+  incorrect. The display-detection replacement (configurable
+  `position_x`/`position_y`) already built into `CrackHouseNG` is
+  harmless and stays as-is either way.
+- It does **not** change `screen_refresh.py`'s final disposition —
+  it was removed at the user's request because e-ink-ghosting
+  clearing has no use case on his TFT/LCD screen, a reason entirely
+  independent of this bug claim.
+- It **does** mean neither plugin actually had a load-crashing display-
+  detection bug on this fork in the first place — that specific
+  diagnosis in both writeups above should be read as superseded by
+  this note, not as an accurate account of why either plugin needed
+  fixing.
+
 ## Real vs. imagined hooks confirmed this cluster
 
 Unlike Cluster 33, no plugin in this batch invented a fake hook name.
