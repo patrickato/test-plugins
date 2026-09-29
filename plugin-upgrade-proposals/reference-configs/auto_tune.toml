@@ -1,0 +1,7 @@
+[main.plugins.auto_tune]
+enabled = true
+# extra_channels = ???  # no default found in source; set a value
+# reset_history = ???  # no default found in source; set a value
+# restrict_channels = ???  # no default found in source; set a value
+# show_hidden = ???  # no default found in source; set a value
+# show_interactions = ???  # no default found in source; set a value

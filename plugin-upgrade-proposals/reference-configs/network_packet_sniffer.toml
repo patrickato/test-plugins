@@ -1,0 +1,2 @@
+[main.plugins.network_packet_sniffer]
+enabled = true

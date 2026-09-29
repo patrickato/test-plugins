@@ -1,0 +1,3 @@
+[main.plugins.RSS_Voice]
+enabled = false
+path = "/root/voice_rss"

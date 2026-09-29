@@ -1,0 +1,4 @@
+[main.plugins.spam_peers]
+enabled = true
+# known_peers = ???  # no default found in source; set a value
+# messages = ???  # no default found in source; set a value

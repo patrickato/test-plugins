@@ -1,0 +1,9 @@
+[main.plugins.telepwn]
+enabled = true
+auto_start = false  # inferred from source default
+# bot_token = ???  # no default found in source; set a value
+# chat_id = ???  # no default found in source; set a value
+# community_chat_id = ???  # no default found in source; set a value
+# community_enabled = ???  # no default found in source; set a value
+send_handshake_file = false  # inferred from source default
+send_message = false  # inferred from source default

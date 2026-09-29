@@ -1,0 +1,6 @@
+[main.plugins.console]
+enabled = true
+color = 'Blue'  # inferred from source default
+# font_size = ???  # source default was `int(ui._height/60)` (not a plain TOML value) - set a real value
+# position = ???  # source default was `(20,100)` (not a plain TOML value) - set a real value
+showLines = 15  # inferred from source default

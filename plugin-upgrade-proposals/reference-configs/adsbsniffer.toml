@@ -1,0 +1,6 @@
+[main.plugins.adsbsniffer]
+enabled = true
+# adsb_x_coord = ???  # no default found in source; set a value
+# adsb_y_coord = ???  # no default found in source; set a value
+# aircraft_file = ???  # no default found in source; set a value
+# timer = ???  # no default found in source; set a value

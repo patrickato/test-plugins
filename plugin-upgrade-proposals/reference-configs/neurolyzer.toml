@@ -1,0 +1,8 @@
+[main.plugins.neurolyzer]
+enabled = true  # inferred from source default
+mac_change_interval = 3600  # inferred from source default
+# monitor_iface = ???  # no default found in source; set a value
+operation_mode = 'stealth'  # inferred from source default
+whitelist_ssids = []  # inferred from source default
+# wids_ssids = ???  # source default was `self.DEFAULT_WIDS` (not a plain TOML value) - set a real value
+wifi_interface = 'wlan0'  # inferred from source default

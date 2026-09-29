@@ -1,0 +1,6 @@
+[main.plugins.printp]
+enabled = true
+# t0_x_coord = ???  # no default found in source; set a value
+# t0_y_coord = ???  # no default found in source; set a value
+# tn_x_coord = ???  # no default found in source; set a value
+# tn_y_coord = ???  # no default found in source; set a value

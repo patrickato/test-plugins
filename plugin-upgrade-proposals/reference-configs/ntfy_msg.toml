@@ -1,0 +1,4 @@
+[main.plugins.ntfy_msg]
+enabled = true
+# name = ???  # no default found in source; set a value
+# serverlink = ???  # no default found in source; set a value

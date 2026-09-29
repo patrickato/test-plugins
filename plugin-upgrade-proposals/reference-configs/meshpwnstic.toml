@@ -1,0 +1,6 @@
+[main.plugins.meshpwnstic]
+enabled = true
+# color = ???  # no default found in source; set a value
+# host = ???  # no default found in source; set a value
+# position = ???  # no default found in source; set a value
+# showLines = ???  # no default found in source; set a value

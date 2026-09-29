@@ -1,0 +1,6 @@
+[main.plugins.speak_to_me]
+enabled = true
+# dictionary = ???  # source default was a Python regex dict `{r'pwn(.*)$': r'pohn\1'}` -
+# not a plain TOML value. If this plugin supports a dictionary option,
+# set it as a real TOML inline table, e.g.:
+# dictionary = { "pwn" = "pohn" }

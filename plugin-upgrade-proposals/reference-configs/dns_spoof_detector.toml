@@ -1,0 +1,2 @@
+[main.plugins.dns_spoof_detector]
+enabled = true

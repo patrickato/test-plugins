@@ -1,0 +1,2 @@
+[main.plugins.MqttPlugin]
+enabled = false

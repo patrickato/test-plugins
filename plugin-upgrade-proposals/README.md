@@ -32,6 +32,20 @@ plugin-upgrade-proposals/
       config-example.toml             <- proposed config, not yet wired to real code
 ```
 
+## `reference-configs/` - real upstream config for every tracked plugin
+
+[`reference-configs/`](reference-configs/) holds one real config file per
+plugin still tracked in `pwnagotchi-plugins/MASTER_PLUGIN_LIST.md`
+(everything not already removed) - fetched from whichever source repo
+actually ships it (any format: `.toml`, `.yml`/`.yaml`, `.json`), or
+built from the plugin's own Python source (`__defaults__` dict, or a
+scan of its `self.options` usage) when no shipped sample exists. See
+[`reference-configs/MANIFEST.md`](reference-configs/MANIFEST.md) for the
+full per-plugin breakdown and what each status tag means. Any real
+API key/token/password found in an upstream sample was redacted before
+being copied here. The 5 plugins already moved to `plugins-wip` are not
+duplicated here - their configs live in their own suites.
+
 ## Status key (used inside each PLAN.md)
 
 | Status | Meaning |

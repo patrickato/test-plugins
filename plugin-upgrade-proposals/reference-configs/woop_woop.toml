@@ -1,0 +1,3 @@
+[main.plugins.woop_woop]
+enabled = true
+# home-password = ???  # no default found in source; set a value

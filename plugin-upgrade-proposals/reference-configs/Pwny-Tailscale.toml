@@ -1,0 +1,10 @@
+[main.plugins.tailscale]
+enabled = true
+# auth_key = ???  # no default found in source; set a value
+# handshake_dir = ???  # no default found in source; set a value
+hostname = 'unknown'  # inferred from source default
+# server_tailscale_ip = ???  # no default found in source; set a value
+# server_user = ???  # no default found in source; set a value
+# source_handshake_path = ???  # no default found in source; set a value
+ssh_port = 22  # inferred from source default
+# sync_interval_secs = ???  # no default found in source; set a value

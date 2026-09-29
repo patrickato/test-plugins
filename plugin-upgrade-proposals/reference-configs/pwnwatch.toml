@@ -1,0 +1,3 @@
+[main.plugins.pwnwatch]
+enabled = true
+max-lines = 4096  # inferred from source default

@@ -1,0 +1,5 @@
+[main.plugins.web2ssh]
+enabled = true
+# password = ???  # no default found in source; set a value
+# port = ???  # no default found in source; set a value
+# username = ???  # no default found in source; set a value

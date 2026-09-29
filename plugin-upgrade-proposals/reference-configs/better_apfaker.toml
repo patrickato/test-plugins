@@ -1,0 +1,15 @@
+# NOTE: the upstream sample this was copied from
+# (itsdarklikehell/pwnagotchi-plugins/configs/better_apfaker.toml) has a
+# real syntax bug - trailing commas after each dotted-key statement,
+# which TOML does not allow (that's Python dict-literal syntax, not
+# TOML). Also, this pass's automated secret-redaction check
+# false-positived on "password_protected" (a boolean flag, not a
+# credential) because the key name contains "password" - restored to
+# its real upstream value (false) below. Both fixed here so this file
+# actually parses and is accurate.
+main.plugins.better_apfaker.enabled = false
+main.plugins.better_apfaker.ssids = ["5G TEST CELL TOWER", "5G TEST CELL TOWER 2"]
+main.plugins.better_apfaker.max = 50
+main.plugins.better_apfaker.repeat = true
+main.plugins.better_apfaker.password_protected = false
+main.plugins.better_apfaker.path = "/home/pi/apfaker/"

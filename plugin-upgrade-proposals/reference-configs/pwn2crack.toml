@@ -1,0 +1,10 @@
+[main.plugins.pwn2crack]
+enabled = true
+# accesskey = ???  # no default found in source; set a value
+# brainFeatures = ???  # no default found in source; set a value
+# genwordlist = ???  # no default found in source; set a value
+# hashisSecret = ???  # no default found in source; set a value
+# htserver = ???  # no default found in source; set a value
+# numhashtoupload = ???  # no default found in source; set a value
+# uploadwordlist = ???  # no default found in source; set a value
+# useBrain = ???  # no default found in source; set a value

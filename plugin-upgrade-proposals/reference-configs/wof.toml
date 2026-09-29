@@ -1,0 +1,7 @@
+[main.plugins.wof]
+enabled = true
+# icon = ???  # no default found in source; set a value
+# icon_reverse = ???  # no default found in source; set a value
+# online_timespan = ???  # no default found in source; set a value
+# position = ???  # no default found in source; set a value
+# wof_file = ???  # no default found in source; set a value
