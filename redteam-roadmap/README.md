@@ -14,6 +14,10 @@ topic, and turn picks into learn+build work.
 - **`ATLAS.md`** — the full field map, every category, handled (A1…LL4).
 - **`INTERESTS.md`** — his pegged interests organized into 11 tracks, candidate
   additions awaiting his yes, the agreed discussion order, and his gear list.
+- **`godrive-manifest.md`** — the USB-fleet deep-dive's concrete output: a vetted
+  "one USB to rule them all" build list (Ventoy NVMe core + tiered ISOs), each with
+  official source, version, how-to-verify, and maintained status. Build entry by
+  entry, verify each as added.
 - **`README.md`** — this resume point.
 
 ## The operating agreement (important — carries across sessions)
@@ -32,7 +36,9 @@ topic, and turn picks into learn+build work.
 ## Current position (update as we go)
 - **Roadmap captured** (this folder) on 2026-10-05.
 - **Discussion order:** (1) Flipper ✓ done · (2) Tor/dark web ✓ done ·
-  (3) USB fleet ← in progress · (4) Kali/BlackArch · (5) revisit list → build+learn plan.
+  (3) USB fleet ← in progress (god-drive manifest started — see `godrive-manifest.md`;
+  Ventoy/Medicat/Hiren's verified, next = seed the NVMe core + Tier 1 ISOs) ·
+  (4) Kali/BlackArch · (5) revisit list → build+learn plan.
 - Tor note: highest-value slices for him = dark-web **threat-intel monitoring**
   (automatable) + a **Tails/Whonix** clean research environment (sketch queued,
   he said yes). Mechanics/OPSEC/onion-services/I2P/Hyphanet all walked.

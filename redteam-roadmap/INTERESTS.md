@@ -6,9 +6,8 @@ Claude suggested, awaiting his yes; **deep-dive queued** = agreed to discuss soo
 ## Agreed discussion order (then revisit the list)
 1. **Flipper Zero — all things** ✓ done 2026-10-05
 2. **Tor + deep/dark web** ✓ done 2026-10-05 (mechanics/onion-routing, deep vs dark, OPSEC via Tails/Whonix, I2P/Hyphanet, red-team threat-intel use; queued build: a safe Tails/Whonix research env + dark-web monitoring)
-3. **The USB fleet** (BadUSB payload library on top of badhid) ← current
-4. Kali / BlackArch — guided toolchain tours
-5. Revisit the full list, turn tracks into a build+learn plan
+3. **The USB fleet** (BadUSB payload library + multiboot god-drive) ← current
+   — god-drive build list started in `godrive-manifest.md`
 4. Kali / BlackArch — guided toolchain tours
 5. Revisit the full list, turn tracks into a build+learn plan
 
@@ -32,8 +31,9 @@ A4 kill chain/ATT&CK · C1 scan/enum · C2 service exploit · K1 Win internals �
 + **cross-network control** (one box controlling another across networks/NAT: C5 pivoting + X1 C2 + reverse shells + legit mesh like Tailscale/SSH/RMM)
 + platform focus: **Windows 10/11** and **Pi 4/5**
 
-## Track 6 — USB / BadUSB fleet  *(deep-dive queued #3)*
+## Track 6 — USB / BadUSB fleet  *(deep-dive #3 — IN PROGRESS)*
 BadUSB wired + wireless · a fleet of USBs that each do something cool · script-running · builds on complete-plugins/badhid-ng
++ **Multiboot god-drive** — Ventoy NVMe core + themed fleet (offense/rescue/privacy/portable/install/forensics). Live vetted build list in `godrive-manifest.md`. Verified so far: Ventoy, Medicat (official mon5termatt GH — "Crack" result is malware), Hiren's BootCD PE (hirensbootcd.org). "Check everything" = official source + SHA-256/GPG + maintained status per entry.
 
 ## Track 7 — Mobile
 Full P set (P1–P7 + edges). "Mobile hacking interests me."
