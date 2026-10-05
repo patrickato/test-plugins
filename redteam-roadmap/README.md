@@ -31,8 +31,11 @@ topic, and turn picks into learn+build work.
 
 ## Current position (update as we go)
 - **Roadmap captured** (this folder) on 2026-10-05.
-- **Discussion order:** (1) Flipper ✓ done · (2) Tor/dark web ← in progress ·
-  (3) USB fleet · (4) Kali/BlackArch · (5) revisit list → build+learn plan.
+- **Discussion order:** (1) Flipper ✓ done · (2) Tor/dark web ✓ done ·
+  (3) USB fleet ← in progress · (4) Kali/BlackArch · (5) revisit list → build+learn plan.
+- Tor note: highest-value slices for him = dark-web **threat-intel monitoring**
+  (automatable) + a **Tails/Whonix** clean research environment (sketch queued,
+  he said yes). Mechanics/OPSEC/onion-services/I2P/Hyphanet all walked.
 - Already-built, graduated tooling that feeds these tracks lives in
   `patrickato/complete-plugins`: **badhid-ng** (BadUSB/BadHID, incl. B3 /stage),
   **remoteexec-ng** (remote-exec agent + fleet controller = cross-network control

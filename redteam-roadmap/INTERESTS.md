@@ -5,8 +5,10 @@ Claude suggested, awaiting his yes; **deep-dive queued** = agreed to discuss soo
 
 ## Agreed discussion order (then revisit the list)
 1. **Flipper Zero — all things** ✓ done 2026-10-05
-2. **Tor + deep/dark web** ← current
-3. The USB fleet (BadUSB payload library on top of badhid)
+2. **Tor + deep/dark web** ✓ done 2026-10-05 (mechanics/onion-routing, deep vs dark, OPSEC via Tails/Whonix, I2P/Hyphanet, red-team threat-intel use; queued build: a safe Tails/Whonix research env + dark-web monitoring)
+3. **The USB fleet** (BadUSB payload library on top of badhid) ← current
+4. Kali / BlackArch — guided toolchain tours
+5. Revisit the full list, turn tracks into a build+learn plan
 4. Kali / BlackArch — guided toolchain tours
 5. Revisit the full list, turn tracks into a build+learn plan
 
