@@ -31,8 +31,8 @@ topic, and turn picks into learn+build work.
 
 ## Current position (update as we go)
 - **Roadmap captured** (this folder) on 2026-10-05.
-- **Discussion order:** (1) Flipper ← in progress · (2) Tor/dark web · (3) USB
-  fleet · (4) Kali/BlackArch · (5) revisit list → build+learn plan.
+- **Discussion order:** (1) Flipper ✓ done · (2) Tor/dark web ← in progress ·
+  (3) USB fleet · (4) Kali/BlackArch · (5) revisit list → build+learn plan.
 - Already-built, graduated tooling that feeds these tracks lives in
   `patrickato/complete-plugins`: **badhid-ng** (BadUSB/BadHID, incl. B3 /stage),
   **remoteexec-ng** (remote-exec agent + fleet controller = cross-network control

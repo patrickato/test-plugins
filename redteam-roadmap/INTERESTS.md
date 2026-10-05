@@ -4,8 +4,8 @@ Handles reference `ATLAS.md`. Status: **pegged** = he picked it; **candidate** =
 Claude suggested, awaiting his yes; **deep-dive queued** = agreed to discuss soon.
 
 ## Agreed discussion order (then revisit the list)
-1. **Flipper Zero — all things** ← current
-2. Tor + deep/dark web
+1. **Flipper Zero — all things** ✓ done 2026-10-05
+2. **Tor + deep/dark web** ← current
 3. The USB fleet (BadUSB payload library on top of badhid)
 4. Kali / BlackArch — guided toolchain tours
 5. Revisit the full list, turn tracks into a build+learn plan
@@ -17,7 +17,7 @@ A5 scripting · B2 dorking · B3 people-OSINT · B7 geo/image OSINT · B8 recon 
 E1 WPA2 capture/crack · E2 PMKID · E3 WPA3 · E4 evil twin · E5 captive portal · E6 deauth (authorized) · E7 WPS · E9 wardriving  *(NOT E8 enterprise)*
 F1–F7 all Bluetooth/BLE
 G2 capture/replay · G3 sub-GHz · G4 rolling codes/keyfobs · G5 GPS concepts · G8 pagers · G10 RFID/NFC
-+ **Flipper Zero** (deep-dive queued #1)
++ **Flipper Zero** ✓ covered 2026-10-05 — all capabilities walked: sub-GHz (CC1101), 125kHz RFID, 13.56MHz NFC (Mifare Classic crackable), iButton, IR, GPIO (= cheap UART/SPI/SWD tool, ties Track 3), BadUSB, BLE. No WiFi onboard → ESP32→Marauder (he has ESP32s). Custom FW (Unleashed/RogueMaster/Momentum) unlocks region-locked TX + extras. Breadth tool spanning Tracks 2/3/4/6. He said "note and move on" — no single sub-area chosen.
 
 ## Track 3 — Hardware
 H1 UART/JTAG/SWD · H3 firmware extraction
