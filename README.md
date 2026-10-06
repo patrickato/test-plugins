@@ -33,6 +33,7 @@ See:
 
 - [PWNAGOTCHI_GAP_AND_PLUGIN_IDEAS_2026-09-24.md](PWNAGOTCHI_GAP_AND_PLUGIN_IDEAS_2026-09-24.md)
 - [OFFENSIVE_BLUETOOTH_IDEAS_2026-09-29.md](OFFENSIVE_BLUETOOTH_IDEAS_2026-09-29.md) - offensive/defensive Bluetooth plugin ideas, from the Cluster 37 (Hardware-specific) review
+- [BEAST_RECON_SUITE_PROPOSAL_2026-10-06.md](BEAST_RECON_SUITE_PROPOSAL_2026-10-06.md) - capture→crack pipeline, GPS/RSSI maps, attacker-source locator, tracker locator (shared BeastSpatialDB + BeastPlot spine); passive/authorized-only, nothing built yet
 
 ## Development principles
 
