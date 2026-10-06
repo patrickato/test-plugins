@@ -1,94 +1,88 @@
 # Beast Recon Suite — design notes & proposals
 
-_Proposed 2026-10-06. Status: notes only, nothing built yet. For patrickato/test-plugins (idea backlog) → graduate approved pieces to plugins-wip._
+_Proposed 2026-10-06; expanded with the full idea set and organized into automatic tool-chains. Status: notes only, nothing built yet. For patrickato/test-plugins (idea backlog) → graduate approved pieces to plugins-wip._
 
-**Scope (non-negotiable, same as the rest of the project):** every capture/crack piece operates only on networks you own or have written authorization to test. The detector/DF pieces are passive receive-only.
+**Scope (non-negotiable, same as the rest of the project):** every capture/crack piece operates only on networks you own or have written authorization to test. All detector / DF / recon pieces are passive, receive-only. Per repo policy, nothing here is approved for building without an explicit per-item decision.
 
-**Data rule (your call, baked in):** every map/plot is driven by real captured data. A sample dataset may ship only as a clearly-labeled placeholder shown until real data loads — never presented as real, never mixed into real output. (The wardrive map already works this way; same engine, same rule.)
+**Data rule (baked in):** every map/plot is driven by real captured data. A sample dataset may ship only as a clearly-labeled placeholder until real data loads — never presented as real, never mixed into real output.
 
----
-
-## The spine: one shared engine, many views
-
-Instead of six plugins each reinventing storage and plotting, build **two shared pieces once**, then everything is a thin view on top:
-
-- **BeastSpatialDB** — one SQLite store of "sightings": `(kind, id, ssid/name, channel/freq, rssi, lat, lon, bearing, first_seen, last_seen, meta_json)`. `kind` = ap | client | capture | attack_event | tracker. Everything below writes rows here.
-- **BeastPlot** — the offline plot/map engine from the wardrive map (true-distance projection, color/size encoding, live redraw, filters). Every "map" below is just BeastPlot pointed at a filtered query of BeastSpatialDB.
-
-Why this matters: Capture Map, RSSI/DF Map, Attacker Locator and Tracker Locator stop being four map projects and become four queries against one engine. Half the code, one consistent UI, and they cross-reference each other for free.
+**Selection status (2026-10-06):** pursuing the original six suite tools + the full list below. Explicitly flagged by the user to pursue: **#1 RF Fusion, #2 rtl_433 decoder, #12 wpa-sec integration.** #9 is optional (user's call). #13 reclassified (see below). #17 merged into the spine (it was the view half of #1).
 
 ---
 
-## 1. Capture → Crack pipeline (3 tools, one flow)
+## The spine — build once, everything else is a view or a feeder
 
-Flow: **pwnagotchi captures** → **Triage scores it** → **Crack Pipeline offloads it** → **results land on the Map + CrackHouse**. Each stage writes to BeastSpatialDB so the map always reflects truth.
-
-### 1a. CaptureTriageNG
-| | |
-| --- | --- |
-| **What** | Reads each `.pcap`/`.22000` as it lands, scores it: is a full EAPOL 4-way or a usable PMKID actually present? crackable / partial / junk. Dedupes by BSSID, keeps the best, tags each with its GPS fix. |
-| **Already exists?** | Partly, as scattered CLI: `hcxpcapngtool` reports what's in a capture, `aircrack-ng` tells you if a handshake is present, `wpa-sec` uploads them. None of it is integrated, on-device, scored, or deduped into a queue. |
-| **Why ours wins** | Runs on the Pi against the capture the moment it's grabbed, turns "I have 400 pcaps" into "37 are actually crackable, here they are ranked, the rest are junk." Feeds the pipeline and the display. Nothing wastes GPU later. |
-| **Pipeline role** | The filter. Only crackable captures move downstream. |
-| **Bad side / misuse** | Triage is an efficiency multiplier for cracking — pointed at handshakes captured from networks you don't own, it makes an attacker faster by telling them which stolen captures are worth the effort. The tool only *reads* pcaps, but it sharpens the offensive workflow. The scope rule (authorized captures only) is what keeps it a lab tool. |
-
-### 1b. CrackPipelineNG
-| | |
-| --- | --- |
-| **What** | A job queue that hands triaged captures to **hashcat** running on the Pi5 or your PC, tracks status (queued/running/cracked/failed), and writes results back to CrackHouse + the map. A wrapper/orchestrator around hashcat — not a new cracker. |
-| **Already exists?** | `wifite` chains capture+crack but isn't pwnagotchi-integrated or offload-aware; `hashcat` + shell scripts do the work but with no queue, no status, no loop-back. Pwnagotchi has no native crack-offload at all. |
-| **Why ours wins** | The Pi4 can't crack; this ships the work to the Pi5/PC where the GPU is, tracks every network's state, and closes the loop so the map shows cracked vs. not in real time. The whole "capture→crack" chain you like, automated end to end. |
-| **Pipeline role** | The engine room. |
-| **Scope** | Only captures from your own / authorized networks. This is the piece closest to the edge, so the authorization gate is the whole point. |
-| **Bad side / misuse** | This is a turnkey WiFi-breaking assembly line if aimed at other people's networks — capture, auto-triage, auto-crack, mapped results, no manual steps. The automation *is* the force multiplier. Legitimate because it operates on captures you're authorized to hold; illegitimate the moment it isn't, and nothing technical stops that but you. |
-
-### 1c. CaptureMapNG
-| | |
-| --- | --- |
-| **What** | BeastPlot view of where every capture happened, colored by crack status (cracked / crackable / junk), sized by signal, filterable by crypto/SSID. Real `survey.json`/capture data only. |
-| **Already exists?** | **Yes** — the `webgpsmap` pwnagotchi plugin plots handshakes on a map. Honest prior art. |
-| **Why ours wins** | webgpsmap needs online map tiles (dead weight at your half-mile-from-anyone lab with no signal); ours is the fully-offline BeastPlot, no tiles, works on the laptop with zero connectivity. Plus it's wired to crack status and the shared DB, so it's a live picture of the pipeline, not a static pin dump. |
-| **Bad side / misuse** | A geolocated map of networks + which ones you've cracked is, in the wrong hands, a target map: "here are the networks I can get into, and exactly where they are." Cross-referenced with the crack results it's a shopping list with coordinates. |
+- **BeastSpatialDB** — one SQLite store of "sightings": `(kind, id, ssid/name, channel/freq, rssi, lat, lon, bearing, first_seen, last_seen, meta_json)`. `kind` = ap | client | capture | attack_event | tracker | rf_emitter. Every tool writes here.
+- **BeastPlot** — the offline true-distance plot/map engine from the wardrive map. Every "map"/timeline/radar below is a filtered query against the DB rendered by BeastPlot. (**Absorbs old #17 "fusion timeline"** — that was just this, showing all `kind`s on one scrubber.)
+- **DF capability** — shared RSSI-over-movement + GPS direction-finding math. Used by the maps, the attacker locator, and the tracker locator; built once, not three times.
+- **Alert bus** — one internal pub/sub. Detectors publish; outputs (screen, Discord, TTS, log) subscribe. Lets detection auto-trigger capture + notification without each plugin wiring its own.
 
 ---
 
-## 2. RSSI / Direction-Finding Map (DFMapNG)
+## Automatic tool-chains (the "combine" answer)
 
-| | |
-| --- | --- |
-| **What** | Estimates where a transmitter physically sits from RSSI sampled as you move + your GPS track (gradient/trilateration-ish), and draws a "it's that way, ~N meters" bearing on BeastPlot. Real samples only. |
-| **Already exists?** | Partly — Kismet has signal/location data and some tooling; commercial WIDS do bearings. Nothing pwnagotchi-native, nothing that plots it live on your kit. |
-| **Why ours wins** | On-device, integrated with the same DB, turns "I hear it" into a direction on screen using hardware you already carry. Pairs with the Attacker Locator below. |
-| **Bad side / misuse** | Direction-finding doesn't care what it's locating. The same math that points you at a rogue AP points you at *a person's phone or a specific device* — it's the core of physically hunting down where someone is. That's the surveillance/stalking edge, and it's inherent to DF, not something bolted on. |
+Several of these are weak alone and strong when they fire each other. Grouped so each chain runs hands-off once armed.
+
+### Chain A — Capture → Crack *(authorized / own nets only)*
+Auto-flow: **handshake captured → Triage scores it → crackable ones queue → Crack runs → results flip the map + CrackHouse.**
+- **CaptureTriageNG** — scores each capture crackable/partial/junk, dedupes, GPS-tags. *Good:* stop wasting GPU on dead captures. *Bad:* an efficiency multiplier for cracking if aimed off-scope.
+- **CrackPipelineNG** — queues triaged captures to hashcat on the Pi5/PC, tracks status, writes back. Wrapper around hashcat, not a new cracker. *Good:* the whole chain automated, Pi4 offloaded. *Bad:* a turnkey WiFi-breaking line if pointed at others' nets.
+- **Wordlist/Ruleset Manager (#11)** — crack backend: organizes dictionaries/rules. *Good:* sharper cracking of your own. *Bad:* same accelerant off-scope.
+- **wpa-sec integration (#12)** *(selected)* — submit your own handshakes to distributed cracking. *Good:* crack your own far faster. *Bad:* submitting others' captures leaks their data and facilitates unauthorized cracking.
+- **CaptureMapNG** — BeastPlot view of captures by location, colored by crack status. Prior art: `webgpsmap` (online tiles); ours is offline + crack-aware. *Bad:* a geolocated "nets I can get into" map.
+
+### Chain B — Recon Enrichment (one engine, not five plugins)
+Auto-flow: **every AP/client sighting in the DB gets auto-enriched the moment it's seen.** Instead of five separate plugins, one pass that attaches:
+- **Vendor + fingerprint (#8)** — OUI → make, plus behavioral IE/rate fingerprint that sees through MAC randomization. *Good:* instant inventory, step one of any assessment. *Bad:* device-profiling of people, re-identifying randomized MACs.
+- **Probe-request / PNL (#5)** — the networks each device keeps calling for. *Good:* the clearest lesson in how WiFi use leaks you. *Bad:* a PNL is a travel history → deanonymization.
+- **Presence timeline (#6)** — first/last/when-present per device. *Good:* learn your baseline, flag a lingering unknown. *Bad:* movement/presence surveillance of passers-by.
+- **Hidden-SSID resolver (#9)** *(optional)* — recovers cloaked SSIDs passively. *Good:* proves hiding an SSID buys ~nothing; fills the map's blank column. *Bad:* de-cloaking others' hidden nets is recon.
+- **Crypto posture (#10)** — rates each AP's WPA2/WPA3/PMF. *Good:* audit your own hardening. *Bad:* a "who's soft" list if aimed outward.
+
+### Chain C — Multi-radio spatial ingest
+Auto-flow: **every radio writes geo-tagged sightings → DB → BeastPlot.** The feeders for the whole map.
+- **RF Fusion (#1)** *(selected)* — bridge the HackRF/SDR so WiFi, BT, sub-GHz share one timeline. *Good:* multi-radio awareness almost nobody has. *Bad:* ambient RF logging captures others' devices/sensors.
+- **rtl_433 decoder (#2)** *(selected)* — decode 433/915 MHz sensors. *Good:* read your own sensors, deep protocol-RE learning. *Bad:* reads neighbors' sensors — TPMS → vehicle tracking, etc.
+- **ADS-B / AIS (#3)** — planes/boats overhead. *Good:* legal RX, real antenna project, fun. *Bad:* aggregated tracking of specific private craft.
+- **Spectrum waterfall (#4)** — live congestion/interference on the TFT. *Good:* see the RF world. *Bad:* mostly benign; helps locate emitters.
+- **DFMapNG** — RSSI-over-movement + GPS → bearing on the plot. *Good:* "it's that way, ~N m." *Bad:* DF locates any transmitter — the people-tracking edge is inherent.
+
+### Chain D — Defense / IDS (detection auto-triggers capture + alert)
+Auto-flow: **Attack Source Locator sees/classifies/locates an attack → auto-fires the forensics recorder → baseline + LAN + proximity detectors all publish to the alert bus → everything paints on the timeline.** This is the headline combine.
+- **AttackSourceLocatorNG** — passively detects deauth/flood/spam/evil-twin, IDs source MAC, locates via DF, live radar. *Good:* who/what/where in real time. *Bad:* the classifier read backwards is a spec for generating those attacks; DF half is a people-finder.
+- **Attack Replay-Forensics recorder (#16)** — on a detected attack, auto-dumps the raw frames to a timestamped pcap. *Good:* real DFIR; learn attacks by reading real ones; evidence. *Bad:* a clean frame recording is a template to replay the attack.
+- **Airspace baseline / anomaly (#7)** — learns normal, flags deviations. *Good:* early warning something changed. *Bad:* the "normal" is a pattern-of-life of nearby people.
+- **Rogue-DHCP / ARP-spoof detector (#14)** *(your LAN)* — catches MITM on your own network. *Good:* spot poisoning. *Bad:* the detection logic describes how the attack runs.
+- **"Parked outside" alerting (#15)** — warns when a new device camps nearby. *Good:* real physical early-warning for a rural spot. *Bad:* surveils everyone passing to do it.
+
+### Chain E — Tracker watch
+Auto-flow: **BLE tracker keeps reappearing near you → locate via DF → alert bus.**
+- **TrackerLocatorNG** — flags AirTag/Tile/SmartTag/find-my beacons, logs, locates. Prior art: Apple Tracker Detect, AirGuard; ours is cross-vendor + always-on + locates. *Bad:* the signature DB also finds/pulls someone's legit tracker, or dodges detection.
+
+### Chain F — Unattended ops & output
+Auto-flow: **Scheduled survey runs A/B/C hands-off → auto-report → signed.**
+- **Scheduled survey + auto-report (#20)** — timed passive sweeps into a clean report. *Good:* pro habit, real portfolio output. *Bad:* continuous outward aggregation is surveillance over time.
+- **Tamper-evident log signer (#22)** — cryptographically signs session logs. *Good:* court-grade integrity. *Bad:* negligible.
+- **Capture black-box recorder (#13)** *(reclassified clean)* — timestamped metadata+events of the run. Storing public beacon **metadata** is not a problem; the only downside is if it ever logs probe identifiers or frame contents, so it stays metadata+events only. *Bad:* none meaningful as scoped.
+- **Field endurance optimizer (#18)** — throttle-aware power/thermal for long runs. *Good:* more field time. *Bad:* negligible.
+- **TTS alerts (#21)** — spoken callouts (an alert-bus output). *Good:* hands-free. *Bad:* negligible.
+
+### Standalone utility (no chain)
+- **Property coverage heatmap (#19)** — walk your land, map your own WiFi dead zones. *Good:* clean sysadmin survey. *Bad:* ~none.
 
 ---
 
-## 3. AttackSourceLocatorNG — the "who / what / where", live
+## Build order (respects the spine + selections)
 
-This is the blue-team piece reshaped the way you actually want it: not "a deauth is happening" but **"deauth flood from `aa:bb:cc:dd:ee:ff`, bearing NE, ~40 m, right here on the radar, now."**
+1. **Spine** — BeastSpatialDB + BeastPlot + alert bus + DF capability.
+2. **Chain C feeders #1, #2** (selected) — first real data into the DB.
+3. **Chain B enrichment** — cheap, makes every map richer immediately.
+4. **Chain A** capture→crack (incl. #11, #12).
+5. **Chain D** defense (locator → #16 → alert bus).
+6. **Chain E** tracker, **Chain F** ops, **#19** utility.
 
-| | |
-| --- | --- |
-| **What** | Passively watches your airspace for attack patterns — deauth/disassoc floods, auth/assoc floods, beacon/SSID spam, evil-twin/karma responders, EAPOL/handshake hammering — identifies the **source MAC**, classifies **what** it's doing, and localizes **where** via RSSI/DF, painted live on BeastPlot as it happens. |
-| **Already exists?** | Partly — Kismet raises alerts, `nzyme` is an open WiFi-defense/forensics project that detects deauth/evil-twin and has some bearing work, commercial WIPS do this at price. None of it is a live, visual, direction-on-a-radar box running on your own pwnagotchi kit. |
-| **Why ours wins** | Real-time radar instead of a log line, source + classification + bearing fused in one view, on gear you already own, offline. It's the exact mirror of WifiJammer — same frames, pointed inward as a sensor that catches someone doing it *to you*. |
-| **Bad side / misuse** | Two edges. First, a precise classifier for "what a deauth/flood/spam looks like" is, read backwards, a spec for *generating* those attacks cleanly — detection knowledge and attack knowledge are the same knowledge. Second, the locator half will happily pinpoint any transmitter, so it's a people-finder as much as an attacker-finder, and it can be used to hunt down and neutralize someone else's sensors/defenses. |
+## Repo / workflow
 
----
-
-## 4. TrackerLocatorNG (finishes BluetoothReconNG's tracker work)
-
-| | |
-| --- | --- |
-| **What** | Flags BLE trackers that keep reappearing near you — AirTag, Tile, SmartTag, generic find-my beacons — alerts, logs to the DB, and (with DF) points you at the one that's following. |
-| **Already exists?** | **Yes** — Apple's "Tracker Detect" app, the open-source **AirGuard** (Android), and the Apple/Google unwanted-tracking standard all do detection. Honest prior art. |
-| **Why ours wins** | Cross-vendor in one place, always-on on the pwnagotchi instead of a phone app you have to open, logs over time, correlates with your WiFi/GPS data, and can *locate* the tracker, not just warn that one exists. |
-| **Bad side / misuse** | The signature DB that lets you *detect* trackers also lets you *find and inventory* them — including locating a tracker someone placed legitimately (anti-theft on an asset) in order to pull it. Turned on BLE generally, the same "recurring device near me over time" logic is people-tracking. And publishing exact detection signatures teaches a tracker maker how to advertise in a way that dodges detection. |
-
----
-
-## Repo placement & how to add
-
-- **Where:** this is an idea-backlog/proposal doc, same shape as `OFFENSIVE_BLUETOOTH_IDEAS_2026-09-29.md`. Drop it at the top level of **patrickato/test-plugins** and link it from `README.md`. When you approve a piece, it graduates to **plugins-wip** as its own suite (BeastSpatialDB + BeastPlot land first as shared deps).
-- **Build order that respects the spine:** BeastSpatialDB + BeastPlot → CaptureTriageNG → CrackPipelineNG → CaptureMapNG → DFMapNG → AttackSourceLocatorNG → TrackerLocatorNG.
-- **Pushing:** direct git push from this session is blocked by the egress proxy — per our setup it goes as a git bundle run by a `.bat` from Explorer on your laptop. I can prep that bundle, or you can drop this file into the repo and commit it yourself with the usual attribution trailer. Say which and I'll set it up.
+- This doc is the idea backlog for the suite (top-level, linked from README). Nothing is approved to build without an explicit per-item go; the selections above authorize the listed items only.
+- Builds land in `patrickato/plugins-wip` as suites (spine first, as shared deps), following `CONVENTIONS.md`.
+- Offensive-policy note: none of these are deauth/jam/targeting tools; the closest, AttackSourceLocator, is detection + passive DF, not targeting. No allowlist gate needed, but all stay passive/authorized as stated.
