@@ -59,12 +59,21 @@ review, decides keep/remove/fix per cluster, and hands anything worth keeping to
   non-existent hooks, or import modules that don't exist here — common fatal defects to
   check for first.
 
-## Offensive plugins
+## Offensive plugins — scope, not a cage
 
-Any deauth/jam/targeting plugin must gate on an **explicit authorized-target allowlist
-(BSSID/SSID), empty by default** — never physical/range assumptions. Offensive/Bluetooth
-idea backlogs live in the top-level `*_IDEAS_*.md` docs; **nothing in them is approved for
-building** without an explicit decision.
+Offensive plugins ship at full capability. The only thing centralized is *aiming*: any
+deauth/jam/targeting/firing-capable plugin consults the **central Scope** — the one list of
+targets you own or are authorized to assess (your own networks and devices, your lab, gear you
+bought to test, engagements you're contracted for, ranges, CTFs, consenting peers). That space is
+broad by design, not a bench restriction. It starts empty only so nothing fires at a target you
+didn't choose; arming is one gesture (add / bulk-import a list / arm-lab, with per-job groups and
+optional expiry). Scope decides WHERE a plugin is aimed, never WHAT it can do — inside scope it's
+unrestricted, and make legitimate use low-friction. The only firing that stays out entirely is the
+kind that can't be aimed and hits bystanders: indiscriminate BLE/beacon spam and RF jamming (also
+illegal to transmit) — detect those, never emit them.
+
+Offensive/Bluetooth idea backlogs live in the top-level `*_IDEAS_*.md` docs; **nothing in them is
+approved for building** without an explicit decision.
 
 ## Related repos
 
